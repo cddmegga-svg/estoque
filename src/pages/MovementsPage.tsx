@@ -23,9 +23,32 @@ interface MovementBatch {
     filialId: string;
     userName: string;
     type: string; // 'entry' or 'exit'
+    notes?: string; // Added notes
     items: Movement[];
     numberOfItems: number;
 }
+// ...
+// Inside groupedMovements
+userName: m.userName,
+    type: m.type,
+        notes: m.notes, // Capture notes
+            items: [],
+                numberOfItems: 0
+                    // ...
+                    // Inside Dialog Details
+                    < div className = "grid grid-cols-2 gap-4 text-sm" >
+                                        <div><span className="font-bold">Filial:</span> {getFilialName(selectedBatch.filialId)}</div>
+                                        <div><span className="font-bold">Usuário:</span> {selectedBatch.userName}</div>
+                                        <div><span className="font-bold">Tipo:</span> {selectedBatch.type === 'entry' ? 'Entrada' : 'Saída'}</div>
+                                        <div className="col-span-2"><span className="font-bold">Obs:</span> {selectedBatch.notes || '-'}</div>
+                                    </div >
+    // ...
+    // Inside Print Template
+    <div className="mb-6 grid grid-cols-2 gap-4">
+        <div><p className="font-bold text-xs uppercase text-gray-500">Filial</p><p>{getFilialName(selectedBatch.filialId)}</p></div>
+        <div><p className="font-bold text-xs uppercase text-gray-500">Operação</p><p>{selectedBatch.type === 'entry' ? 'Entrada' : 'Saída'}</p></div>
+        <div className="col-span-2"><p className="font-bold text-xs uppercase text-gray-500">Observações</p><p>{selectedBatch.notes || '-'}</p></div>
+    </div>
 
 export const MovementsPage = ({ user }: { user: any }) => {
     const [selectedTab, setSelectedTab] = useState('entry');
