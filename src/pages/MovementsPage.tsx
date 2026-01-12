@@ -35,6 +35,8 @@ export const MovementsPage = ({ user }: { user: any }) => {
     const [selectedLote, setSelectedLote] = useState('');
     const [quantity, setQuantity] = useState('');
     const [expirationDate, setExpirationDate] = useState('');
+    const [nfeNumber, setNfeNumber] = useState('');
+    const [entryDate, setEntryDate] = useState(''); // Default empty? Or today?
     const [notes, setNotes] = useState('');
 
     // History & Details State
@@ -175,8 +177,8 @@ export const MovementsPage = ({ user }: { user: any }) => {
                         expirationDate: expirationDate,
                         quantity: qtd,
                         unitPrice: product?.costPrice || 0, // Fallback
-                        entryDate: new Date().toISOString(),
-                        nfeNumber: notes // Use notes as ref or add field
+                        entryDate: entryDate || new Date().toISOString(), // Use selected date or now
+                        nfeNumber: nfeNumber // Pass real NFe Number
                     });
                 }
             }
@@ -199,6 +201,8 @@ export const MovementsPage = ({ user }: { user: any }) => {
             // Clean
             setQuantity('');
             setNotes('');
+            setNfeNumber('');
+            setEntryDate('');
             // Optional: Keep selection to allow rapid entry? Maybe clear Lote
             if (selectedTab === 'entry') setSelectedLote('');
 

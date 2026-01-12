@@ -22,6 +22,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
         { id: 'products', icon: Package, label: 'Produtos', path: '/products' },
         { id: 'movements', icon: RefreshCw, label: 'Movimentação Manual', path: '/movements' },
         { id: 'transfers', label: 'Transferências', icon: ArrowLeftRight },
+        { id: 'import', label: 'Importar XML', icon: FileText, path: '/import' },
     ];
 
     if (isAdmin) {
