@@ -24,7 +24,8 @@ export const fetchProducts = async (): Promise<Product[]> => {
         salePrice: item.sale_price || 0,
         imageUrl: item.image_url,
         category: item.category,
-        distributor: item.distributor
+        distributor: item.distributor,
+        minStock: item.min_stock || 0
     }));
 };
 
@@ -144,7 +145,8 @@ export const addProduct = async (product: any) => {
         sale_price: product.salePrice,
         image_url: product.imageUrl,
         category: product.category,
-        distributor: product.distributor
+        distributor: product.distributor,
+        min_stock: product.minStock
     };
 
     if (product.id) {
@@ -174,6 +176,7 @@ export const updateProduct = async (id: string, updates: any) => {
     if (updates.imageUrl !== undefined) productData.image_url = updates.imageUrl;
     if (updates.category !== undefined) productData.category = updates.category;
     if (updates.distributor !== undefined) productData.distributor = updates.distributor;
+    if (updates.minStock !== undefined) productData.min_stock = updates.minStock;
 
     const { data, error } = await supabase
         .from('products')

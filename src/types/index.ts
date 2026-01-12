@@ -26,6 +26,7 @@ export interface Product {
   imageUrl?: string;
   category?: string;
   distributor?: string;
+  minStock?: number;
 }
 
 export const PRODUCT_CATEGORIES = [
