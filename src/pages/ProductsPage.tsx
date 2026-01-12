@@ -14,7 +14,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { fetchProducts, addProduct } from '@/services/api';
+import { fetchProducts, addProduct, updateProduct } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
@@ -36,6 +36,8 @@ export const ProductsPage = () => {
         imageUrl: ''
     });
 
+    const [editingId, setEditingId] = useState<string | null>(null);
+
     const { toast } = useToast();
     const queryClient = useQueryClient();
 
@@ -50,45 +52,66 @@ export const ProductsPage = () => {
         mutationFn: addProduct,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
-            toast({
-                title: 'Produto cadastrado!',
-                description: `${formData.name} foi adicionado com sucesso.`,
-            });
+            toast({ title: 'Produto cadastrado!', description: `${formData.name} salvo com sucesso.` });
             setIsDialogOpen(false);
-            setFormData({
-                name: '',
-                ean: '',
-                ncm: '',
-                manufacturer: '',
-                activeIngredient: '',
-                costPrice: 0,
-                salePrice: 0,
-                imageUrl: ''
-            });
+            resetForm();
         },
-        onError: (error: any) => {
-            console.error(error);
-            toast({
-                variant: 'destructive',
-                title: 'Erro ao cadastrar',
-                description: error.message || 'Ocorreu um erro ao salvar o produto.',
-            });
-        }
+        onError: (error: any) => toast({ variant: 'destructive', title: 'Erro', description: error.message })
     });
+
+    // Update Product Mutation
+    const updateProductMutation = useMutation({
+        mutationFn: (variables: { id: string; data: any }) => updateProduct(variables.id, variables.data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            toast({ title: 'Produto atualizado!', description: `${formData.name} foi atualizado.` });
+            setIsDialogOpen(false);
+            resetForm();
+        },
+        onError: (error: any) => toast({ variant: 'destructive', title: 'Erro', description: error.message })
+    });
+
+    const resetForm = () => {
+        setFormData({
+            name: '',
+            ean: '',
+            ncm: '',
+            manufacturer: '',
+            activeIngredient: '',
+            costPrice: 0,
+            salePrice: 0,
+            imageUrl: ''
+        });
+        setEditingId(null);
+    };
+
+    const handleEdit = (product: any) => {
+        setFormData({
+            name: product.name,
+            ean: product.ean || '',
+            ncm: product.ncm || '',
+            manufacturer: product.manufacturer || '',
+            activeIngredient: product.activeIngredient || '',
+            costPrice: product.costPrice || 0,
+            salePrice: product.salePrice || 0,
+            imageUrl: product.imageUrl || ''
+        });
+        setEditingId(product.id);
+        setIsDialogOpen(true);
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!formData.name || !formData.ean) {
-            toast({
-                variant: 'destructive',
-                title: 'Campos obrigatórios',
-                description: 'Preencha pelo menos o Nome e o EAN.',
-            });
+            toast({ variant: 'destructive', title: 'Campos obrigatórios', description: 'Preencha Nome e EAN.' });
             return;
         }
 
-        createProductMutation.mutate(formData);
+        if (editingId) {
+            updateProductMutation.mutate({ id: editingId, data: formData });
+        } else {
+            createProductMutation.mutate(formData);
+        }
     };
 
     const handleInputChange = (field: string, value: string | number) => {
@@ -305,6 +328,11 @@ export const ProductsPage = () => {
                                         </div>
                                         <div className="col-span-2 text-muted-foreground text-xs">
                                             {formatCurrency(product.costPrice || 0)}
+                                        </div>
+                                        <div className="col-span-12 md:col-span-1 flex justify-end">
+                                            <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
+                                                Editar
+                                            </Button>
                                         </div>
                                     </div>
                                 ))

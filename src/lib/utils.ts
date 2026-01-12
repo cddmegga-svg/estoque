@@ -48,5 +48,7 @@ export const isExpired = (expirationDate: string): boolean => {
 };
 
 export const generateId = (prefix: string): string => {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // Database expects UUID, so we ignore the prefix to ensure compatibility
+  // Or we could leave it if the column wasn't UUID type, but it is.
+  return self.crypto.randomUUID();
 };

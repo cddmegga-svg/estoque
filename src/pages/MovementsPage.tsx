@@ -203,6 +203,7 @@ export const MovementsPage = ({ user }: { user: any }) => {
             setNotes('');
             setNfeNumber('');
             setEntryDate('');
+
             // Optional: Keep selection to allow rapid entry? Maybe clear Lote
             if (selectedTab === 'entry') setSelectedLote('');
 

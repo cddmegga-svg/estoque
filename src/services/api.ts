@@ -155,6 +155,28 @@ export const addProduct = async (product: any) => {
     return data;
 };
 
+export const updateProduct = async (id: string, updates: any) => {
+    const productData: any = {};
+    if (updates.name) productData.name = updates.name;
+    if (updates.activeIngredient) productData.active_ingredient = updates.activeIngredient;
+    if (updates.manufacturer) productData.manufacturer = updates.manufacturer;
+    if (updates.ean) productData.ean = updates.ean;
+    if (updates.ncm) productData.ncm = updates.ncm;
+    if (updates.costPrice !== undefined) productData.cost_price = updates.costPrice;
+    if (updates.salePrice !== undefined) productData.sale_price = updates.salePrice;
+    if (updates.imageUrl !== undefined) productData.image_url = updates.imageUrl;
+
+    const { data, error } = await supabase
+        .from('products')
+        .update(productData)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
 export const addStockItem = async (item: any) => {
     const { data, error } = await supabase
         .from('stock_items')
