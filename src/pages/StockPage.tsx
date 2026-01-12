@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Package, Search, Filter, AlertTriangle, Calendar } from 'lucide-react';
+import { Package, Filter, AlertTriangle, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,40 +8,41 @@ import { fetchStock, fetchProducts, fetchFiliais } from '@/services/api';
 import { formatDate, formatCurrency, isExpiringSoon, isExpired } from '@/lib/utils';
 import { User } from '@/types';
 import { useQuery } from '@tanstack/react-query';
+import { ProductCombobox } from '@/components/ProductCombobox';
 
 interface StockPageProps {
   user: User;
 }
 
 export const StockPage = ({ user }: StockPageProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState('');
   const [filterFilial, setFilterFilial] = useState<string>('all');
   const [filterExpiration, setFilterExpiration] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
 
-  const { data: stock = [] } = useQuery({ queryKey: ['stock'], queryFn: fetchStock });
-  const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: fetchProducts });
+  const { data: stock = [], isLoading: isLoadingStock, error: stockError } = useQuery({ queryKey: ['stock'], queryFn: fetchStock });
+  const { data: products = [], isLoading: isLoadingProducts } = useQuery({ queryKey: ['products'], queryFn: fetchProducts });
   const { data: filiais = [] } = useQuery({ queryKey: ['filiais'], queryFn: fetchFiliais });
 
+  const isLoading = isLoadingStock || isLoadingProducts;
+
+  if (stockError) {
+    console.error('Stock Error:', stockError);
+  }
+
   const filteredAndSortedStock = useMemo(() => {
+    if (isLoading || !stock || !products) return [];
+
     let filtered = stock;
 
-    // Busca
-    if (searchTerm) {
-      filtered = filtered.filter(item => {
-        const product = products.find(p => p.id === item.productId);
-        const term = searchTerm.toLowerCase();
-        return (
-          (product?.name || '').toLowerCase().includes(term) ||
-          (product?.activeIngredient || '').toLowerCase().includes(term) ||
-          (item.lote || '').toLowerCase().includes(term)
-        );
-      });
+    // Busca (Smart Filter)
+    if (selectedProductId) {
+      filtered = filtered.filter(item => item.productId === selectedProductId);
     }
 
     // Filtro de filial
     if (filterFilial !== 'all') {
-      filtered = filtered.filter(item => item.filialId === filterFilial);
+      filtered = filtered.filter(item => item?.filialId === filterFilial);
     }
 
     // Filtro de validade
@@ -72,7 +72,7 @@ export const StockPage = ({ user }: StockPageProps) => {
     });
 
     return sorted;
-  }, [stock, products, searchTerm, filterFilial, filterExpiration, sortBy]);
+  }, [stock, products, selectedProductId, filterFilial, filterExpiration, sortBy]);
 
   const getProduct = (productId: string) => products.find(p => p.id === productId);
   const getFilial = (filialId: string) => filiais.find(f => f.id === filialId);
@@ -102,12 +102,10 @@ export const StockPage = ({ user }: StockPageProps) => {
         <CardContent className="space-y-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+              <ProductCombobox
+                products={products}
+                value={selectedProductId}
+                onChange={setSelectedProductId}
               />
             </div>
 

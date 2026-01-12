@@ -13,6 +13,7 @@ import { User, StockItem } from '@/types';
 import { formatDate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ProductCombobox } from '@/components/ProductCombobox';
 
 interface TransfersPageProps {
   user: User;
@@ -68,17 +69,21 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
   // Apenas administradores podem fazer transferências
   const canTransfer = user.role === 'admin';
 
+  // Products logic with safety checks
+  const safeStock = Array.isArray(stock) ? stock : [];
+  const safeProducts = Array.isArray(products) ? products : [];
+
   // Estoque da filial do usuário
-  const userStock = stock.filter(item => item.filialId === user.filialId);
+  const userStock = safeStock.filter(item => item?.filialId === user?.filialId);
 
   // Produtos únicos no estoque do usuário
-  const availableProducts = products.filter(product =>
-    userStock.some(item => item.productId === product.id)
+  const availableProducts = safeProducts.filter(product =>
+    product && userStock.some(item => item?.productId === product.id)
   );
 
   // Itens de estoque do produto selecionado
   const stockItemsForProduct = selectedProduct
-    ? userStock.filter(item => item.productId === selectedProduct)
+    ? userStock.filter(item => item?.productId === selectedProduct)
     : [];
 
   // Filiais disponíveis para transferência (exceto a atual)
@@ -163,18 +168,11 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Produto</Label>
-                  <Select value={selectedProduct} onValueChange={handleProductSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o produto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableProducts.map(product => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <ProductCombobox
+                    products={availableProducts}
+                    value={selectedProduct}
+                    onChange={handleProductSelect}
+                  />
                 </div>
 
                 {stockItemsForProduct.length > 0 && (

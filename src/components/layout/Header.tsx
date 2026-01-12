@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { User } from '@/types';
 import { fetchFiliais } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {
   user: User | null;
@@ -11,6 +12,8 @@ interface HeaderProps {
 }
 
 export const Header = ({ user, onNavigate, onRegister }: HeaderProps) => {
+  const { signOut } = useAuth();
+
   const { data: filiais = [] } = useQuery({
     queryKey: ['filiais'],
     queryFn: fetchFiliais,
@@ -36,7 +39,7 @@ export const Header = ({ user, onNavigate, onRegister }: HeaderProps) => {
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <div className="text-right">
+                <div className="text-right hidden md:block">
                   <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                     <UserIcon className="w-4 h-4" />
                     {user.name}
@@ -45,6 +48,10 @@ export const Header = ({ user, onNavigate, onRegister }: HeaderProps) => {
                     {userFilial?.name} • {user.role === 'admin' ? 'Administrador' : 'Consulta'}
                   </div>
                 </div>
+
+                <Button variant="ghost" size="icon" onClick={() => signOut()} title="Sair">
+                  <LogOut className="w-5 h-5 text-muted-foreground hover:text-destructive" />
+                </Button>
               </>
             ) : (
               <Button

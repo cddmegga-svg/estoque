@@ -6,10 +6,11 @@ import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { StockPage } from '@/pages/StockPage';
 import { ImportPage } from '@/pages/ImportPage';
-import { TransfersPage } from '@/pages/TransfersPage';
-import { AdminPage } from '@/pages/AdminPage';
-import { Header } from '@/components/layout/Header';
-import { Navigation } from '@/components/layout/Navigation';
+import { TransfersPage } from './pages/TransfersPage';
+import { MovementsPage } from './pages/MovementsPage';
+import { ProductsPage } from './pages/ProductsPage';
+import { AdminPage } from './pages/AdminPage';
+import { Sidebar } from '@/components/layout/Sidebar';
 import { Toaster } from '@/components/ui/toaster';
 
 function App() {
@@ -19,8 +20,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground">Carregando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-emerald-600 font-medium animate-pulse">Carregando PharmaFlow...</div>
       </div>
     );
   }
@@ -53,6 +54,10 @@ function App() {
         return <ImportPage user={user} />;
       case 'transfers':
         return <TransfersPage user={user} />;
+      case 'products':
+        return <ProductsPage />;
+      case 'movements':
+        return <MovementsPage />;
       case 'admin':
         return user.role === 'admin' ? <AdminPage currentUser={user} /> : <div className="text-center py-12 text-muted-foreground">Acesso restrito a administradores</div>;
       default:
@@ -61,20 +66,19 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header
-        user={user}
-        onNavigate={setCurrentPage}
-        onRegister={() => { }} // Hidden or re-purposed
-      />
-      <Navigation
+    <div className="min-h-screen bg-slate-50 flex">
+      {/* Sidebar - Fixed width */}
+      <Sidebar
         currentPage={currentPage}
         onNavigate={setCurrentPage}
-        isAdmin={user?.role === 'admin'}
+        user={user}
       />
 
-      <main className="container mx-auto px-4 py-8">
-        {renderPage()}
+      {/* Main Content - Computed margin to account for fixed sidebar */}
+      <main className="flex-1 ml-64 p-8 overflow-y-auto h-screen">
+        <div className="max-w-7xl mx-auto">
+          {renderPage()}
+        </div>
       </main>
 
       <Toaster />

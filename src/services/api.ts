@@ -126,16 +126,22 @@ export const createTransfer = async (transferData: any) => {
 
 // Mutations
 export const addProduct = async (product: any) => {
+    // Prepare the object, omitting ID if not present to let DB generate it
+    const productData: any = {
+        name: product.name,
+        active_ingredient: product.activeIngredient,
+        manufacturer: product.manufacturer,
+        ean: product.ean,
+        ncm: product.ncm
+    };
+
+    if (product.id) {
+        productData.id = product.id;
+    }
+
     const { data, error } = await supabase
         .from('products')
-        .insert([{
-            id: product.id,
-            name: product.name,
-            active_ingredient: product.activeIngredient,
-            manufacturer: product.manufacturer,
-            ean: product.ean,
-            ncm: product.ncm
-        }])
+        .insert([productData])
         .select()
         .single();
 
