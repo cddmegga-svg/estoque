@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { ArrowDownCircle, ArrowUpCircle, Barcode, Calendar, Package, Factory, FileText, Info, History, Printer, ChevronRight } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, Barcode, Calendar, Package, Factory, FileText, Info, History, Printer, ChevronRight, Camera } from 'lucide-react';
 import { fetchFiliais, fetchProducts, fetchStock, addMovement, fetchMovements, updateStockItem, addStockItem } from '@/services/api';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { Product, StockItem, Movement } from '@/types';

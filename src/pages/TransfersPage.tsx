@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo } from 'react';
-import { ArrowLeftRight, Plus, History, Package, Trash2, Printer, ChevronRight } from 'lucide-react';
+import { ArrowLeftRight, Plus, History, Package, Trash2, Printer, ChevronRight, Camera } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
