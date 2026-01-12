@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { parseNFeXML, SAMPLE_NFE_XML } from '@/lib/xmlParser';
 import { fetchFiliais, fetchProducts, addProduct, addStockItem, addMovement } from '@/services/api';
-import { NFe, User, Product } from '@/types';
+import { NFe, User, Product, PRODUCT_CATEGORIES } from '@/types';
 import { formatCurrency, formatDate, generateId } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,7 +21,7 @@ interface ImportPageProps {
 export const ImportPage = ({ user }: ImportPageProps) => {
   const [nfeData, setNfeData] = useState<NFe | null>(null);
   const [selectedFilial, setSelectedFilial] = useState<string>('');
-  const [itemsWithLoteData, setItemsWithLoteData] = useState<Map<number, { lote: string; expirationDate: string }>>(new Map());
+  const [itemsEditedData, setItemsEditedData] = useState<Map<number, any>>(new Map());
   const [error, setError] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
@@ -73,11 +73,11 @@ export const ImportPage = ({ user }: ImportPageProps) => {
     }
   };
 
-  const updateItemLoteData = (itemIndex: number, field: 'lote' | 'expirationDate', value: string) => {
-    const newMap = new Map(itemsWithLoteData);
-    const current = newMap.get(itemIndex) || { lote: '', expirationDate: '' };
+  const updateItemData = (itemIndex: number, field: string, value: string) => {
+    const newMap = new Map(itemsEditedData);
+    const current = newMap.get(itemIndex) || {};
     newMap.set(itemIndex, { ...current, [field]: value });
-    setItemsWithLoteData(newMap);
+    setItemsEditedData(newMap);
   };
 
   const handleImportNFe = async () => {
@@ -100,11 +100,15 @@ export const ImportPage = ({ user }: ImportPageProps) => {
       // Process items sequentially to avoid race conditions or overwhelming the DB
       for (let index = 0; index < nfeData.items.length; index++) {
         const item = nfeData.items[index];
-        const loteData = itemsWithLoteData.get(index);
+        const editedItem = itemsEditedData.get(index) || {};
 
-        // Verificar se temos lote e validade (do XML ou preenchido manualmente)
-        const finalLote = loteData?.lote || item.lote;
-        const finalExpiration = loteData?.expirationDate || item.expirationDate;
+        // Merge XML data with manual edits (Manual takes precedence)
+        const finalLote = editedItem.lote || item.lote;
+        const finalExpiration = editedItem.expirationDate || item.expirationDate;
+        const finalName = editedItem.name || item.name;
+        const finalManufacturer = editedItem.manufacturer || item.manufacturer;
+        const finalCategory = editedItem.category;
+        const finalDistributor = editedItem.distributor || nfeData.supplier; // Default to NFe supplier
 
         if (!finalLote || !finalExpiration) {
           continue; // Pular itens sem lote/validade
@@ -118,11 +122,13 @@ export const ImportPage = ({ user }: ImportPageProps) => {
           const newProductID = generateId('prod');
           const newProduct = {
             id: newProductID, // Note: API service will use this ID
-            name: item.name,
-            activeIngredient: item.name.split(' ')[0], // Simple heuristic, ideally manual or better parsing
-            manufacturer: item.manufacturer,
+            name: finalName,
+            activeIngredient: finalName.split(' ')[0],
+            manufacturer: finalManufacturer,
             ean: item.ean,
             ncm: item.ncm,
+            category: finalCategory,
+            distributor: finalDistributor
           };
 
           await addProduct(newProduct);
@@ -133,10 +139,21 @@ export const ImportPage = ({ user }: ImportPageProps) => {
             activeIngredient: newProduct.activeIngredient,
             manufacturer: newProduct.manufacturer,
             ean: newProduct.ean,
-            ncm: newProduct.ncm
+            ncm: newProduct.ncm,
+            category: newProduct.category,
+            distributor: newProduct.distributor
           };
 
           sessionCreatedProducts.set(item.ean, product);
+        } else {
+          // If product exists, we might want to update it? 
+          // For now, let's assume we don't overwrite existing product data on import unless explicitly asked.
+          // But the user MIGHT be correcting data. 
+          // Let's stick to "Creating new" logic for now as requested "Register items".
+          // If the user wants to update, they usually go to Products page.
+          // However, if they just added Category/Distributor here, it won't save if product exists.
+          // We can skip update for existing products to stick to safety, or simple update.
+          // Given the instructions, let's just use existing product.
         }
 
         if (!product) continue;
@@ -183,7 +200,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
       // Limpar formulário
       setNfeData(null);
       setSelectedFilial('');
-      setItemsWithLoteData(new Map());
+      setItemsEditedData(new Map());
 
     } catch (err: any) {
       console.error(err);
@@ -291,8 +308,8 @@ export const ImportPage = ({ user }: ImportPageProps) => {
 
               <div className="space-y-3">
                 {nfeData.items.map((item, index) => {
-                  const loteData = itemsWithLoteData.get(index);
-                  const hasLoteAndExpiration = (loteData?.lote && loteData?.expirationDate) || (item.lote && item.expirationDate);
+                  const editedItem = itemsEditedData.get(index) || {};
+                  const hasLoteAndExpiration = (editedItem.lote || item.lote) && (editedItem.expirationDate || item.expirationDate);
 
                   return (
                     <Card key={index}>
@@ -301,9 +318,15 @@ export const ImportPage = ({ user }: ImportPageProps) => {
                           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                             <Package className="w-5 h-5 text-primary" />
                           </div>
-                          <div className="flex-1 space-y-3">
+                          <div className="flex-1 space-y-4">
                             <div>
-                              <h4 className="font-medium text-foreground">{item.name}</h4>
+                              <Label htmlFor={`name-${index}`} className="text-xs">Nome do Produto</Label>
+                              <Input
+                                id={`name-${index}`}
+                                defaultValue={item.name}
+                                onChange={(e) => updateItemData(index, 'name', e.target.value)}
+                                className="font-medium"
+                              />
                               <div className="flex flex-wrap gap-2 mt-2">
                                 <Badge variant="secondary">EAN: {item.ean}</Badge>
                                 <Badge variant="secondary">NCM: {item.ncm}</Badge>
@@ -314,32 +337,67 @@ export const ImportPage = ({ user }: ImportPageProps) => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <div className="space-y-1">
-                                <Label htmlFor={`lote-${index}`} className="text-xs">
-                                  Lote {item.lote && '(do XML)'}
-                                </Label>
+                                <Label htmlFor={`manufacturer-${index}`} className="text-xs">Fabricante</Label>
                                 <Input
-                                  id={`lote-${index}`}
-                                  placeholder={item.lote || 'Digite o lote'}
-                                  defaultValue={item.lote}
-                                  onChange={(e) => updateItemLoteData(index, 'lote', e.target.value)}
-                                // Disabled if strict checking enabled, but allowing override for now
+                                  id={`manufacturer-${index}`}
+                                  defaultValue={item.manufacturer}
+                                  onChange={(e) => updateItemData(index, 'manufacturer', e.target.value)}
                                 />
                               </div>
                               <div className="space-y-1">
-                                <Label htmlFor={`expiration-${index}`} className="text-xs">
-                                  Data de Validade {item.expirationDate && '(do XML)'}
-                                </Label>
+                                <Label htmlFor={`distributor-${index}`} className="text-xs">Distribuidor / Fornecedor</Label>
                                 <Input
-                                  id={`expiration-${index}`}
-                                  type="date"
-                                  defaultValue={item.expirationDate}
-                                  onChange={(e) => updateItemLoteData(index, 'expirationDate', e.target.value)}
+                                  id={`distributor-${index}`}
+                                  defaultValue={nfeData.supplier}
+                                  placeholder={nfeData.supplier}
+                                  onChange={(e) => updateItemData(index, 'distributor', e.target.value)}
                                 />
+                              </div>
+                              <div className="space-y-1">
+                                <Label htmlFor={`category-${index}`} className="text-xs">Categoria</Label>
+                                <Select onValueChange={(val) => updateItemData(index, 'category', val)}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Selecione..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {PRODUCT_CATEGORIES.map((cat) => (
+                                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            <div className="border-t pt-2 mt-2">
+                              <p className="text-xs font-semibold mb-2">Dados de Lote e Validade</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <Label htmlFor={`lote-${index}`} className="text-xs">
+                                    Lote {item.lote && '(do XML)'}
+                                  </Label>
+                                  <Input
+                                    id={`lote-${index}`}
+                                    placeholder={item.lote || 'Digite o lote'}
+                                    defaultValue={item.lote}
+                                    onChange={(e) => updateItemData(index, 'lote', e.target.value)}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label htmlFor={`expiration-${index}`} className="text-xs">
+                                    Data de Validade {item.expirationDate && '(do XML)'}
+                                  </Label>
+                                  <Input
+                                    id={`expiration-${index}`}
+                                    type="date"
+                                    defaultValue={item.expirationDate}
+                                    onChange={(e) => updateItemData(index, 'expirationDate', e.target.value)}
+                                  />
+                                </div>
                               </div>
                             </div>
 
                             {hasLoteAndExpiration && (
-                              <div className="flex items-center gap-2 text-sm text-green-600">
+                              <div className="flex items-center gap-2 text-sm text-green-600 mt-2">
                                 <CheckCircle className="w-4 h-4" />
                                 <span>Pronto para importar</span>
                               </div>

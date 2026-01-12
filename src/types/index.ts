@@ -24,7 +24,22 @@ export interface Product {
   costPrice?: number;
   salePrice?: number;
   imageUrl?: string;
+  category?: string;
+  distributor?: string;
 }
+
+export const PRODUCT_CATEGORIES = [
+  'Éticos',
+  'Genéricos',
+  'Similares',
+  'Perfumaria e Higiene',
+  'Leites e Nutrição',
+  'Dermocosméticos',
+  'Correlatos / Acessórios',
+  'Outros'
+] as const;
+
+export type ProductCategory = typeof PRODUCT_CATEGORIES[number];
 
 export interface StockItem {
   id: string;

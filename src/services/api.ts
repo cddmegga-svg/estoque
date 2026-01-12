@@ -22,7 +22,9 @@ export const fetchProducts = async (): Promise<Product[]> => {
         ncm: item.ncm,
         costPrice: item.cost_price || 0,
         salePrice: item.sale_price || 0,
-        imageUrl: item.image_url
+        imageUrl: item.image_url,
+        category: item.category,
+        distributor: item.distributor
     }));
 };
 
@@ -140,7 +142,9 @@ export const addProduct = async (product: any) => {
         ncm: product.ncm,
         cost_price: product.costPrice,
         sale_price: product.salePrice,
-        image_url: product.imageUrl
+        image_url: product.imageUrl,
+        category: product.category,
+        distributor: product.distributor
     };
 
     if (product.id) {
@@ -168,6 +172,8 @@ export const updateProduct = async (id: string, updates: any) => {
     if (updates.costPrice !== undefined) productData.cost_price = updates.costPrice;
     if (updates.salePrice !== undefined) productData.sale_price = updates.salePrice;
     if (updates.imageUrl !== undefined) productData.image_url = updates.imageUrl;
+    if (updates.category !== undefined) productData.category = updates.category;
+    if (updates.distributor !== undefined) productData.distributor = updates.distributor;
 
     const { data, error } = await supabase
         .from('products')

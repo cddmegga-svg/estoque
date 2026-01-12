@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Package, Plus, Search, Barcode, Factory, FileText, Info, Trash2 } from 'lucide-react';
+import { Package, Plus, Search, Barcode, Factory, FileText, Info, Trash2, Tag, Truck } from 'lucide-react';
+import { PRODUCT_CATEGORIES } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import { MoneyInput } from '@/components/ui/money-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export const ProductsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -33,8 +35,12 @@ export const ProductsPage = () => {
         activeIngredient: '',
         costPrice: 0,
         salePrice: 0,
-        imageUrl: ''
+        imageUrl: '',
+        category: '',
+        distributor: ''
     });
+
+    const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
     const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -96,7 +102,9 @@ export const ProductsPage = () => {
             activeIngredient: '',
             costPrice: 0,
             salePrice: 0,
-            imageUrl: ''
+            imageUrl: '',
+            category: '',
+            distributor: ''
         });
         setEditingId(null);
     };
@@ -110,7 +118,9 @@ export const ProductsPage = () => {
             activeIngredient: product.activeIngredient || '',
             costPrice: product.costPrice || 0,
             salePrice: product.salePrice || 0,
-            imageUrl: product.imageUrl || ''
+            imageUrl: product.imageUrl || '',
+            category: product.category || '',
+            distributor: product.distributor || ''
         });
         setEditingId(product.id);
         setIsDialogOpen(true);
@@ -137,11 +147,15 @@ export const ProductsPage = () => {
     // Filter Logic
     const filteredProducts = products.filter(product => {
         const term = searchTerm.toLowerCase();
-        return (
+        const matchesTerm = (
             product.name.toLowerCase().includes(term) ||
             (product.ean || '').includes(term) ||
             (product.activeIngredient || '').toLowerCase().includes(term)
         );
+
+        const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
+
+        return matchesTerm && matchesCategory;
     });
 
     return (
@@ -239,6 +253,35 @@ export const ProductsPage = () => {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="grid gap-2">
+                                        <Label htmlFor="category">Categoria</Label>
+                                        <Select value={formData.category} onValueChange={(val) => handleInputChange('category', val)}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Selecione..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {PRODUCT_CATEGORIES.map((cat) => (
+                                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="distributor">Distribuidor Preferencial</Label>
+                                        <div className="relative">
+                                            <Truck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                            <Input
+                                                id="distributor"
+                                                className="pl-9"
+                                                value={formData.distributor}
+                                                onChange={(e) => handleInputChange('distributor', e.target.value)}
+                                                placeholder="Ex: SantaCruz..."
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
                                         <Label htmlFor="costPrice">Preço de Custo (R$)</Label>
                                         <MoneyInput
                                             id="costPrice"
@@ -298,14 +341,29 @@ export const ProductsPage = () => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="mb-6 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Buscar por nome, EAN ou princípio ativo..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-9 max-w-md"
-                        />
+                    <div className="mb-6 flex flex-col md:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Buscar por nome, EAN ou princípio ativo..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                        <div className="w-[200px]">
+                            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Filtrar Categoria" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todas as Categorias</SelectItem>
+                                    {PRODUCT_CATEGORIES.map((cat) => (
+                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
                     <div className="rounded-md border">
@@ -334,11 +392,21 @@ export const ProductsPage = () => {
                                             </div>
                                             <div>
                                                 <div className="font-semibold text-foreground">{product.name}</div>
-                                                <div className="text-xs text-muted-foreground">{product.activeIngredient}</div>
+                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                    {product.activeIngredient && <span className="text-xs text-muted-foreground">{product.activeIngredient}</span>}
+                                                    {product.category && <Badge variant="secondary" className="text-[10px] h-4 px-1">{product.category}</Badge>}
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="col-span-2 font-mono text-xs text-muted-foreground">{product.ean}</div>
-                                        <div className="col-span-2 text-muted-foreground">{product.manufacturer}</div>
+                                        <div className="col-span-2">
+                                            <div className="text-muted-foreground">{product.manufacturer}</div>
+                                            {product.distributor && (
+                                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80 mt-0.5">
+                                                    <Truck className="w-3 h-3" /> {product.distributor}
+                                                </div>
+                                            )}
+                                        </div>
                                         <div className="col-span-2 font-bold text-emerald-700">
                                             {formatCurrency(product.salePrice || 0)}
                                         </div>
