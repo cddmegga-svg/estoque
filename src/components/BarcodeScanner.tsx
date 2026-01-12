@@ -14,13 +14,18 @@ export const BarcodeScanner = ({ onScan, isOpen, onClose }: BarcodeScannerProps)
     const [error, setError] = useState<string>('');
 
     const { ref } = useZxing({
+        constraints: { video: { facingMode: 'environment' } },
         onDecodeResult(result) {
             onScan(result.getText());
             onClose();
         },
         onError(err) {
-            // Ignore minor errors, looking for camera permission issues mainly
-            console.log("Scanner loop error:", err);
+            console.error("Scanner error:", err);
+            if (err.name === 'NotAllowedError') {
+                setError('Permissão de câmera negada. Verifique as configurações do navegador.');
+            } else if (err.name === 'NotFoundError') {
+                setError('Nenhuma câmera encontrada neste dispositivo.');
+            }
         }
     });
 
@@ -35,12 +40,21 @@ export const BarcodeScanner = ({ onScan, isOpen, onClose }: BarcodeScannerProps)
                 </DialogHeader>
 
                 <div className="flex flex-col items-center justify-center p-4 min-h-[300px] bg-black rounded-lg overflow-hidden relative">
-                    <video ref={ref} className="w-full h-full object-cover rounded-md" />
-
-                    {/* Viewfinder overlay */}
-                    <div className="absolute inset-0 border-2 border-emerald-500/50 flex grid grid-cols-1 grid-rows-1 pointer-events-none">
-                        <div className="w-64 h-32 border-2 border-red-500 rounded m-auto animate-pulse"></div>
-                    </div>
+                    {error ? (
+                        <div className="text-center text-red-500 p-4">
+                            <CameraOff className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                            <p className="font-bold">Erro na Câmera</p>
+                            <p className="text-sm mt-1">{error}</p>
+                        </div>
+                    ) : (
+                        <>
+                            <video ref={ref} className="w-full h-full object-cover rounded-md" />
+                            {/* Viewfinder overlay */}
+                            <div className="absolute inset-0 border-2 border-emerald-500/50 flex grid grid-cols-1 grid-rows-1 pointer-events-none">
+                                <div className="w-64 h-32 border-2 border-red-500 rounded m-auto animate-pulse"></div>
+                            </div>
+                        </>
+                    )}
 
                     <p className="absolute bottom-4 text-white text-xs bg-black/50 px-2 py-1 rounded">
                         Aponte a câmera para o código EAN
