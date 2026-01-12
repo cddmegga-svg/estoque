@@ -418,67 +418,67 @@ export const ProductsPage = () => {
                             ) : filteredProducts.length === 0 ? (
                                 <div className="p-8 text-center text-muted-foreground">Nenhum produto encontrado.</div>
                             ) : (
-                            ): (
-                                    filteredProducts.map((product) => {
+                                filteredProducts.map((product) => {
                                     const currentStock = stockMap[product.id] || 0;
                                     const isLowStock = product.minStock > 0 && currentStock < product.minStock;
 
-                            return (
-                            <div key={product.id} className={`grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors text-sm border-l-4 ${isLowStock ? 'border-l-amber-500 bg-amber-50/50' : 'border-l-transparent'}`}>
-                                <div className="col-span-4 font-medium flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded bg-white border flex items-center justify-center text-emerald-700 overflow-hidden relative">
-                                        {product.imageUrl ? (
-                                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
-                                        ) : (
-                                            <Package className="w-5 h-5" />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold text-foreground flex items-center gap-2">
-                                            {product.name}
-                                            {isLowStock && (
-                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                                                    <AlertTriangle className="w-3 h-3 mr-1" />
-                                                    Repor ({currentStock}/{product.minStock})
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <div className="font-semibold text-foreground">{product.name}</div>
-                                            <div className="flex flex-wrap gap-2 mt-1">
-                                                {product.activeIngredient && <span className="text-xs text-muted-foreground">{product.activeIngredient}</span>}
-                                                {product.category && <Badge variant="secondary" className="text-[10px] h-4 px-1">{product.category}</Badge>}
+                                    return (
+                                        <div key={product.id} className={`grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors text-sm border-l-4 ${isLowStock ? 'border-l-amber-500 bg-amber-50/50' : 'border-l-transparent'}`}>
+                                            <div className="col-span-4 font-medium flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded bg-white border flex items-center justify-center text-emerald-700 overflow-hidden relative">
+                                                    {product.imageUrl ? (
+                                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
+                                                    ) : (
+                                                        <Package className="w-5 h-5" />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <div className="font-semibold text-foreground flex items-center gap-2">
+                                                        {product.name}
+                                                        {isLowStock && (
+                                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                                                <AlertTriangle className="w-3 h-3 mr-1" />
+                                                                Repor ({currentStock}/{product.minStock})
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex flex-wrap gap-2 mt-1">
+                                                            {product.activeIngredient && <span className="text-xs text-muted-foreground">{product.activeIngredient}</span>}
+                                                            {product.category && <Badge variant="secondary" className="text-[10px] h-4 px-1">{product.category}</Badge>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="col-span-2 font-mono text-xs text-muted-foreground">{product.ean}</div>
+                                            <div className="col-span-2">
+                                                <div className="text-muted-foreground">{product.manufacturer}</div>
+                                                {product.distributor && (
+                                                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80 mt-0.5">
+                                                        <Truck className="w-3 h-3" /> {product.distributor}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="col-span-2 font-bold text-emerald-700">
+                                                {formatCurrency(product.salePrice || 0)}
+                                            </div>
+                                            <div className="col-span-2 text-muted-foreground text-xs">
+                                                {formatCurrency(product.costPrice || 0)}
+                                            </div>
+                                            <div className="col-span-12 md:col-span-1 flex justify-end gap-2">
+                                                <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
+                                                    Editar
+                                                </Button>
+                                                <Button variant="destructive" size="sm" onClick={() => handleDelete(product)}>
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="col-span-2 font-mono text-xs text-muted-foreground">{product.ean}</div>
-                                    <div className="col-span-2">
-                                        <div className="text-muted-foreground">{product.manufacturer}</div>
-                                        {product.distributor && (
-                                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80 mt-0.5">
-                                                <Truck className="w-3 h-3" /> {product.distributor}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="col-span-2 font-bold text-emerald-700">
-                                        {formatCurrency(product.salePrice || 0)}
-                                    </div>
-                                    <div className="col-span-2 text-muted-foreground text-xs">
-                                        {formatCurrency(product.costPrice || 0)}
-                                    </div>
-                                    <div className="col-span-12 md:col-span-1 flex justify-end gap-2">
-                                        <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
-                                            Editar
-                                        </Button>
-                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(product)}>
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                                ))
+                                    )
+                                })
                             )}
-                            </div>
                         </div>
+                    </div>
                 </CardContent>
             </Card>
         </div>
