@@ -269,20 +269,9 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label>Produto</Label>
-                      <Button variant="ghost" size="sm" className="h-6 text-emerald-600 gap-1" onClick={() => setIsScannerOpen(true)}>
-                        <Camera className="w-3 h-3" /> Scan
-                      </Button>
-                    </div>
+                    <Label>Produto</Label>
                     <ProductCombobox products={availableProducts} value={selectedProduct} onChange={handleProductSelect} />
                   </div>
-
-                  <BarcodeScanner
-                    isOpen={isScannerOpen}
-                    onClose={() => setIsScannerOpen(false)}
-                    onScan={handleScan}
-                  />
 
                   {stockItemsForProduct.length > 0 && (
                     <div className="space-y-2">

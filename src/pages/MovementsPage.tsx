@@ -27,20 +27,14 @@ interface MovementBatch {
     numberOfItems: number;
 }
 
-import { BarcodeScanner } from '@/components/BarcodeScanner';
-import { Camera } from 'lucide-react';
-
-export const MovementsPage = ({ user }: { user: any }) => { // Accept user prop if available, otherwise assume global or handle inside
+export const MovementsPage = ({ user }: { user: any }) => {
     const [selectedTab, setSelectedTab] = useState('entry');
     const [selectedFilial, setSelectedFilial] = useState('');
     const [selectedProduct, setSelectedProduct] = useState('');
-    const [selectedLote, setSelectedLote] = useState(''); // For Exit: ID of stockItem, For Entry: String text
+    const [selectedLote, setSelectedLote] = useState('');
     const [quantity, setQuantity] = useState('');
-    const [expirationDate, setExpirationDate] = useState(''); // Only active for Entry or Manual Override
+    const [expirationDate, setExpirationDate] = useState('');
     const [notes, setNotes] = useState('');
-
-    // Scanner
-    const [isScannerOpen, setIsScannerOpen] = useState(false);
 
     // History & Details State
     const [selectedBatch, setSelectedBatch] = useState<MovementBatch | null>(null);
@@ -316,93 +310,81 @@ export const MovementsPage = ({ user }: { user: any }) => { // Accept user prop 
                                                     </Select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <div className="flex items-center justify-between">
-                                                        <Label>Produto</Label>
-                                                        <Button variant="ghost" size="sm" className="h-6 text-emerald-600 gap-1" onClick={() => setIsScannerOpen(true)}>
-                                                            <Camera className="w-3 h-3" /> Scan
-                                                        </Button>
-                                                    </div>
+                                                    <Label>Produto</Label>
                                                     <ProductCombobox
                                                         products={products}
                                                         value={selectedProduct}
                                                         onChange={setSelectedProduct}
                                                     />
                                                 </div>
-                                            </div>
 
-                                            <BarcodeScanner
-                                                isOpen={isScannerOpen}
-                                                onClose={() => setIsScannerOpen(false)}
-                                                onScan={handleScan}
-                                            />
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="space-y-2">
-                                                    <Label>Lote</Label>
-                                                    {selectedTab === 'exit' ? (
-                                                        <Select value={selectedLote} onValueChange={handleLoteSelect} disabled={!selectedProduct || !selectedFilial}>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder={!selectedProduct ? "Selecione prod e filial" : "Selecione o lote"} />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {availableStock.length === 0 ? (
-                                                                    <SelectItem value="none" disabled>Sem estoque disponível</SelectItem>
-                                                                ) : (
-                                                                    availableStock.map(item => (
-                                                                        <SelectItem key={item.id} value={item.id}>
-                                                                            {item.lote} (Qtd: {item.quantity})
-                                                                        </SelectItem>
-                                                                    ))
-                                                                )}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    ) : (
-                                                        <Input
-                                                            placeholder="Digite o N° do lote"
-                                                            value={selectedLote}
-                                                            onChange={(e) => setSelectedLote(e.target.value)}
-                                                        />
-                                                    )}
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Data de Validade</Label>
-                                                    <div className="relative">
-                                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                                        <Input
-                                                            type="date"
-                                                            className="pl-9"
-                                                            value={expirationDate}
-                                                            onChange={(e) => setExpirationDate(e.target.value)}
-                                                            disabled={selectedTab === 'exit'} // Auto-filled on exit
-                                                        />
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="space-y-2">
+                                                        <Label>Lote</Label>
+                                                        {selectedTab === 'exit' ? (
+                                                            <Select value={selectedLote} onValueChange={handleLoteSelect} disabled={!selectedProduct || !selectedFilial}>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder={!selectedProduct ? "Selecione prod e filial" : "Selecione o lote"} />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {availableStock.length === 0 ? (
+                                                                        <SelectItem value="none" disabled>Sem estoque disponível</SelectItem>
+                                                                    ) : (
+                                                                        availableStock.map(item => (
+                                                                            <SelectItem key={item.id} value={item.id}>
+                                                                                {item.lote} (Qtd: {item.quantity})
+                                                                            </SelectItem>
+                                                                        ))
+                                                                    )}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        ) : (
+                                                            <Input
+                                                                placeholder="Digite o N° do lote"
+                                                                value={selectedLote}
+                                                                onChange={(e) => setSelectedLote(e.target.value)}
+                                                            />
+                                                        )}
                                                     </div>
-                                                    {selectedTab === 'exit' && <p className="text-xs text-muted-foreground mt-1">Preenchido automaticamente pelo lote</p>}
+                                                    <div className="space-y-2">
+                                                        <Label>Data de Validade</Label>
+                                                        <div className="relative">
+                                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                            <Input
+                                                                type="date"
+                                                                className="pl-9"
+                                                                value={expirationDate}
+                                                                onChange={(e) => setExpirationDate(e.target.value)}
+                                                                disabled={selectedTab === 'exit'} // Auto-filled on exit
+                                                            />
+                                                        </div>
+                                                        {selectedTab === 'exit' && <p className="text-xs text-muted-foreground mt-1">Preenchido automaticamente pelo lote</p>}
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="space-y-2">
-                                                <Label>Quantidade</Label>
-                                                <Input
-                                                    type="number"
-                                                    placeholder="Digite a quantidade"
-                                                    value={quantity}
-                                                    onChange={(e) => setQuantity(e.target.value)}
-                                                />
-                                            </div>
+                                                <div className="space-y-2">
+                                                    <Label>Quantidade</Label>
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="Digite a quantidade"
+                                                        value={quantity}
+                                                        onChange={(e) => setQuantity(e.target.value)}
+                                                    />
+                                                </div>
 
-                                            <div className="space-y-2">
-                                                <Label>Observação (Opcional)</Label>
-                                                <Input
-                                                    placeholder="Motivo da movimentação"
-                                                    value={notes}
-                                                    onChange={(e) => setNotes(e.target.value)}
-                                                />
-                                            </div>
+                                                <div className="space-y-2">
+                                                    <Label>Observação (Opcional)</Label>
+                                                    <Input
+                                                        placeholder="Motivo da movimentação"
+                                                        value={notes}
+                                                        onChange={(e) => setNotes(e.target.value)}
+                                                    />
+                                                </div>
 
-                                            <Button onClick={handleRegister} className={selectedTab === 'entry' ? "w-full bg-emerald-600 hover:bg-emerald-700" : "w-full bg-red-600 hover:bg-red-700"}>
-                                                {selectedTab === 'entry' ? 'Registrar Entrada' : 'Registrar Baixa'}
-                                            </Button>
-                                        </div>
+                                                <Button onClick={handleRegister} className={selectedTab === 'entry' ? "w-full bg-emerald-600 hover:bg-emerald-700" : "w-full bg-red-600 hover:bg-red-700"}>
+                                                    {selectedTab === 'entry' ? 'Registrar Entrada' : 'Registrar Baixa'}
+                                                </Button>
+                                            </div>
                                     </Tabs>
                                 </CardContent>
                             </Card>
