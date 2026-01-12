@@ -18,7 +18,10 @@ export const fetchProducts = async (): Promise<Product[]> => {
         activeIngredient: item.active_ingredient,
         manufacturer: item.manufacturer,
         ean: item.ean,
-        ncm: item.ncm
+        ncm: item.ncm,
+        costPrice: item.cost_price || 0,
+        salePrice: item.sale_price || 0,
+        imageUrl: item.image_url
     }));
 };
 
@@ -132,7 +135,10 @@ export const addProduct = async (product: any) => {
         active_ingredient: product.activeIngredient,
         manufacturer: product.manufacturer,
         ean: product.ean,
-        ncm: product.ncm
+        ncm: product.ncm,
+        cost_price: product.costPrice,
+        sale_price: product.salePrice,
+        image_url: product.imageUrl
     };
 
     if (product.id) {
@@ -208,6 +214,30 @@ export const addMovement = async (movement: any) => {
 
 export const addTransfer = async (transfer: any) => {
     return createTransfer(transfer);
+};
+
+export const fetchMovements = async (): Promise<Movement[]> => {
+    const { data, error } = await supabase
+        .from('movements')
+        .select('*')
+        .order('date', { ascending: false });
+
+    if (error) throw error;
+
+    return data.map((item: any) => ({
+        id: item.id,
+        productId: item.product_id,
+        filialId: item.filial_id,
+        lote: item.lote,
+        type: item.type,
+        quantity: item.quantity,
+        date: item.date,
+        userId: item.user_id,
+        userName: item.user_name,
+        notes: item.notes,
+        nfeNumber: item.nfe_number,
+        transferId: item.transfer_id
+    }));
 };
 
 // Users

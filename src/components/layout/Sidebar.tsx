@@ -29,9 +29,14 @@ export const Sidebar = ({ currentPage, onNavigate, user }: SidebarProps) => {
     return (
         <aside className="w-64 bg-white border-r border-border min-h-screen flex flex-col fixed left-0 top-0 h-full z-50">
             {/* Header */}
-            <div className="p-6 border-b border-border/50">
-                <h1 className="text-2xl font-bold text-primary tracking-tight">PharmaFlow</h1>
-                <p className="text-xs text-muted-foreground mt-1">Centro de Distribuição</p>
+            <div className="h-20 flex items-center px-6 border-b border-border/50 gap-3">
+                <div className="h-10 w-10 flex-shrink-0">
+                    <img src="/logo.png" alt="Mega Farma" className="h-full w-full object-contain" />
+                </div>
+                <div>
+                    <h1 className="text-lg font-extrabold text-[#d32f2f] leading-none tracking-tight">MEGA FARMA</h1>
+                    <p className="text-xs font-semibold text-[#1976d2] tracking-wider">POPULAR</p>
+                </div>
             </div>
 
             {/* Navigation */}

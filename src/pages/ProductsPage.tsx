@@ -17,6 +17,8 @@ import {
 import { fetchProducts, addProduct } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/utils';
+import { MoneyInput } from '@/components/ui/money-input';
 
 export const ProductsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -28,7 +30,10 @@ export const ProductsPage = () => {
         ean: '',
         ncm: '',
         manufacturer: '',
-        activeIngredient: ''
+        activeIngredient: '',
+        costPrice: 0,
+        salePrice: 0,
+        imageUrl: ''
     });
 
     const { toast } = useToast();
@@ -55,7 +60,10 @@ export const ProductsPage = () => {
                 ean: '',
                 ncm: '',
                 manufacturer: '',
-                activeIngredient: ''
+                activeIngredient: '',
+                costPrice: 0,
+                salePrice: 0,
+                imageUrl: ''
             });
         },
         onError: (error: any) => {
@@ -83,7 +91,7 @@ export const ProductsPage = () => {
         createProductMutation.mutate(formData);
     };
 
-    const handleInputChange = (field: string, value: string) => {
+    const handleInputChange = (field: string, value: string | number) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
@@ -189,6 +197,46 @@ export const ProductsPage = () => {
                                         </div>
                                     </div>
                                 </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="costPrice">Preço de Custo (R$)</Label>
+                                        <MoneyInput
+                                            id="costPrice"
+                                            value={formData.costPrice}
+                                            onChange={(val) => handleInputChange('costPrice', val)}
+                                            placeholder="R$ 0,00"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="salePrice">Preço de Venda (R$)</Label>
+                                        <MoneyInput
+                                            id="salePrice"
+                                            value={formData.salePrice}
+                                            onChange={(val) => handleInputChange('salePrice', val)}
+                                            placeholder="R$ 0,00"
+                                            className="font-bold text-emerald-700"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="imageUrl">URL da Imagem do Produto</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="imageUrl"
+                                            value={formData.imageUrl}
+                                            onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+                                            placeholder="https://exemplo.com/imagem.png"
+                                        />
+                                        {formData.imageUrl && (
+                                            <div className="h-10 w-10 border rounded bg-slate-100 flex-shrink-0 relative overflow-hidden">
+                                                <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-[0.8rem] text-muted-foreground">Cole o link de uma imagem da internet.</p>
+                                </div>
                             </div>
                             <DialogFooter>
                                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -225,9 +273,9 @@ export const ProductsPage = () => {
                         <div className="grid grid-cols-12 gap-4 p-4 bg-muted/50 font-medium text-sm text-muted-foreground border-b">
                             <div className="col-span-4">Nome</div>
                             <div className="col-span-2">EAN</div>
-                            <div className="col-span-2">NCM</div>
                             <div className="col-span-2">Fabricante</div>
-                            <div className="col-span-2">Princípio Ativo</div>
+                            <div className="col-span-2">Venda</div>
+                            <div className="col-span-2">Custo</div>
                         </div>
                         <div className="divide-y">
                             {isLoading ? (
@@ -238,18 +286,25 @@ export const ProductsPage = () => {
                                 filteredProducts.map((product) => (
                                     <div key={product.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors text-sm">
                                         <div className="col-span-4 font-medium flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded bg-emerald-100 flex items-center justify-center text-emerald-700">
-                                                <Package className="w-4 h-4" />
+                                            <div className="w-10 h-10 rounded bg-white border flex items-center justify-center text-emerald-700 overflow-hidden relative">
+                                                {product.imageUrl ? (
+                                                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
+                                                ) : (
+                                                    <Package className="w-5 h-5" />
+                                                )}
                                             </div>
-                                            {product.name}
+                                            <div>
+                                                <div className="font-semibold text-foreground">{product.name}</div>
+                                                <div className="text-xs text-muted-foreground">{product.activeIngredient}</div>
+                                            </div>
                                         </div>
-                                        <div className="col-span-2 font-mono text-xs">{product.ean}</div>
-                                        <div className="col-span-2 text-muted-foreground">{product.ncm}</div>
+                                        <div className="col-span-2 font-mono text-xs text-muted-foreground">{product.ean}</div>
                                         <div className="col-span-2 text-muted-foreground">{product.manufacturer}</div>
-                                        <div className="col-span-2">
-                                            <Badge variant="outline" className="font-normal">
-                                                {product.activeIngredient}
-                                            </Badge>
+                                        <div className="col-span-2 font-bold text-emerald-700">
+                                            {formatCurrency(product.salePrice || 0)}
+                                        </div>
+                                        <div className="col-span-2 text-muted-foreground text-xs">
+                                            {formatCurrency(product.costPrice || 0)}
                                         </div>
                                     </div>
                                 ))

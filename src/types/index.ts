@@ -17,10 +17,13 @@ export interface Filial {
 export interface Product {
   id: string;
   name: string;
-  activeIngredient: string;
-  manufacturer: string;
-  ean: string;
-  ncm: string;
+  activeIngredient?: string;
+  manufacturer?: string;
+  ean?: string;
+  ncm?: string;
+  costPrice?: number;
+  salePrice?: number;
+  imageUrl?: string;
 }
 
 export interface StockItem {
