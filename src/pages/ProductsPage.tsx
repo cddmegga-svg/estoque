@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Package, Plus, Search, Barcode, Factory, FileText, Info } from 'lucide-react';
+import { Package, Plus, Search, Barcode, Factory, FileText, Info, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { fetchProducts, addProduct, updateProduct } from '@/services/api';
+import { fetchProducts, addProduct, updateProduct, deleteProduct } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
@@ -70,6 +70,22 @@ export const ProductsPage = () => {
         },
         onError: (error: any) => toast({ variant: 'destructive', title: 'Erro', description: error.message })
     });
+
+    // Delete Product Mutation
+    const deleteProductMutation = useMutation({
+        mutationFn: deleteProduct,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] });
+            toast({ title: 'Produto removido', description: 'O produto foi excluído com sucesso.' });
+        },
+        onError: (error: any) => toast({ variant: 'destructive', title: 'Erro ao excluir', description: error.message })
+    });
+
+    const handleDelete = async (product: any) => {
+        if (window.confirm(`Tem certeza que deseja excluir o produto "${product.name}"?`)) {
+            deleteProductMutation.mutate(product.id);
+        }
+    };
 
     const resetForm = () => {
         setFormData({
@@ -329,9 +345,12 @@ export const ProductsPage = () => {
                                         <div className="col-span-2 text-muted-foreground text-xs">
                                             {formatCurrency(product.costPrice || 0)}
                                         </div>
-                                        <div className="col-span-12 md:col-span-1 flex justify-end">
+                                        <div className="col-span-12 md:col-span-1 flex justify-end gap-2">
                                             <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
                                                 Editar
+                                            </Button>
+                                            <Button variant="destructive" size="sm" onClick={() => handleDelete(product)}>
+                                                <Trash2 className="w-4 h-4" />
                                             </Button>
                                         </div>
                                     </div>

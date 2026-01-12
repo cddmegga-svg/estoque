@@ -7,7 +7,8 @@ export const fetchProducts = async (): Promise<Product[]> => {
     const { data, error } = await supabase
         .from('products')
         .select('*')
-        .order('name');
+        .order('name')
+        .limit(5000);
 
     if (error) throw error;
 
@@ -69,7 +70,8 @@ export const updateFilial = async (id: string, updates: Partial<Filial>) => {
 export const fetchStock = async (): Promise<StockItem[]> => {
     const { data, error } = await supabase
         .from('stock_items')
-        .select('*');
+        .select('*')
+        .limit(5000);
 
     if (error) throw error;
 
@@ -155,6 +157,7 @@ export const addProduct = async (product: any) => {
     return data;
 };
 
+
 export const updateProduct = async (id: string, updates: any) => {
     const productData: any = {};
     if (updates.name) productData.name = updates.name;
@@ -175,6 +178,16 @@ export const updateProduct = async (id: string, updates: any) => {
 
     if (error) throw error;
     return data;
+};
+
+export const deleteProduct = async (id: string) => {
+    const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+    if (error) throw error;
+    return true;
 };
 
 export const addStockItem = async (item: any) => {
