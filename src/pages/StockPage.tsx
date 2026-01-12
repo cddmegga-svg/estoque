@@ -31,10 +31,11 @@ export const StockPage = ({ user }: StockPageProps) => {
     if (searchTerm) {
       filtered = filtered.filter(item => {
         const product = products.find(p => p.id === item.productId);
+        const term = searchTerm.toLowerCase();
         return (
-          product?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product?.activeIngredient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.lote.toLowerCase().includes(searchTerm.toLowerCase())
+          (product?.name || '').toLowerCase().includes(term) ||
+          (product?.activeIngredient || '').toLowerCase().includes(term) ||
+          (item.lote || '').toLowerCase().includes(term)
         );
       });
     }

@@ -34,6 +34,34 @@ export const fetchFiliais = async (): Promise<Filial[]> => {
     return data;
 };
 
+export const addFilial = async (filial: Omit<Filial, 'id'>) => {
+    const { data, error } = await supabase
+        .from('filiais')
+        .insert([{
+            name: filial.name,
+            cnpj: filial.cnpj,
+            address: filial.address,
+            type: filial.type
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const updateFilial = async (id: string, updates: Partial<Filial>) => {
+    const { data, error } = await supabase
+        .from('filiais')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
 // Stock
 export const fetchStock = async (): Promise<StockItem[]> => {
     const { data, error } = await supabase

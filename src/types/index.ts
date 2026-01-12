@@ -11,6 +11,7 @@ export interface Filial {
   name: string;
   cnpj: string;
   address: string;
+  type: 'store' | 'warehouse';
 }
 
 export interface Product {

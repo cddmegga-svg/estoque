@@ -13,15 +13,18 @@ CREATE TABLE filiais (
   name VARCHAR(255) NOT NULL,
   cnpj VARCHAR(18) UNIQUE NOT NULL,
   address TEXT,
+  type VARCHAR(20) NOT NULL CHECK (type IN ('store', 'warehouse')) DEFAULT 'store',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Índices para filiais
 CREATE INDEX idx_filiais_cnpj ON filiais(cnpj);
+CREATE INDEX idx_filiais_type ON filiais(type);
 
 COMMENT ON TABLE filiais IS 'Cadastro das filiais da rede de farmácias';
 COMMENT ON COLUMN filiais.cnpj IS 'CNPJ no formato 00.000.000/0000-00';
+COMMENT ON COLUMN filiais.type IS 'store: loja física | warehouse: centro de distribuição';
 
 
 -- Tabela: Usuários
@@ -378,6 +381,84 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION get_expiring_products IS 'Retorna produtos próximos ao vencimento (padrão: 6 meses)';
 
 
+-- Function: Registrar Venda (PDV)
+CREATE OR REPLACE FUNCTION register_sale(
+  p_filial_id UUID,
+  p_items JSONB, -- Array: [{ "ean": "...", "quantity": 1 }]
+  p_user_id UUID,
+  p_user_name VARCHAR
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_item JSONB;
+  v_product_id UUID;
+  v_stock_item_id UUID;
+  v_quantity INTEGER;
+  v_ean VARCHAR;
+  v_remaining_qty INTEGER;
+  v_deduct_qty INTEGER;
+BEGIN
+  -- Iterar sobre os itens da venda
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    v_ean := v_item->>'ean';
+    v_quantity := (v_item->>'quantity')::INTEGER;
+    v_remaining_qty := v_quantity;
+
+    -- Buscar produto
+    SELECT id INTO v_product_id FROM products WHERE ean = v_ean;
+    
+    IF v_product_id IS NULL THEN
+      RAISE EXCEPTION 'Produto com EAN % não encontrado', v_ean;
+    END IF;
+
+    -- Loop para deduzir de múltiplos lotes se necessário (FIFO)
+    WHILE v_remaining_qty > 0 LOOP
+      -- Buscar lote mais antigo com saldo
+      SELECT id, quantity INTO v_stock_item_id, v_deduct_qty
+      FROM stock_items 
+      WHERE product_id = v_product_id 
+        AND filial_id = p_filial_id 
+        AND quantity > 0
+      ORDER BY expiration_date ASC
+      LIMIT 1;
+
+      IF v_stock_item_id IS NULL THEN
+         RAISE EXCEPTION 'Estoque insuficiente para o produto EAN: %', v_ean;
+      END IF;
+
+      -- Definir quantidade a deduzir deste lote
+      IF v_deduct_qty >= v_remaining_qty THEN
+        v_deduct_qty := v_remaining_qty;
+      END IF;
+
+      -- Atualizar estoque
+      UPDATE stock_items 
+      SET quantity = quantity - v_deduct_qty 
+      WHERE id = v_stock_item_id;
+
+      -- Registrar saída
+      INSERT INTO movements (
+        product_id, filial_id, lote, type, quantity, 
+        user_id, user_name, notes
+      )
+      SELECT 
+        product_id, filial_id, lote, 'exit', v_deduct_qty, 
+        p_user_id, p_user_name, 'Venda PDV'
+      FROM stock_items WHERE id = v_stock_item_id;
+
+      v_remaining_qty := v_remaining_qty - v_deduct_qty;
+    END LOOP;
+
+  END LOOP;
+
+  RETURN jsonb_build_object('status', 'success', 'message', 'Venda registrada com sucesso');
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION register_sale IS 'Registra venda do PDV, baixando estoque automaticamente (FIFO)';
+
+
 -- Function: Obter Valor Total do Estoque por Filial
 CREATE OR REPLACE FUNCTION get_stock_value_by_filial(p_filial_id UUID DEFAULT NULL)
 RETURNS TABLE (
@@ -644,10 +725,12 @@ CREATE POLICY "Admins can manage nfe imports"
 -- ============================================================================
 
 -- Inserir filiais (Usando UUIDs válidos gerados)
-INSERT INTO filiais (id, name, cnpj, address) VALUES
-  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Filial Centro', '12.345.678/0001-01', 'Rua Principal, 100 - Centro'),
-  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'Filial Jardins', '12.345.678/0002-02', 'Av. das Flores, 250 - Jardins'),
-  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'Filial Shopping', '12.345.678/0003-03', 'Shopping Center, Loja 45 - Zona Sul');
+-- Inserir filiais (Usando UUIDs válidos gerados)
+INSERT INTO filiais (id, name, cnpj, address, type) VALUES
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Filial Centro', '12.345.678/0001-01', 'Rua Principal, 100 - Centro', 'store'),
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'Filial Jardins', '12.345.678/0002-02', 'Av. das Flores, 250 - Jardins', 'store'),
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'Filial Shopping', '12.345.678/0003-03', 'Shopping Center, Loja 45 - Zona Sul', 'store'),
+  ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', 'CD Central', '12.345.678/0004-04', 'Via Industrial, 5000 - Distrito Ind.', 'warehouse');
 
 -- Inserir usuários
 INSERT INTO users (id, name, email, role, filial_id) VALUES
