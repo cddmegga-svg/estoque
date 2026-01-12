@@ -54,27 +54,6 @@ interface TransferBatch {
   items: Transfer[];
   totalItems: number;
 }
-// ...
-// Inside groupedTransfers
-userName: t.userName,
-  notes: t.notes, // Capture notes
-    items: [],
-      totalItems: 0
-        // ...
-        // Inside Dialog Details
-        < div className = "grid grid-cols-2 gap-4 text-sm" >
-                    <div><span className="font-bold">De:</span> {getFilialName(selectedBatch.fromFilialId)}</div>
-                    <div><span className="font-bold">Para:</span> {getFilialName(selectedBatch.toFilialId)}</div>
-                    <div><span className="font-bold">Responsável:</span> {selectedBatch.userName}</div>
-                    <div className="col-span-2"><span className="font-bold">Obs:</span> {selectedBatch.notes || '-'}</div>
-                  </div >
-  // ...
-  // Inside Print Template
-  <div className="mb-6 grid grid-cols-2 gap-4">
-    <div><p className="font-bold text-xs uppercase text-gray-500">Origem</p><p>{getFilialName(selectedBatch.fromFilialId)}</p></div>
-    <div><p className="font-bold text-xs uppercase text-gray-500">Destino</p><p>{getFilialName(selectedBatch.toFilialId)}</p></div>
-    <div className="col-span-2"><p className="font-bold text-xs uppercase text-gray-500">Observações</p><p>{selectedBatch.notes || '-'}</p></div>
-  </div>
 
 export const TransfersPage = ({ user }: TransfersPageProps) => {
   // Current Selection State
@@ -140,6 +119,7 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
           fromFilialId: t.fromFilialId,
           toFilialId: t.toFilialId,
           userName: t.userName,
+          notes: t.notes, // Capture notes
           items: [],
           totalItems: 0
         };
