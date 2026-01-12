@@ -1,8 +1,10 @@
-import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { User } from '@/types';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useState } from 'react';
 
 interface SidebarProps {
     currentPage: string;
@@ -10,7 +12,7 @@ interface SidebarProps {
     user: User | null;
 }
 
-export const Sidebar = ({ currentPage, onNavigate, user }: SidebarProps) => {
+const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClose }: SidebarProps & { isMobile?: boolean, onClose?: () => void }) => {
     const { signOut } = useAuth();
     const isAdmin = user?.role === 'admin';
 
@@ -27,9 +29,9 @@ export const Sidebar = ({ currentPage, onNavigate, user }: SidebarProps) => {
     }
 
     return (
-        <aside className="w-64 bg-white border-r border-border min-h-screen flex flex-col fixed left-0 top-0 h-full z-50">
+        <div className="flex flex-col h-full bg-white">
             {/* Header */}
-            <div className="h-20 flex items-center px-6 border-b border-border/50 gap-3">
+            <div className="h-20 flex items-center px-6 border-b border-border/50 gap-3 flex-shrink-0">
                 <div className="h-10 w-10 flex-shrink-0">
                     <img src="/logo.png" alt="Mega Farma" className="h-full w-full object-contain" />
                 </div>
@@ -40,7 +42,7 @@ export const Sidebar = ({ currentPage, onNavigate, user }: SidebarProps) => {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-6 px-3 space-y-1">
+            <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = currentPage === item.id;
@@ -48,7 +50,10 @@ export const Sidebar = ({ currentPage, onNavigate, user }: SidebarProps) => {
                     return (
                         <button
                             key={item.id}
-                            onClick={() => onNavigate(item.id)}
+                            onClick={() => {
+                                onNavigate(item.id);
+                                if (isMobile && onClose) onClose();
+                            }}
                             className={cn(
                                 'w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all',
                                 isActive
@@ -64,7 +69,7 @@ export const Sidebar = ({ currentPage, onNavigate, user }: SidebarProps) => {
             </nav>
 
             {/* Footer / User Profile */}
-            <div className="p-4 border-t border-border/50 bg-slate-50/50">
+            <div className="p-4 border-t border-border/50 bg-slate-50/50 flex-shrink-0">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
                         {user?.name?.charAt(0) || 'U'}
@@ -86,6 +91,40 @@ export const Sidebar = ({ currentPage, onNavigate, user }: SidebarProps) => {
                     Sair
                 </Button>
             </div>
+        </div>
+    );
+};
+
+export const Sidebar = (props: SidebarProps) => {
+    return (
+        <aside className="w-64 border-r border-border min-h-screen hidden lg:flex flex-col fixed left-0 top-0 h-full z-50 bg-white shadow-sm">
+            <SidebarContent {...props} />
         </aside>
     );
 };
+
+export const MobileHeader = (props: SidebarProps) => {
+    const [open, setOpen] = useState(false);
+
+    return (
+        <div className="lg:hidden h-16 border-b bg-white flex items-center justify-between px-4 sticky top-0 z-40 shadow-sm">
+            <div className="flex items-center gap-2">
+                <div className="h-8 w-8">
+                    <img src="/logo.png" alt="Mega Farma" className="h-full w-full object-contain" />
+                </div>
+                <span className="font-bold text-lg text-emerald-800">PharmaFlow mobile</span>
+            </div>
+
+            <Sheet open={open} onOpenChange={setOpen}>
+                <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Menu className="w-6 h-6" />
+                    </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-72">
+                    <SidebarContent {...props} isMobile={true} onClose={() => setOpen(false)} />
+                </SheetContent>
+            </Sheet>
+        </div>
+    );
+}

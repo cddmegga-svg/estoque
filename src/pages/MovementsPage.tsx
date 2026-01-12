@@ -27,6 +27,9 @@ interface MovementBatch {
     numberOfItems: number;
 }
 
+import { BarcodeScanner } from '@/components/BarcodeScanner';
+import { Camera } from 'lucide-react';
+
 export const MovementsPage = ({ user }: { user: any }) => { // Accept user prop if available, otherwise assume global or handle inside
     const [selectedTab, setSelectedTab] = useState('entry');
     const [selectedFilial, setSelectedFilial] = useState('');
@@ -35,6 +38,9 @@ export const MovementsPage = ({ user }: { user: any }) => { // Accept user prop 
     const [quantity, setQuantity] = useState('');
     const [expirationDate, setExpirationDate] = useState(''); // Only active for Entry or Manual Override
     const [notes, setNotes] = useState('');
+
+    // Scanner
+    const [isScannerOpen, setIsScannerOpen] = useState(false);
 
     // History & Details State
     const [selectedBatch, setSelectedBatch] = useState<MovementBatch | null>(null);
@@ -108,6 +114,16 @@ export const MovementsPage = ({ user }: { user: any }) => { // Accept user prop 
     // Helper: Names
     const getProductName = (id: string) => products.find(p => p.id === id)?.name || 'Produto desconhecido';
     const getFilialName = (id: string) => filiais.find(f => f.id === id)?.name || 'Filial desconhecida';
+
+    const handleScan = (code: string) => {
+        const product = products.find(p => p.ean === code);
+        if (product) {
+            setSelectedProduct(product.id);
+            toast({ title: 'Produto encontrado', description: `${product.name} selecionado.` });
+        } else {
+            toast({ variant: 'destructive', title: 'Não encontrado', description: `Nenhum produto com EAN ${code}` });
+        }
+    };
 
 
     const handleRegister = async () => {
@@ -300,7 +316,12 @@ export const MovementsPage = ({ user }: { user: any }) => { // Accept user prop 
                                                     </Select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label>Produto</Label>
+                                                    <div className="flex items-center justify-between">
+                                                        <Label>Produto</Label>
+                                                        <Button variant="ghost" size="sm" className="h-6 text-emerald-600 gap-1" onClick={() => setIsScannerOpen(true)}>
+                                                            <Camera className="w-3 h-3" /> Scan
+                                                        </Button>
+                                                    </div>
                                                     <ProductCombobox
                                                         products={products}
                                                         value={selectedProduct}
@@ -308,6 +329,12 @@ export const MovementsPage = ({ user }: { user: any }) => { // Accept user prop 
                                                     />
                                                 </div>
                                             </div>
+
+                                            <BarcodeScanner
+                                                isOpen={isScannerOpen}
+                                                onClose={() => setIsScannerOpen(false)}
+                                                onScan={handleScan}
+                                            />
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <div className="space-y-2">

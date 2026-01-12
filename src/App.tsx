@@ -10,7 +10,7 @@ import { TransfersPage } from './pages/TransfersPage';
 import { MovementsPage } from './pages/MovementsPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { AdminPage } from './pages/AdminPage';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Sidebar, MobileHeader } from '@/components/layout/Sidebar';
 import { Toaster } from '@/components/ui/toaster';
 
 function App() {
@@ -57,7 +57,7 @@ function App() {
       case 'products':
         return <ProductsPage />;
       case 'movements':
-        return <MovementsPage />;
+        return <MovementsPage user={user} />;
       case 'admin':
         return user.role === 'admin' ? <AdminPage currentUser={user} /> : <div className="text-center py-12 text-muted-foreground">Acesso restrito a administradores</div>;
       default:
@@ -66,16 +66,23 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar - Fixed width */}
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      {/* Mobile Header */}
+      <MobileHeader
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        user={user}
+      />
+
+      {/* Desktop Sidebar */}
       <Sidebar
         currentPage={currentPage}
         onNavigate={setCurrentPage}
         user={user}
       />
 
-      {/* Main Content - Computed margin to account for fixed sidebar */}
-      <main className="flex-1 ml-64 p-8 overflow-y-auto h-screen">
+      {/* Main Content */}
+      <main className="flex-1 lg:ml-64 p-4 lg:p-8 overflow-y-auto h-[calc(100vh-64px)] lg:h-screen">
         <div className="max-w-7xl mx-auto">
           {renderPage()}
         </div>
