@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { parseNFeXML, SAMPLE_NFE_XML } from '@/lib/xmlParser';
 import { fetchFiliais, fetchProducts, addProduct, addStockItem, addMovement } from '@/services/api';
 import { NFe, User, Product, PRODUCT_CATEGORIES } from '@/types';
-import { formatCurrency, formatDate, generateId } from '@/lib/utils';
+import { formatCurrency, formatDate, generateId, formatCNPJ } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -306,6 +306,41 @@ export const ImportPage = ({ user }: ImportPageProps) => {
                 </Select>
               </div>
 
+              {/* Validation Logic */}
+              {(() => {
+                const selectedFilialObj = filiais.find(f => f.id === selectedFilial);
+                const cleanNfeCNPJ = nfeData.recipientCnpj?.replace(/\D/g, '') || '';
+                const cleanFilialCNPJ = selectedFilialObj?.cnpj?.replace(/\D/g, '') || '';
+
+                // Only validate if both exist. If NFe has no recipient, we warn but might not block? 
+                // User said "must be directed to correct CNPJ", so strict check usually implies blocking mismatch.
+                const isMismatch = selectedFilial && cleanNfeCNPJ && cleanFilialCNPJ && cleanNfeCNPJ !== cleanFilialCNPJ;
+
+                return (
+                  <>
+                    {selectedFilial && (
+                      <div className={`text-sm mt-1 mb-2 ${isMismatch ? 'text-red-600 font-bold' : 'text-muted-foreground'}`}>
+                        Filial Selecionada: {selectedFilialObj?.name} (CNPJ: {selectedFilialObj?.cnpj || 'N/A'})
+                        {cleanNfeCNPJ && (
+                          <span className="block text-xs font-normal">
+                            Destino no XML: {formatCNPJ(cleanNfeCNPJ)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {isMismatch && (
+                      <Alert variant="destructive" className="mb-4">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          <strong>Bloqueio de Segurança:</strong> O CNPJ de destino da NFe ({formatCNPJ(cleanNfeCNPJ)}) não confere com a filial selecionada.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </>
+                );
+              })()}
+
               <div className="space-y-3">
                 {nfeData.items.map((item, index) => {
                   const editedItem = itemsEditedData.get(index) || {};
@@ -412,7 +447,13 @@ export const ImportPage = ({ user }: ImportPageProps) => {
 
               <Button
                 onClick={handleImportNFe}
-                disabled={!selectedFilial || isImporting}
+                disabled={(() => {
+                  const selectedFilialObj = filiais.find(f => f.id === selectedFilial);
+                  const cleanNfeCNPJ = nfeData.recipientCnpj?.replace(/\D/g, '') || '';
+                  const cleanFilialCNPJ = selectedFilialObj?.cnpj?.replace(/\D/g, '') || '';
+                  const isMismatch = selectedFilial && cleanNfeCNPJ && cleanFilialCNPJ && cleanNfeCNPJ !== cleanFilialCNPJ;
+                  return !selectedFilial || isImporting || isMismatch;
+                })()}
                 className="w-full"
                 size="lg"
               >

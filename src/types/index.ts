@@ -99,5 +99,6 @@ export interface NFe {
   date: string;
   supplier: string;
   cnpj: string;
+  recipientCnpj: string;
   items: NFeItem[];
 }

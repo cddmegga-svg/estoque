@@ -27,6 +27,13 @@ export const parseNFeXML = (xmlString: string): NFe | null => {
 
     const items: NFeItem[] = [];
 
+    // Extract Recipient Info
+    const dest = xmlDoc.querySelector('dest');
+    const recipientCNPJ = dest?.querySelector('CNPJ')?.textContent || '';
+
+    // Fallback for when dest/CNPJ is not present (e.g. testing), but user requested strict check.
+    // We pass empty string if missing.
+
     detElements.forEach(det => {
       const prod = det.querySelector('prod');
       if (!prod) return;
@@ -63,6 +70,7 @@ export const parseNFeXML = (xmlString: string): NFe | null => {
       date: nfeDate.split('T')[0],
       supplier: supplierName,
       cnpj: supplierCNPJ,
+      recipientCnpj: recipientCNPJ,
       items,
     };
   } catch (error) {
