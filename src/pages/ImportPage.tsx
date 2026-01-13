@@ -223,12 +223,28 @@ export const ImportPage = ({ user }: ImportPageProps) => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Upload de Arquivo XML</CardTitle>
-          <CardDescription>Selecione um arquivo XML de Nota Fiscal Eletrônica (NFe) padrão Brasil</CardDescription>
+          <CardTitle>Dados de Entrada</CardTitle>
+          <CardDescription>Selecione a Filial de destino e o arquivo XML</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="xml-file">Arquivo XML</Label>
+            <Label>Filial de Destino *</Label>
+            <Select value={selectedFilial} onValueChange={setSelectedFilial} disabled={isImporting}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a filial..." />
+              </SelectTrigger>
+              <SelectContent>
+                {filiais.map(filial => (
+                  <SelectItem key={filial.id} value={filial.id}>
+                    {filial.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="xml-file">Arquivo XML (NFe)</Label>
             <div className="flex gap-2">
               <Input
                 id="xml-file"
@@ -236,13 +252,37 @@ export const ImportPage = ({ user }: ImportPageProps) => {
                 accept=".xml"
                 onChange={handleFileUpload}
                 className="flex-1"
-                disabled={isImporting}
+                disabled={isImporting || !selectedFilial}
               />
-              <Button variant="outline" onClick={handleUseSampleXML} disabled={isImporting}>
+              <Button variant="outline" onClick={handleUseSampleXML} disabled={isImporting || !selectedFilial}>
                 Usar Exemplo
               </Button>
             </div>
+            {!selectedFilial && <p className="text-xs text-muted-foreground text-orange-600">Selecione uma filial para habilitar o upload.</p>}
           </div>
+
+          {/* Validation Logic */}
+          {(() => {
+            const selectedFilialObj = filiais.find(f => f.id === selectedFilial);
+            const cleanNfeCNPJ = nfeData?.recipientCnpj?.replace(/\D/g, '') || '';
+            const cleanFilialCNPJ = selectedFilialObj?.cnpj?.replace(/\D/g, '') || '';
+
+            // Check mismatch only if both are present
+            const isMismatch = selectedFilial && nfeData && cleanNfeCNPJ && cleanFilialCNPJ && cleanNfeCNPJ !== cleanFilialCNPJ;
+
+            return (
+              <>
+                {isMismatch && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Bloqueio de Segurança:</strong> O CNPJ de destino da NFe ({formatCNPJ(cleanNfeCNPJ)}) não confere com a filial selecionada ({selectedFilialObj?.name}).
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </>
+            );
+          })()}
 
           {error && (
             <Alert variant="destructive">
@@ -290,57 +330,6 @@ export const ImportPage = ({ user }: ImportPageProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Filial de Destino</Label>
-                <Select value={selectedFilial} onValueChange={setSelectedFilial}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a filial" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filiais.map(filial => (
-                      <SelectItem key={filial.id} value={filial.id}>
-                        {filial.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Validation Logic */}
-              {(() => {
-                const selectedFilialObj = filiais.find(f => f.id === selectedFilial);
-                const cleanNfeCNPJ = nfeData.recipientCnpj?.replace(/\D/g, '') || '';
-                const cleanFilialCNPJ = selectedFilialObj?.cnpj?.replace(/\D/g, '') || '';
-
-                // Only validate if both exist. If NFe has no recipient, we warn but might not block? 
-                // User said "must be directed to correct CNPJ", so strict check usually implies blocking mismatch.
-                const isMismatch = selectedFilial && cleanNfeCNPJ && cleanFilialCNPJ && cleanNfeCNPJ !== cleanFilialCNPJ;
-
-                return (
-                  <>
-                    {selectedFilial && (
-                      <div className={`text-sm mt-1 mb-2 ${isMismatch ? 'text-red-600 font-bold' : 'text-muted-foreground'}`}>
-                        Filial Selecionada: {selectedFilialObj?.name} (CNPJ: {selectedFilialObj?.cnpj || 'N/A'})
-                        {cleanNfeCNPJ && (
-                          <span className="block text-xs font-normal">
-                            Destino no XML: {formatCNPJ(cleanNfeCNPJ)}
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {isMismatch && (
-                      <Alert variant="destructive" className="mb-4">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          <strong>Bloqueio de Segurança:</strong> O CNPJ de destino da NFe ({formatCNPJ(cleanNfeCNPJ)}) não confere com a filial selecionada.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </>
-                );
-              })()}
-
               <div className="space-y-3">
                 {nfeData.items.map((item, index) => {
                   const editedItem = itemsEditedData.get(index) || {};
