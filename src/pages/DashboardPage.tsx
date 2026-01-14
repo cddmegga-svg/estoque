@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { Package, Building2, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Package, Building2, AlertTriangle, TrendingUp, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExpirationAlert } from '@/components/features/ExpirationAlert';
-import { fetchStock, fetchProducts, fetchFiliais } from '@/services/api'; // Use API
+import { fetchStock, fetchProducts, fetchFiliais, fetchPayables } from '@/services/api'; // Use API
 import { isExpiringSoon, formatCurrency } from '@/lib/utils';
 import { User } from '@/types';
 import { useQuery } from '@tanstack/react-query';
@@ -34,6 +34,35 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
       stockByFilial,
     };
   }, [stock, products, filiais]);
+
+  // Financial Stats
+  const { data: payables = [] } = useQuery({ queryKey: ['payables'], queryFn: fetchPayables });
+
+  const financialStats = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const next7Days = new Date(today);
+    next7Days.setDate(today.getDate() + 7);
+
+    const dueSoon = payables.filter(p => {
+      if (p.status !== 'pending') return false;
+      const due = new Date(p.dueDate);
+      return due >= today && due <= next7Days;
+    });
+
+    const totalDueSoon = dueSoon.reduce((acc, curr) => acc + curr.amount, 0);
+    const overdueCount = payables.filter(p => {
+      if (p.status !== 'pending') return false;
+      const due = new Date(p.dueDate);
+      // Fix timezone comparison properly or just simple string check if formats aligned
+      // p.dueDate is YYYY-MM-DD string.
+      // new Date("2025-01-01") is usually UTC or local 00:00.
+      // We can compare timestamps.
+      return due < today;
+    }).length;
+
+    return { totalDueSoon, countDueSoon: dueSoon.length, overdueCount };
+  }, [payables]);
 
   return (
     <div className="space-y-6">
@@ -99,6 +128,23 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
           <CardContent>
             <div className="text-3xl font-bold text-warning">{stats.expiringItems.length}</div>
             <p className="text-xs text-muted-foreground mt-1">Itens em até 6 meses</p>
+          </CardContent>
+        </Card>
+
+        {/* Financial Widget */}
+        <Card className={financialStats.overdueCount > 0 ? "border-red-400 bg-red-50/10" : "border-blue-200"}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardDescription>Contas a Pagar (7 dias)</CardDescription>
+              <DollarSign className="w-4 h-4 text-emerald-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-emerald-700">{formatCurrency(financialStats.totalDueSoon)}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {financialStats.countDueSoon} a vencer
+              {financialStats.overdueCount > 0 && <span className="text-destructive font-bold ml-1">({financialStats.overdueCount} atrasadas)</span>}
+            </p>
           </CardContent>
         </Card>
       </div>

@@ -19,6 +19,7 @@ import { fetchProducts, addProduct, updateProduct, deleteProduct, fetchStock } f
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
+import { calculateSmartPrice, calculateMargin } from '@/lib/pricingUtils';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -38,7 +39,13 @@ export const ProductsPage = () => {
         imageUrl: '',
         category: '',
         distributor: '',
-        minStock: 0
+        minStock: 0,
+        profitMargin: 30, // Default 30%
+        taxCfop: '',
+        taxIcms: 0,
+        taxPis: 0,
+        taxCofins: 0,
+        taxIpi: 0
     });
 
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -118,7 +125,13 @@ export const ProductsPage = () => {
             imageUrl: '',
             category: '',
             distributor: '',
-            minStock: 0
+            minStock: 0,
+            profitMargin: 30,
+            taxCfop: '',
+            taxIcms: 0,
+            taxPis: 0,
+            taxCofins: 0,
+            taxIpi: 0
         });
         setEditingId(null);
     };
@@ -135,7 +148,13 @@ export const ProductsPage = () => {
             imageUrl: product.imageUrl || '',
             category: product.category || '',
             distributor: product.distributor || '',
-            minStock: product.minStock || 0
+            minStock: product.minStock || 0,
+            profitMargin: product.profitMargin || 30,
+            taxCfop: product.taxCfop || '',
+            taxIcms: product.taxIcms || 0,
+            taxPis: product.taxPis || 0,
+            taxCofins: product.taxCofins || 0,
+            taxIpi: product.taxIpi || 0
         });
         setEditingId(product.id);
         setIsDialogOpen(true);
@@ -317,22 +336,49 @@ export const ProductsPage = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="costPrice">Preço de Custo (R$)</Label>
                                         <MoneyInput
                                             id="costPrice"
                                             value={formData.costPrice}
-                                            onChange={(val) => handleInputChange('costPrice', val)}
+                                            onChange={(val) => {
+                                                const cost = val;
+                                                const margin = formData.profitMargin;
+                                                const newPrice = calculateSmartPrice(cost, margin);
+                                                setFormData(prev => ({ ...prev, costPrice: cost, salePrice: newPrice }));
+                                            }}
                                             placeholder="R$ 0,00"
                                         />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="profitMargin">Margem (%)</Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="profitMargin"
+                                                type="number"
+                                                value={formData.profitMargin}
+                                                onChange={(e) => {
+                                                    const margin = parseFloat(e.target.value) || 0;
+                                                    const newPrice = calculateSmartPrice(formData.costPrice, margin);
+                                                    setFormData(prev => ({ ...prev, profitMargin: margin, salePrice: newPrice }));
+                                                }}
+                                            />
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">%</span>
+                                        </div>
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="salePrice">Preço de Venda (R$)</Label>
                                         <MoneyInput
                                             id="salePrice"
                                             value={formData.salePrice}
-                                            onChange={(val) => handleInputChange('salePrice', val)}
+                                            onChange={(val) => {
+                                                // Inverse calculation? If user sets price manually, update margin
+                                                const price = val;
+                                                const cost = formData.costPrice;
+                                                const newMargin = calculateMargin(cost, price);
+                                                setFormData(prev => ({ ...prev, salePrice: price, profitMargin: newMargin }));
+                                            }}
                                             placeholder="R$ 0,00"
                                             className="font-bold text-emerald-700"
                                         />

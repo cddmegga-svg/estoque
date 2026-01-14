@@ -11,6 +11,8 @@ import { MovementsPage } from './pages/MovementsPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { AdminPage } from './pages/AdminPage';
 import { Sidebar, MobileHeader } from '@/components/layout/Sidebar';
+import { SuppliersPage } from './pages/SuppliersPage';
+import { FinancialPage } from './pages/FinancialPage';
 import { Toaster } from '@/components/ui/toaster';
 
 function App() {
@@ -58,6 +60,10 @@ function App() {
         return <ProductsPage />;
       case 'movements':
         return <MovementsPage user={user} />;
+      case 'suppliers':
+        return <SuppliersPage />;
+      case 'financial':
+        return <FinancialPage />;
       case 'admin':
         return user.role === 'admin' ? <AdminPage currentUser={user} /> : <div className="text-center py-12 text-muted-foreground">Acesso restrito a administradores</div>;
       default:

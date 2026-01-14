@@ -11,6 +11,7 @@ import { parseNFeXML, SAMPLE_NFE_XML } from '@/lib/xmlParser';
 import { fetchFiliais, fetchProducts, addProduct, addStockItem, addMovement } from '@/services/api';
 import { NFe, User, Product, PRODUCT_CATEGORIES } from '@/types';
 import { formatCurrency, formatDate, generateId, formatCNPJ } from '@/lib/utils';
+import { calculateSmartPrice } from '@/lib/pricingUtils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -128,7 +129,17 @@ export const ImportPage = ({ user }: ImportPageProps) => {
             ean: item.ean,
             ncm: item.ncm,
             category: finalCategory,
-            distributor: finalDistributor
+            distributor: finalDistributor,
+            // Extended Data
+            costPrice: item.unitPrice,
+            profitMargin: editedItem.profitMargin || 30.0,
+            price: editedItem.salePrice || calculateSmartPrice(item.unitPrice, 30.0),
+            taxCfop: item.cfop,
+            taxIcms: item.taxes?.icms,
+            taxPis: item.taxes?.pis,
+            taxCofins: item.taxes?.cofins,
+            taxIpi: item.taxes?.ipi,
+            // Manufacturing Date logic for Stock Item comes later, stored in item/editedItem
           };
 
           await addProduct(newProduct);
@@ -164,6 +175,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
           filialId: selectedFilial,
           lote: finalLote,
           expirationDate: finalExpiration,
+          manufacturingDate: item.manufacturingDate, // From parsed XML
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           entryDate: new Date().toISOString().split('T')[0],
@@ -356,6 +368,51 @@ export const ImportPage = ({ user }: ImportPageProps) => {
                                 <Badge variant="secondary">NCM: {item.ncm}</Badge>
                                 <Badge variant="outline">{item.quantity} unidades</Badge>
                                 <Badge variant="outline">{formatCurrency(item.unitPrice)}/un</Badge>
+                              </div>
+                            </div>
+
+                            {/* Pricing Section */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-slate-50 rounded-md border text-sm">
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Custo Unit. (R$)</Label>
+                                <div className="font-medium">{formatCurrency(item.unitPrice)}</div>
+                              </div>
+                              <div>
+                                <Label htmlFor={`margin-${index}`} className="text-xs">Margem (%)</Label>
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    id={`margin-${index}`}
+                                    type="number"
+                                    className="h-8"
+                                    defaultValue={editedItem.profitMargin || 30}
+                                    onChange={(e) => {
+                                      const margin = parseFloat(e.target.value) || 0;
+                                      const newPrice = calculateSmartPrice(item.unitPrice, margin);
+                                      updateItemData(index, 'profitMargin', margin.toString());
+                                      updateItemData(index, 'salePrice', newPrice.toString());
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <Label htmlFor={`price-${index}`} className="text-xs text-emerald-700 font-bold">Venda Sugerida</Label>
+                                <div className="relative">
+                                  <div className="absolute left-2 top-1.5 text-xs text-muted-foreground">R$</div>
+                                  <Input
+                                    id={`price-${index}`}
+                                    type="number"
+                                    className="h-8 pl-6 font-bold text-emerald-700"
+                                    value={editedItem.salePrice || calculateSmartPrice(item.unitPrice, 30)}
+                                    onChange={(e) => updateItemData(index, 'salePrice', e.target.value)}
+                                  />
+                                </div>
+                              </div>
+                              <div className="col-span-1 md:col-span-3 text-[10px] text-muted-foreground flex gap-4 mt-1 border-t pt-1 border-slate-200">
+                                <span title="Código Fiscal de Operações">CFOP: {item.cfop || '-'}</span>
+                                <span>ICMS: {item.taxes?.icms || 0}%</span>
+                                <span>PIS: {item.taxes?.pis || 0}%</span>
+                                <span>COFINS: {item.taxes?.cofins || 0}%</span>
+                                <span>IPI: {item.taxes?.ipi || 0}%</span>
                               </div>
                             </div>
 

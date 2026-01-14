@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { Product, StockItem, Filial, Transfer, Movement, User } from '@/types';
+import { Product, StockItem, Filial, Transfer, Movement, User, Supplier, AccountPayable } from '@/types';
 
 // Products
 export const fetchProducts = async (): Promise<Product[]> => {
@@ -345,5 +345,115 @@ export const deleteUser = async (id: string) => {
         .delete()
         .eq('id', id);
 
+    if (error) throw error;
+};
+// Suppliers
+export const fetchSuppliers = async (): Promise<Supplier[]> => {
+    const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .order('name');
+
+    if (error) throw error;
+    return data;
+};
+
+export const addSupplier = async (supplier: Omit<Supplier, 'id'>) => {
+    const { data, error } = await supabase
+        .from('suppliers')
+        .insert([supplier])
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+};
+
+export const updateSupplier = async (id: string, updates: Partial<Supplier>) => {
+    const { data, error } = await supabase
+        .from('suppliers')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+};
+
+export const deleteSupplier = async (id: string) => {
+    const { error } = await supabase
+        .from('suppliers')
+        .delete()
+        .eq('id', id);
+    if (error) throw error;
+};
+
+// Financial (Accounts Payable)
+export const fetchPayables = async (): Promise<AccountPayable[]> => {
+    const { data, error } = await supabase
+        .from('accounts_payable')
+        .select('*')
+        .order('due_date', { ascending: true });
+
+    if (error) throw error;
+
+    return data.map((item: any) => ({
+        id: item.id,
+        description: item.description,
+        supplierId: item.supplier_id,
+        entityName: item.entity_name,
+        amount: item.amount,
+        dueDate: item.due_date,
+        status: item.status,
+        barcode: item.barcode,
+        invoiceNumber: item.invoice_number,
+        filialId: item.filial_id,
+        notes: item.notes
+    }));
+};
+
+export const addPayable = async (payable: Omit<AccountPayable, 'id'>) => {
+    const { data, error } = await supabase
+        .from('accounts_payable')
+        .insert([{
+            description: payable.description,
+            supplier_id: payable.supplierId,
+            entity_name: payable.entityName,
+            amount: payable.amount,
+            due_date: payable.dueDate,
+            status: payable.status,
+            barcode: payable.barcode,
+            invoice_number: payable.invoiceNumber,
+            filial_id: payable.filialId,
+            notes: payable.notes
+        }])
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+};
+
+export const updatePayable = async (id: string, updates: Partial<AccountPayable>) => {
+    const dbUpdates: any = { ...updates };
+    if (updates.supplierId !== undefined) dbUpdates.supplier_id = updates.supplierId;
+    if (updates.entityName !== undefined) dbUpdates.entity_name = updates.entityName;
+    if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+    if (updates.invoiceNumber !== undefined) dbUpdates.invoice_number = updates.invoiceNumber;
+    if (updates.filialId !== undefined) dbUpdates.filial_id = updates.filialId;
+
+    const { data, error } = await supabase
+        .from('accounts_payable')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+};
+
+export const deletePayable = async (id: string) => {
+    const { error } = await supabase
+        .from('accounts_payable')
+        .delete()
+        .eq('id', id);
     if (error) throw error;
 };

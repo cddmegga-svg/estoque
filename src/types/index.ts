@@ -27,6 +27,14 @@ export interface Product {
   category?: string;
   distributor?: string;
   minStock?: number;
+
+  // Extended Data
+  profitMargin?: number;
+  taxCfop?: string;
+  taxIcms?: number;
+  taxPis?: number;
+  taxCofins?: number;
+  taxIpi?: number;
 }
 
 export const PRODUCT_CATEGORIES = [
@@ -48,6 +56,7 @@ export interface StockItem {
   filialId: string;
   lote: string;
   expirationDate: string; // ISO date string
+  manufacturingDate?: string; // Data de Fabricação
   quantity: number;
   unitPrice: number;
   entryDate: string; // ISO date string
@@ -92,6 +101,14 @@ export interface NFeItem {
   manufacturer: string;
   lote?: string;
   expirationDate?: string;
+  manufacturingDate?: string;
+  cfop?: string;
+  taxes?: {
+    icms?: number;
+    pis?: number;
+    cofins?: number;
+    ipi?: number;
+  };
 }
 
 export interface NFe {
@@ -101,4 +118,27 @@ export interface NFe {
   cnpj: string;
   recipientCnpj: string;
   items: NFeItem[];
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  cnpj?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+}
+
+export interface AccountPayable {
+  id: string;
+  description: string;
+  supplierId?: string;
+  entityName?: string; // Fornecedor manual/cedente
+  amount: number;
+  dueDate: string; // YYYY-MM-DD
+  status: 'pending' | 'paid' | 'overdue';
+  barcode?: string;
+  invoiceNumber?: string;
+  filialId: string;
+  notes?: string;
 }
