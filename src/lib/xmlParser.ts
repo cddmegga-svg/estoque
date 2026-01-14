@@ -111,6 +111,17 @@ export const parseNFeXML = (xmlString: string): NFe | null => {
       items.push(item);
     });
 
+    // Extract Duplicates (Cobrança)
+    const duplicates: any[] = [];
+    const dupElements = xmlDoc.querySelectorAll('cobr dup');
+    dupElements.forEach(dup => {
+      duplicates.push({
+        number: dup.querySelector('nDup')?.textContent || '',
+        dueDate: dup.querySelector('dVenc')?.textContent || '',
+        value: parseFloat(dup.querySelector('vDup')?.textContent || '0')
+      });
+    });
+
     return {
       number: nfeNumber,
       date: nfeDate.split('T')[0],
@@ -118,6 +129,7 @@ export const parseNFeXML = (xmlString: string): NFe | null => {
       cnpj: supplierCNPJ,
       recipientCnpj: recipientCNPJ,
       items,
+      duplicates
     };
   } catch (error) {
     console.error('Erro ao processar XML:', error);

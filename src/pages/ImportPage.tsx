@@ -8,12 +8,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { parseNFeXML, SAMPLE_NFE_XML } from '@/lib/xmlParser';
-import { fetchFiliais, fetchProducts, addProduct, addStockItem, addMovement } from '@/services/api';
-import { NFe, User, Product, PRODUCT_CATEGORIES } from '@/types';
+import { fetchFiliais, fetchProducts, addProduct, addStockItem, addMovement, addPayable } from '@/services/api';
+import { NFe, User, Product, PRODUCT_CATEGORIES, NFeDuplicate, Supplier } from '@/types';
 import { formatCurrency, formatDate, generateId, formatCNPJ } from '@/lib/utils';
 import { calculateSmartPrice } from '@/lib/pricingUtils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { SupplierFormDialog } from '@/components/forms/SupplierFormDialog';
+import { fetchSuppliers } from '@/services/api';
 
 interface ImportPageProps {
   user: User;
@@ -22,7 +24,14 @@ interface ImportPageProps {
 export const ImportPage = ({ user }: ImportPageProps) => {
   const [nfeData, setNfeData] = useState<NFe | null>(null);
   const [selectedFilial, setSelectedFilial] = useState<string>('');
-  const [itemsEditedData, setItemsEditedData] = useState<Map<number, any>>(new Map());
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+
+  // Supplier & Financial Logic
+  const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
+  const [newSupplierData, setNewSupplierData] = useState<Partial<Supplier>>({});
+  const [extractedBills, setExtractedBills] = useState<(NFeDuplicate & { barcode?: string, include: boolean })[]>([]);
+
+  const [itemsEditedData, setItemsEditedData] = new Map<number, any>();
   const [error, setError] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
@@ -46,6 +55,37 @@ export const ImportPage = ({ user }: ImportPageProps) => {
 
       if (parsedNFe) {
         setNfeData(parsedNFe);
+
+        // 1. Check Supplier
+        const cleanCnpj = parsedNFe.cnpj.replace(/\D/g, '');
+        const existingSupplier = suppliers.find(s => s.cnpj?.replace(/\D/g, '') === cleanCnpj);
+
+        if (!existingSupplier) {
+          setNewSupplierData({
+            name: parsedNFe.supplier,
+            cnpj: parsedNFe.cnpj,
+            // Tentar extrair endereço se possível no futuro
+          });
+          // Delay slightly to let UI render, then show prompt or auto-open
+          toast({
+            title: 'Fornecedor Novo!',
+            description: 'Fornecedor não encontrado. Clique em "Cadastrar" para adicionar.',
+            action: <Button variant="outline" size="sm" onClick={() => setIsSupplierDialogOpen(true)}>Cadastrar</Button>,
+            duration: 10000
+          });
+        }
+
+        // 2. Extract Bills
+        if (parsedNFe.duplicates && parsedNFe.duplicates.length > 0) {
+          setExtractedBills(parsedNFe.duplicates.map(d => ({
+            ...d,
+            barcode: '',
+            include: true // Default to include
+          })));
+        } else {
+          setExtractedBills([]);
+        }
+
         toast({
           title: 'XML importado com sucesso!',
           description: `NFe ${parsedNFe.number} - ${parsedNFe.items.length} itens encontrados`,
@@ -210,9 +250,39 @@ export const ImportPage = ({ user }: ImportPageProps) => {
       });
 
       // Limpar formulário
-      setNfeData(null);
-      setSelectedFilial('');
       setItemsEditedData(new Map());
+
+      // ---------------------------------------------------------
+      // PROCESS FINANCIALS
+      // ---------------------------------------------------------
+      const billsToImport = extractedBills.filter(b => b.include);
+      if (billsToImport.length > 0) {
+        // Find Supplier ID
+        const cleanNfeCnpj = nfeData?.cnpj?.replace(/\D/g, '') || '';
+        const supplier = suppliers.find(s => s.cnpj?.replace(/\D/g, '') === cleanNfeCnpj);
+
+        let billsCount = 0;
+        for (const bill of billsToImport) {
+          await addPayable({
+            description: `Fatura NFe ${nfeData?.number} (${bill.number})`,
+            amount: bill.value,
+            dueDate: bill.dueDate,
+            status: 'pending',
+            filialId: selectedFilial, // Bill goes to the receiving filial
+            supplierId: supplier?.id,
+            entityName: supplier ? supplier.name : nfeData?.supplier,
+            invoiceNumber: nfeData?.number,
+            barcode: bill.barcode,
+            notes: `Importado via XML`
+          });
+          billsCount++;
+        }
+        if (billsCount > 0) {
+          toast({ title: 'Financeiro Atualizado', description: `${billsCount} contas a pagar criadas.` });
+        }
+      }
+
+      setExtractedBills([]); // Clear
 
     } catch (err: any) {
       console.error(err);
@@ -333,6 +403,63 @@ export const ImportPage = ({ user }: ImportPageProps) => {
               </div>
             </CardContent>
           </Card>
+
+          {/* FINANCIALS SECTION */}
+          {extractedBills.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Financeiro / Contas a Pagar</CardTitle>
+                <CardDescription>
+                  Faturas extraídas do XML. Selecione para lançar automaticamente.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {extractedBills.map((bill, idx) => (
+                    <div key={idx} className="flex flex-col md:flex-row gap-4 items-start md:items-center p-3 border rounded-md bg-slate-50">
+                      <div className="flex items-center gap-3 min-w-[150px]">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          checked={bill.include}
+                          onChange={(e) => {
+                            const newBills = [...extractedBills];
+                            newBills[idx].include = e.target.checked;
+                            setExtractedBills(newBills);
+                          }}
+                        />
+                        <div>
+                          <p className="font-semibold text-sm">Fatura {bill.number}</p>
+                          <p className="text-xs text-muted-foreground">{formatDate(bill.dueDate)}</p>
+                        </div>
+                      </div>
+
+                      <div className="font-bold text-emerald-700 min-w-[100px]">
+                        {formatCurrency(bill.value)}
+                      </div>
+
+                      <div className="flex-1 w-full">
+                        <div className="flex gap-2 items-center">
+                          <Label htmlFor={`barcode-${idx}`} className="sr-only">Código de Barras</Label>
+                          <Input
+                            id={`barcode-${idx}`}
+                            placeholder="Código de Barras / Linha Digitável (Opcional)"
+                            value={bill.barcode}
+                            onChange={(e) => {
+                              const newBills = [...extractedBills];
+                              newBills[idx].barcode = e.target.value;
+                              setExtractedBills(newBills);
+                            }}
+                            className="bg-white"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>
@@ -510,6 +637,16 @@ export const ImportPage = ({ user }: ImportPageProps) => {
           </Card>
         </>
       )}
+      <SupplierFormDialog
+        isOpen={isSupplierDialogOpen}
+        onClose={() => setIsSupplierDialogOpen(false)}
+        initialData={newSupplierData}
+        onSuccess={(newSupplier) => {
+          // Refresh suppliers list
+          setSuppliers(prev => [...prev, newSupplier]);
+          // Also update the Suppliers Query cache if needed, handled by invalidateQueries inside dialog
+        }}
+      />
     </div>
   );
 };

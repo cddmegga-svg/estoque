@@ -111,6 +111,12 @@ export interface NFeItem {
   };
 }
 
+export interface NFeDuplicate {
+  number: string;
+  dueDate: string;
+  value: number;
+}
+
 export interface NFe {
   number: string;
   date: string;
@@ -118,6 +124,7 @@ export interface NFe {
   cnpj: string;
   recipientCnpj: string;
   items: NFeItem[];
+  duplicates?: NFeDuplicate[]; // Faturas/Duplicatas
 }
 
 export interface Supplier {

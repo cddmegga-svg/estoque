@@ -13,6 +13,7 @@ import { fetchPayables, addPayable, updatePayable, deletePayable, fetchSuppliers
 import { AccountPayable, Supplier } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { parseBoleto } from '@/lib/boletoParser';
+import { SupplierFormDialog } from '@/components/forms/SupplierFormDialog';
 
 export const FinancialPage = () => {
     const { toast } = useToast();
@@ -24,6 +25,7 @@ export const FinancialPage = () => {
     const [formData, setFormData] = useState<Partial<AccountPayable>>({ status: 'pending' });
     const [boletoCode, setBoletoCode] = useState('');
     const [isProcessingBoleto, setIsProcessingBoleto] = useState(false);
+    const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
 
     // Queries
     const { data: bills = [], isLoading } = useQuery({ queryKey: ['payables'], queryFn: fetchPayables });
@@ -341,26 +343,36 @@ export const FinancialPage = () => {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Fornecedor</Label>
-                                <Select
-                                    value={formData.supplierId || 'manual'}
-                                    onValueChange={(val) => {
-                                        if (val === 'manual') setFormData({ ...formData, supplierId: undefined, entityName: '' });
-                                        else {
-                                            const s = suppliers.find(sup => sup.id === val);
-                                            setFormData({ ...formData, supplierId: val, entityName: s?.name });
-                                        }
-                                    }}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione um fornecedor..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="manual">-- Digitar Manualmente --</SelectItem>
-                                        {suppliers.map(s => (
-                                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="flex gap-2">
+                                    <Select
+                                        value={formData.supplierId || 'manual'}
+                                        onValueChange={(val) => {
+                                            if (val === 'manual') setFormData({ ...formData, supplierId: undefined, entityName: '' });
+                                            else {
+                                                const s = suppliers.find(sup => sup.id === val);
+                                                setFormData({ ...formData, supplierId: val, entityName: s?.name });
+                                            }
+                                        }}
+                                    >
+                                        <SelectTrigger className="flex-1">
+                                            <SelectValue placeholder="Selecione um fornecedor..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="manual">-- Digitar Manualmente --</SelectItem>
+                                            {suppliers.map(s => (
+                                                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Button
+                                        size="icon"
+                                        variant="outline"
+                                        title="Cadastrar Novo Fornecedor"
+                                        onClick={() => setIsSupplierDialogOpen(true)}
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                    </Button>
+                                </div>
                             </div>
 
                             {(!formData.supplierId || formData.supplierId === 'manual') && (
@@ -428,6 +440,19 @@ export const FinancialPage = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <SupplierFormDialog
+                isOpen={isSupplierDialogOpen}
+                onClose={() => setIsSupplierDialogOpen(false)}
+                onSuccess={(newSupplier) => {
+                    // Auto-select the new supplier
+                    setFormData(prev => ({
+                        ...prev,
+                        supplierId: newSupplier.id,
+                        entityName: newSupplier.name
+                    }));
+                }}
+            />
         </div>
     );
 };
