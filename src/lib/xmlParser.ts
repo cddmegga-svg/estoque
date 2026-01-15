@@ -113,7 +113,11 @@ export const parseNFeXML = (xmlString: string): NFe | null => {
 
     // Extract Duplicates (Cobrança)
     const duplicates: any[] = [];
-    const dupElements = xmlDoc.querySelectorAll('cobr dup');
+    // Try multiple selectors for nested duplicatas
+    let dupElements = xmlDoc.querySelectorAll('dup');
+    if (dupElements.length === 0) dupElements = xmlDoc.querySelectorAll('cobr dup');
+    if (dupElements.length === 0) dupElements = xmlDoc.querySelectorAll('cobr > dup');
+
     dupElements.forEach(dup => {
       duplicates.push({
         number: dup.querySelector('nDup')?.textContent || '',

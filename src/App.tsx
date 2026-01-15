@@ -66,6 +66,7 @@ function App() {
       case 'financial':
         return <FinancialPage user={user} />;
       case 'purchaseRequests':
+      case 'orders': // Match sidebar 'orders' id
         return <PurchaseRequestsPage user={user} />;
       case 'admin':
         return user.role === 'admin' ? <AdminPage currentUser={user} /> : <div className="text-center py-12 text-muted-foreground">Acesso restrito a administradores</div>;

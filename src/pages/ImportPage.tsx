@@ -31,7 +31,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
   const [newSupplierData, setNewSupplierData] = useState<Partial<Supplier>>({});
   const [extractedBills, setExtractedBills] = useState<(NFeDuplicate & { barcode?: string, include: boolean })[]>([]);
 
-  const [itemsEditedData, setItemsEditedData] = new Map<number, any>();
+  const [itemsEditedData, setItemsEditedData] = useState<Map<number, any>>(new Map());
   const [error, setError] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
@@ -345,12 +345,13 @@ export const ImportPage = ({ user }: ImportPageProps) => {
 
           {/* Validation Logic */}
           {(() => {
+            if (!nfeData) return null; // Safe return
             const selectedFilialObj = filiais.find(f => f.id === selectedFilial);
             const cleanNfeCNPJ = nfeData?.recipientCnpj?.replace(/\D/g, '') || '';
             const cleanFilialCNPJ = selectedFilialObj?.cnpj?.replace(/\D/g, '') || '';
 
             // Check mismatch only if both are present
-            const isMismatch = selectedFilial && nfeData && cleanNfeCNPJ && cleanFilialCNPJ && cleanNfeCNPJ !== cleanFilialCNPJ;
+            const isMismatch = selectedFilial && cleanNfeCNPJ && cleanFilialCNPJ && cleanNfeCNPJ !== cleanFilialCNPJ;
 
             return (
               <>
