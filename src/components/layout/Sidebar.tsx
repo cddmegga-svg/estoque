@@ -14,21 +14,39 @@ interface SidebarProps {
 
 const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClose }: SidebarProps & { isMobile?: boolean, onClose?: () => void }) => {
     const { signOut } = useAuth();
-    const isAdmin = user?.role === 'admin';
+    // Role-based Menu Logic
+    const role = user?.role || 'viewer';
+    const canManageFn = ['admin'].includes(role);
+    const canManageStock = ['admin', 'manager', 'stock'].includes(role);
+    const canImport = ['admin', 'manager', 'stock'].includes(role);
+    const canViewReports = ['admin', 'manager'].includes(role);
 
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' },
-        { id: 'products', icon: Package, label: 'Produtos', path: '/products' },
-        { id: 'movements', icon: RefreshCw, label: 'Movimentação Manual', path: '/movements' },
-        { id: 'orders', label: 'Encomendas', icon: ClipboardList, path: '/orders' }, // New Item
-        { id: 'transfers', label: 'Transferências', icon: ArrowLeftRight },
-        { id: 'import', label: 'Importar XML', icon: FileText, path: '/import' },
-        { id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' },
-        { id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' },
+        { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' }, // View all
+        { id: 'products', icon: Package, label: 'Produtos', path: '/products' }, // View all
     ];
 
-    if (isAdmin) {
+    if (canManageStock) {
+        menuItems.push({ id: 'movements', icon: RefreshCw, label: 'Movimentação Manual', path: '/movements' });
+    }
+
+    menuItems.push(
+        { id: 'orders', label: 'Encomendas', icon: ClipboardList, path: '/orders' },
+        { id: 'transfers', label: 'Transferências', icon: ArrowLeftRight }
+    );
+
+    if (canImport) {
+        menuItems.push({ id: 'import', label: 'Importar XML', icon: FileText, path: '/import' });
+    }
+
+    menuItems.push({ id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' });
+
+    if (canManageFn) {
+        menuItems.push({ id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' });
+    }
+
+    if (role === 'admin') {
         menuItems.push({ id: 'admin', label: 'Administração', icon: Shield });
     }
 

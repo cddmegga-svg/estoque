@@ -317,6 +317,13 @@ export const FinancialPage = ({ user }: FinancialPageProps) => {
                         suppliers={suppliers}
                         filiais={filiais}
                         setIsSupplierDialogOpen={setIsSupplierDialogOpen}
+                        // Scanner Support: Pass Key Handler
+                        onKeyDown={(e: any) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleProcessBoleto();
+                            }
+                        }}
                     />
 
                     <DialogFooter>
@@ -409,7 +416,7 @@ export const FinancialPage = ({ user }: FinancialPageProps) => {
 };
 
 // Extracted Form Content to cleaner component structure (internal)
-const FormContent = ({ formData, setFormData, boletoCode, setBoletoCode, handleProcessBoleto, isProcessingBoleto, suppliers, filiais, setIsSupplierDialogOpen }: any) => (
+const FormContent = ({ formData, setFormData, boletoCode, setBoletoCode, handleProcessBoleto, isProcessingBoleto, suppliers, filiais, setIsSupplierDialogOpen, onKeyDown }: any) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
         {/* LEFT COL: Boleto & Basic Info */}
         <div className="space-y-4">
@@ -420,6 +427,8 @@ const FormContent = ({ formData, setFormData, boletoCode, setBoletoCode, handleP
                         placeholder="Cole aqui o código..."
                         value={boletoCode}
                         onChange={(e) => setBoletoCode(e.target.value)}
+                        onKeyDown={onKeyDown} // Hook up scanner enter key
+                        autoFocus // Start focused for scanning
                     />
                     <Button size="icon" variant="secondary" onClick={handleProcessBoleto} title="Processar Boleto" disabled={isProcessingBoleto}>
                         <Barcode className="w-4 h-4" />
