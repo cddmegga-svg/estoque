@@ -133,8 +133,8 @@ export const createTransfer = async (transferData: any) => {
 };
 
 // Mutations
-export const addProduct = async (product: any) => {
-    // Prepare the object, omitting ID if not present to let DB generate it
+export const addProduct = async (product: any, userId?: string) => {
+    // Prepare the object
     const productData: any = {
         name: product.name,
         active_ingredient: product.activeIngredient,
@@ -146,7 +146,9 @@ export const addProduct = async (product: any) => {
         image_url: product.imageUrl,
         category: product.category,
         distributor: product.distributor,
-        min_stock: product.minStock
+        min_stock: product.minStock,
+        created_by: userId,
+        updated_by: userId
     };
 
     if (product.id) {
@@ -164,7 +166,7 @@ export const addProduct = async (product: any) => {
 };
 
 
-export const updateProduct = async (id: string, updates: any) => {
+export const updateProduct = async (id: string, updates: any, userId?: string) => {
     const productData: any = {};
     if (updates.name) productData.name = updates.name;
     if (updates.activeIngredient) productData.active_ingredient = updates.activeIngredient;
@@ -177,6 +179,7 @@ export const updateProduct = async (id: string, updates: any) => {
     if (updates.category !== undefined) productData.category = updates.category;
     if (updates.distributor !== undefined) productData.distributor = updates.distributor;
     if (updates.minStock !== undefined) productData.min_stock = updates.minStock;
+    if (userId) productData.updated_by = userId;
 
     const { data, error } = await supabase
         .from('products')
@@ -358,20 +361,27 @@ export const fetchSuppliers = async (): Promise<Supplier[]> => {
     return data;
 };
 
-export const addSupplier = async (supplier: Omit<Supplier, 'id'>) => {
+export const addSupplier = async (supplier: Omit<Supplier, 'id'>, userId?: string) => {
     const { data, error } = await supabase
         .from('suppliers')
-        .insert([supplier])
+        .insert([{
+            ...supplier,
+            created_by: userId,
+            updated_by: userId
+        }])
         .select()
         .single();
     if (error) throw error;
     return data;
 };
 
-export const updateSupplier = async (id: string, updates: Partial<Supplier>) => {
+export const updateSupplier = async (id: string, updates: Partial<Supplier>, userId?: string) => {
     const { data, error } = await supabase
         .from('suppliers')
-        .update(updates)
+        .update({
+            ...updates,
+            updated_by: userId
+        })
         .eq('id', id)
         .select()
         .single();
@@ -411,7 +421,7 @@ export const fetchPayables = async (): Promise<AccountPayable[]> => {
     }));
 };
 
-export const addPayable = async (payable: Omit<AccountPayable, 'id'>) => {
+export const addPayable = async (payable: Omit<AccountPayable, 'id'>, userId?: string) => {
     const { data, error } = await supabase
         .from('accounts_payable')
         .insert([{
@@ -424,7 +434,9 @@ export const addPayable = async (payable: Omit<AccountPayable, 'id'>) => {
             barcode: payable.barcode,
             invoice_number: payable.invoiceNumber,
             filial_id: payable.filialId,
-            notes: payable.notes
+            notes: payable.notes,
+            created_by: userId,
+            updated_by: userId
         }])
         .select()
         .single();
@@ -432,13 +444,14 @@ export const addPayable = async (payable: Omit<AccountPayable, 'id'>) => {
     return data;
 };
 
-export const updatePayable = async (id: string, updates: Partial<AccountPayable>) => {
+export const updatePayable = async (id: string, updates: Partial<AccountPayable>, userId?: string) => {
     const dbUpdates: any = { ...updates };
     if (updates.supplierId !== undefined) dbUpdates.supplier_id = updates.supplierId;
     if (updates.entityName !== undefined) dbUpdates.entity_name = updates.entityName;
     if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
     if (updates.invoiceNumber !== undefined) dbUpdates.invoice_number = updates.invoiceNumber;
     if (updates.filialId !== undefined) dbUpdates.filial_id = updates.filialId;
+    if (userId) dbUpdates.updated_by = userId;
 
     const { data, error } = await supabase
         .from('accounts_payable')
@@ -455,5 +468,48 @@ export const deletePayable = async (id: string) => {
         .from('accounts_payable')
         .delete()
         .eq('id', id);
+    if (error) throw error;
+};
+
+// Purchase Requests
+export const fetchPurchaseRequests = async () => {
+    const { data, error } = await supabase
+        .from('purchase_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+};
+
+export const addPurchaseRequest = async (request: any) => {
+    const { data, error } = await supabase
+        .from('purchase_requests')
+        .insert(request)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const updatePurchaseRequest = async (id: string, updates: any) => {
+    const { data, error } = await supabase
+        .from('purchase_requests')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const deletePurchaseRequest = async (id: string) => {
+    const { error } = await supabase
+        .from('purchase_requests')
+        .delete()
+        .eq('id', id);
+
     if (error) throw error;
 };

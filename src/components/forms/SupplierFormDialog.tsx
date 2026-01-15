@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { addSupplier, updateSupplier } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { Supplier } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SupplierFormDialogProps {
     isOpen: boolean;
@@ -19,6 +20,7 @@ interface SupplierFormDialogProps {
 export const SupplierFormDialog = ({ isOpen, onClose, onSuccess, initialData, editingSupplier }: SupplierFormDialogProps) => {
     const { toast } = useToast();
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const [formData, setFormData] = useState<Partial<Supplier>>({
         name: '',
@@ -44,7 +46,7 @@ export const SupplierFormDialog = ({ isOpen, onClose, onSuccess, initialData, ed
     }, [isOpen, editingSupplier, initialData]);
 
     const createMutation = useMutation({
-        mutationFn: addSupplier,
+        mutationFn: (data: any) => addSupplier(data, user?.id),
         onSuccess: (newSupplier: any) => {
             queryClient.invalidateQueries({ queryKey: ['suppliers'] });
             toast({ title: 'Fornecedor cadastrado!', description: `${newSupplier.name} salvo com sucesso.` });
@@ -55,7 +57,7 @@ export const SupplierFormDialog = ({ isOpen, onClose, onSuccess, initialData, ed
     });
 
     const updateMutation = useMutation({
-        mutationFn: (vars: { id: string; data: any }) => updateSupplier(vars.id, vars.data),
+        mutationFn: (vars: { id: string; data: any }) => updateSupplier(vars.id, vars.data, user?.id),
         onSuccess: (updatedSupplier: any) => {
             queryClient.invalidateQueries({ queryKey: ['suppliers'] });
             toast({ title: 'Fornecedor atualizado!', description: `${updatedSupplier.name} salvo com sucesso.` });

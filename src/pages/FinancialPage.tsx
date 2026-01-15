@@ -10,12 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { fetchPayables, addPayable, updatePayable, deletePayable, fetchSuppliers, fetchFiliais } from '@/services/api';
-import { AccountPayable, Supplier } from '@/types';
+import { AccountPayable, Supplier, User } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { parseBoleto } from '@/lib/boletoParser';
 import { SupplierFormDialog } from '@/components/forms/SupplierFormDialog';
 
-export const FinancialPage = () => {
+interface FinancialPageProps {
+    user?: User; // Optional mostly for TS if used standalone, but usually present
+}
+
+export const FinancialPage = ({ user }: FinancialPageProps) => {
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const [searchTerm, setSearchTerm] = useState('');
@@ -34,7 +38,7 @@ export const FinancialPage = () => {
 
     // Mutations
     const createMutation = useMutation({
-        mutationFn: addPayable,
+        mutationFn: (data: any) => addPayable(data, user?.id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['payables'] });
             toast({ title: 'Conta lançada com sucesso!' });
@@ -44,7 +48,7 @@ export const FinancialPage = () => {
     });
 
     const updateMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: Partial<AccountPayable> }) => updatePayable(id, data),
+        mutationFn: ({ id, data }: { id: string; data: Partial<AccountPayable> }) => updatePayable(id, data, user?.id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['payables'] });
             toast({ title: 'Conta atualizada com sucesso!' });

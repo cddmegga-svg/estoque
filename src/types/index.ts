@@ -149,3 +149,16 @@ export interface AccountPayable {
   filialId: string;
   notes?: string;
 }
+
+export interface PurchaseRequest {
+  id: string;
+  user_id: string;
+  user_name?: string;
+  client_name: string;
+  client_contact?: string;
+  item_description: string;
+  priority: 'normal' | 'urgent';
+  status: 'pending' | 'ordered' | 'arrived' | 'picked_up' | 'cancelled';
+  notes?: string;
+  created_at?: string;
+}

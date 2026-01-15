@@ -182,7 +182,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
             // Manufacturing Date logic for Stock Item comes later, stored in item/editedItem
           };
 
-          await addProduct(newProduct);
+          await addProduct(newProduct, user.id);
 
           product = {
             id: newProduct.id,
@@ -274,7 +274,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
             invoiceNumber: nfeData?.number,
             barcode: bill.barcode,
             notes: `Importado via XML`
-          });
+          }, user.id);
           billsCount++;
         }
         if (billsCount > 0) {
