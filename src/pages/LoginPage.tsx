@@ -18,7 +18,18 @@ export const LoginPage = ({ onRegister }: LoginPageProps) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { signIn } = useAuth();
+  const { signIn, loginAsGuest } = useAuth();
+
+  const signInAsGuest = async () => {
+    try {
+      setLoading(true);
+      await loginAsGuest();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +102,19 @@ export const LoginPage = ({ onRegister }: LoginPageProps) => {
 
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? 'Entrando...' : 'Entrar'}
+            </Button>
+
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Ou</span>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-dashed border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              onClick={() => signInAsGuest()}
+            >
+              Entrar como Convidado (Teste)
             </Button>
           </form>
         </CardContent>

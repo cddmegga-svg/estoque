@@ -11,6 +11,7 @@ interface AuthContextType {
     signIn: (email: string, password?: string) => Promise<void>;
     signUp: (email: string, password: string, data: any) => Promise<void>;
     signOut: () => Promise<void>;
+    loginAsGuest: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
     signIn: async () => { },
     signUp: async () => { },
     signOut: async () => { },
+    loginAsGuest: async () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -126,8 +128,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(null);
     };
 
+    const loginAsGuest = async () => {
+        // Create a temporary guest session
+        const guestUser: User = {
+            id: 'guest-user-id',
+            name: 'Usuário Teste (Convidado)',
+            email: 'convidado@farma.com',
+            role: 'admin', // Full access for testing
+            filialId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' // Hardcoded Filial Centro
+        };
+        setUser(guestUser);
+        // We don't set a Supabase session because it doesn't exist, 
+        // but the app relies mostly on 'user' state for permissions.
+    };
+
     return (
-        <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+        <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, loginAsGuest }}>
             {children}
         </AuthContext.Provider>
     );
