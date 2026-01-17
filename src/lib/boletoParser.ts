@@ -14,13 +14,41 @@ export const parseBoleto = (code: string): BoletoInfo => {
         // Boleto de Convênio (Luz, Água, Tel)
         return parseLinhaDigitavelConvenio(cleanCode);
     } else if (cleanCode.length === 44) {
-        // Código de Barras direto
-        // TODO: Implement barcode direct parsing if needed (usually scanners emulate keyboard typing linha digitavel or send 44 chars)
-        // For now assuming Linha Digitavel input
-        return { type: 'unknown' };
+        // Código de Barras direto (Leitor USB)
+        return parseCodigoBarras(cleanCode);
     }
 
     return { type: 'unknown' };
+};
+
+const parseCodigoBarras = (code: string): BoletoInfo => {
+    // Layout Padrão Febraban (44 dígitos)
+    // 01-03: Banco
+    // 04: Código Moeda (9=Real)
+    // 05: DV do Código de Barras
+    // 06-09: Fator de Vencimento
+    // 10-19: Valor (10 dígitos)
+    // 20-44: Campo Livre
+
+    const bankCode = code.substring(0, 3);
+    const factorStr = code.substring(5, 9);
+    const valueStr = code.substring(9, 19);
+
+    const amount = parseInt(valueStr) / 100;
+    const factor = parseInt(factorStr);
+
+    let dueDate: Date | undefined;
+    if (factor >= 1000) {
+        const baseDate = new Date('1997-10-07T12:00:00Z');
+        dueDate = new Date(baseDate.getTime() + (factor * 24 * 60 * 60 * 1000));
+    }
+
+    return {
+        amount,
+        dueDate,
+        bank: bankCode,
+        type: 'bancario'
+    };
 };
 
 const parseLinhaDigitavelBancaria = (code: string): BoletoInfo => {

@@ -14,6 +14,7 @@ import { Sidebar, MobileHeader } from '@/components/layout/Sidebar';
 import { SuppliersPage } from './pages/SuppliersPage';
 import { FinancialPage } from './pages/FinancialPage';
 import { PurchaseRequestsPage } from '@/pages/PurchaseRequestsPage';
+import { SalesPage } from '@/pages/SalesPage';
 import { Toaster } from '@/components/ui/toaster';
 
 function App() {
@@ -70,6 +71,8 @@ function App() {
         return <PurchaseRequestsPage user={user} />;
       case 'admin':
         return user.role === 'admin' ? <AdminPage currentUser={user} /> : <div className="text-center py-12 text-muted-foreground">Acesso restrito a administradores</div>;
+      case 'sales':
+        return <SalesPage />;
       default:
         return <DashboardPage user={user} onNavigate={setCurrentPage} />;
     }

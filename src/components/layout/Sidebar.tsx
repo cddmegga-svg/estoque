@@ -16,38 +16,43 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
     const { signOut } = useAuth();
     // Role-based Menu Logic
     const role = user?.role || 'viewer';
-    const canManageFn = ['admin'].includes(role);
-    const canManageStock = ['admin', 'manager', 'stock'].includes(role);
-    const canImport = ['admin', 'manager', 'stock'].includes(role);
-    const canViewReports = ['admin', 'manager'].includes(role);
+
+    // Derived Permissions
+    const isAdmin = role === 'admin';
+    const isManager = ['admin', 'manager'].includes(role);
+    const isStock = ['admin', 'manager', 'stock'].includes(role);
+    const isSales = ['admin', 'manager', 'sales'].includes(role);
 
     const menuItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' }, // View all
-        { id: 'products', icon: Package, label: 'Produtos', path: '/products' }, // View all
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
     ];
 
-    if (canManageStock) {
-        menuItems.push({ id: 'movements', icon: RefreshCw, label: 'Movimentação Manual', path: '/movements' });
-    }
-
+    // Todos (exceto viewer?) veem estoque para consulta
     menuItems.push(
-        { id: 'orders', label: 'Encomendas', icon: ClipboardList, path: '/orders' },
-        { id: 'transfers', label: 'Transferências', icon: ArrowLeftRight }
+        { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' },
+        { id: 'products', icon: Package, label: 'Produtos', path: '/products' }
     );
 
-    if (canImport) {
-        menuItems.push({ id: 'import', label: 'Importar XML', icon: FileText, path: '/import' });
+    // Ballão/Vendas
+    if (isSales) {
+        menuItems.push({ id: 'sales', icon: DollarSign, label: 'Pré-Venda (Balcão)', path: '/sales' });
+        menuItems.push({ id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' });
     }
 
-    menuItems.push({ id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' });
+    // Estoque/Gerente (Movimentação e Importação)
+    if (isStock) {
+        menuItems.push(
+            { id: 'movements', icon: RefreshCw, label: 'Movimentação Manual', path: '/movements' },
+            { id: 'import', label: 'Importar XML', icon: FileText, path: '/import' },
+            { id: 'transfers', label: 'Transferências', icon: ArrowLeftRight, path: '/transfers' },
+            { id: 'orders', label: 'Encomendas', icon: ClipboardList, path: '/orders' }
+        );
+    }
 
-    if (canManageFn) {
+    // Financeiro (Só Admin e Gerente Financeiro se tivesse)
+    if (isAdmin) {
         menuItems.push({ id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' });
-    }
-
-    if (role === 'admin') {
-        menuItems.push({ id: 'admin', label: 'Administração', icon: Shield });
+        menuItems.push({ id: 'admin', label: 'Administração', icon: Shield, path: '/admin' });
     }
 
     return (

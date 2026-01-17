@@ -162,3 +162,29 @@ export interface PurchaseRequest {
   notes?: string;
   created_at?: string;
 }
+
+export interface SaleItem {
+  id: string;
+  saleId: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface Sale {
+  id: string;
+  customerName?: string;
+  customerCpf?: string;
+  totalValue: number;
+  discountValue: number;
+  finalValue: number;
+  status: 'open' | 'completed' | 'cancelled';
+  paymentMethod?: string;
+  userId?: string;
+  userName?: string;
+  filialId: string;
+  createdAt: string;
+  items?: SaleItem[];
+}

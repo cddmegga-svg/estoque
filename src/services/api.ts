@@ -513,3 +513,56 @@ export const deletePurchaseRequest = async (id: string) => {
 
     if (error) throw error;
 };
+
+// --- Sales ---
+export const createSale = async (subtotal: number, discount: number, total: number, items: any[], customerName?: string, userId?: string, userName?: string, filialId?: string) => {
+    // 1. Create Sale Header
+    const { data: sale, error: saleError } = await supabase
+        .from('sales')
+        .insert({
+            customer_name: customerName,
+            total_value: subtotal,
+            discount_value: discount,
+            final_value: total,
+            status: 'completed',
+            user_id: userId,
+            user_name: userName,
+            filial_id: filialId
+        })
+        .select()
+        .single();
+
+    if (saleError) throw saleError;
+
+    // 2. Create Sale Items
+    const saleItems = items.map((item: any) => ({
+        sale_id: sale.id,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        unit_price: item.product.salePrice,
+        total_price: item.quantity * item.product.salePrice
+    }));
+
+    const { error: itemsError } = await supabase
+        .from('sale_items')
+        .insert(saleItems);
+
+    if (itemsError) throw itemsError;
+
+    // 3. Deduct Stock via Movements
+    for (const item of items) {
+        await addMovement({
+            productId: item.product.id,
+            filialId: filialId!,
+            lote: 'PRE-VENDA',
+            type: 'exit',
+            quantity: item.quantity,
+            userId: userId!,
+            userName: userName!,
+            notes: `Venda #${sale.id.slice(0, 8)}`
+        });
+    }
+
+    return sale;
+};
