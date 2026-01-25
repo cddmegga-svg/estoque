@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '@/lib/db';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,21 +33,36 @@ export const SalesPage = () => {
     const [isFinalizing, setIsFinalizing] = useState(false);
 
     // Queries
-    const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: fetchProducts });
+    // Queries & Local DB
+    // const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: fetchProducts }); <-- Replaced by Dexie
+
+    // Live Query for Offline/Local Search
+    const filteredProducts = useLiveQuery(async () => {
+        if (!searchTerm) {
+            // Return empty or top 10 if you want detailed list on empty
+            return await db.products.limit(10).toArray();
+        }
+
+        const lowerTerm = searchTerm.toLowerCase();
+
+        // Search by Name or EAN
+        // Dexie efficiency: specific index search or simple filter if small DB
+        // For < 1000 items, filter is fine. For > 1000, multi-entry index recommended.
+        return await db.products
+            .filter(p =>
+                p.name.toLowerCase().includes(lowerTerm) ||
+                (p.ean && p.ean.includes(lowerTerm)) ||
+                (p.activeIngredient && p.activeIngredient.toLowerCase().includes(lowerTerm))
+            )
+            .limit(20)
+            .toArray();
+    }, [searchTerm]);
+
     const { data: filiais = [] } = useQuery({ queryKey: ['filiais'], queryFn: fetchFiliais });
 
     const currentFilialName = useMemo(() => {
         return filiais.find(f => f.id === user?.filialId)?.name || 'Filial Desconhecida';
     }, [filiais, user?.filialId]);
-
-    // Computed
-    const filteredProducts = useMemo(() => {
-        if (!searchTerm) return [];
-        return products.filter(p =>
-            p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.ean?.includes(searchTerm)
-        ).slice(0, 10); // Limit results for performance
-    }, [products, searchTerm]);
 
     const subtotal = cart.reduce((acc, item) => acc + (item.product.salePrice * item.quantity), 0);
     const total = Math.max(0, subtotal - discountValue);
@@ -133,27 +150,47 @@ export const SalesPage = () => {
 
         try {
             setIsFinalizing(true);
-            await createSale(
-                subtotal,
-                discountValue,
-                total,
-                cart,
-                customerName,
-                user?.id,
-                user?.name,
-                user?.filialId
-            );
 
-            toast({ title: 'Venda Realizada!', description: `Total: ${formatCurrency(total)}` });
+            if (navigator.onLine) {
+                // Online: Send to API
+                await createSale(
+                    subtotal,
+                    discountValue,
+                    total,
+                    cart,
+                    customerName,
+                    user?.id,
+                    user?.name,
+                    user?.filialId
+                );
+                toast({ title: 'Venda Realizada!', description: `Total: ${formatCurrency(total)}` });
+            } else {
+                // Offline: Save to Dexie
+                await db.offlineSales.add({
+                    tempId: crypto.randomUUID(),
+                    customerName,
+                    totalValue: subtotal,
+                    discountValue,
+                    finalValue: total,
+                    items: cart, // Store the whole cart structure
+                    createdAt: new Date().toISOString(),
+                    synced: 0
+                });
+                toast({ title: 'Venda Salva (Offline)!', description: 'Será sincronizada quando a conexão voltar.', variant: 'destructive' });
+            }
 
-            // Reset
+            // Reset UI
             setCart([]);
             setCustomerName('');
             setDiscountValue(0);
 
-            // Invalidate stock queries
-            queryClient.invalidateQueries({ queryKey: ['products'] });
-            queryClient.invalidateQueries({ queryKey: ['movements'] });
+            // Invalidate queries if online, otherwise just reset
+            if (navigator.onLine) {
+                queryClient.invalidateQueries({ queryKey: ['products'] });
+                queryClient.invalidateQueries({ queryKey: ['movements'] });
+            } else {
+                // Optionally update local stock count if we were tracking it locally
+            }
 
         } catch (error) {
             console.error(error);
@@ -183,7 +220,7 @@ export const SalesPage = () => {
                     </CardHeader>
                     <CardContent className="flex-1 overflow-auto">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filteredProducts.map(product => (
+                            {filteredProducts?.map(product => (
                                 <div
                                     key={product.id}
                                     className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition-colors flex flex-col justify-between"

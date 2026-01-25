@@ -27,6 +27,9 @@ export interface Product {
   category?: string;
   distributor?: string;
   minStock?: number;
+  maxStock?: number; // Sugestão de compra
+  abcCurve?: 'A' | 'B' | 'C' | 'D'; // Curva ABC
+  pmcPrice?: number; // Preço Máximo ao Consumidor
 
   // Extended Data
   profitMargin?: number;

@@ -17,10 +17,15 @@ import { PurchaseRequestsPage } from '@/pages/PurchaseRequestsPage';
 import { SalesPage } from '@/pages/SalesPage';
 import { Toaster } from '@/components/ui/toaster';
 
+import { useProductSync } from '@/hooks/useProductSync';
+
 function App() {
   const { user, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [showRegister, setShowRegister] = useState(false);
+
+  // Background Sync
+  useProductSync();
 
   if (loading) {
     return (
