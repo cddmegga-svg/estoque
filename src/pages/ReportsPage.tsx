@@ -1,0 +1,176 @@
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/lib/supabase';
+import { formatCurrency } from '@/lib/utils';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { TrendingUp, Users, DollarSign, Package } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
+export const ReportsPage = () => {
+
+    // 1. Fetch Daily Sales (Simulated View or Direct Query)
+    const { data: salesData } = useQuery({
+        queryKey: ['reports_daily'],
+        queryFn: async () => {
+            // In a real scenario, use the View `v_daily_sales`
+            // For now, let's query raw sales to demonstrate
+            const { data } = await supabase
+                .from('sales')
+                .select('created_at, final_value')
+                .eq('status', 'completed')
+                .order('created_at', { ascending: true });
+
+            if (!data) return [];
+
+            // Group by Day
+            const grouped: Record<string, number> = {};
+            data.forEach(sale => {
+                const date = new Date(sale.created_at).toLocaleDateString('pt-BR');
+                grouped[date] = (grouped[date] || 0) + Number(sale.final_value);
+            });
+
+            return Object.entries(grouped).map(([date, value]) => ({ date, value }));
+        }
+    });
+
+    // 2. Fetch KPI Stats
+    const { data: stats } = useQuery({
+        queryKey: ['reports_kpi'],
+        queryFn: async () => {
+            const { data } = await supabase
+                .from('sales')
+                .select('final_value, id')
+                .eq('status', 'completed');
+
+            const totalRevenue = data?.reduce((acc, curr) => acc + Number(curr.final_value), 0) || 0;
+            const totalSales = data?.length || 0;
+            const ticketAvg = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+            return { totalRevenue, totalSales, ticketAvg };
+        }
+    });
+
+    return (
+        <div className="space-y-6">
+            <h1 className="text-3xl font-bold text-gray-800">Relatórios & Inteligência 📊</h1>
+
+            {/* KPI CARDS */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Faturamento Total</CardTitle>
+                        <DollarSign className="h-4 w-4 text-emerald-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{formatCurrency(stats?.totalRevenue || 0)}</div>
+                        <p className="text-xs text-muted-foreground">+20.1% em relação ao mês anterior</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Vendas Realizadas</CardTitle>
+                        <Users className="h-4 w-4 text-blue-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats?.totalSales || 0}</div>
+                        <p className="text-xs text-muted-foreground">Clientes atendidos</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-amber-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{formatCurrency(stats?.ticketAvg || 0)}</div>
+                        <p className="text-xs text-muted-foreground">Média por cliente</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* CHARTS ROW 1 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="col-span-1">
+                    <CardHeader>
+                        <CardTitle>Vendas dos Últimos Dias</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={salesData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="date" fontSize={12} />
+                                <YAxis fontSize={12} tickFormatter={(value) => `R$${value}`} />
+                                <RechartsTooltip formatter={(value: number) => formatCurrency(value)} />
+                                <Bar dataKey="value" fill="#059669" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
+
+                <Card className="col-span-1">
+                    <CardHeader>
+                        <CardTitle>Curva ABC (Distribuição)</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-md bg-slate-50">
+                        <div className="text-center">
+                            <Package className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                            <p>Em breve: Classificação automática A/B/C</p>
+                            <p className="text-xs">Necessário popular dados de vendas.</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* PURCHASE SUGGESTIONS */}
+            <Card className="mt-6 border-amber-200">
+                <CardHeader className="bg-amber-50">
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="text-amber-800 flex items-center gap-2">
+                            <Package className="w-5 h-5" /> Sugestões de Compra (IA)
+                        </CardTitle>
+                        <Button variant="outline" size="sm" className="text-amber-700 border-amber-300 hover:bg-amber-100">
+                            Exportar Pedido
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="rounded-md border mt-4">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Produto</TableHead>
+                                    <TableHead>Fabricante</TableHead>
+                                    <TableHead className="text-center">Estoque Atual</TableHead>
+                                    <TableHead className="text-center">Giro Diário (30d)</TableHead>
+                                    <TableHead className="text-center font-bold text-emerald-700">Sugestão</TableHead>
+                                    <TableHead className="text-center">Prioridade</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {/* Mock Data for Visualization - Replace with useQuery('purchase_suggestions') */}
+                                <TableRow>
+                                    <TableCell className="font-medium">Dipirona 500mg</TableCell>
+                                    <TableCell>Medley</TableCell>
+                                    <TableCell className="text-center text-red-600 font-bold">5</TableCell>
+                                    <TableCell className="text-center">12.5</TableCell>
+                                    <TableCell className="text-center font-bold text-lg bg-emerald-50 text-emerald-700">200</TableCell>
+                                    <TableCell className="text-center"><Badge variant="destructive">Crítico</Badge></TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell className="font-medium">Dorflex 10cp</TableCell>
+                                    <TableCell>Sanofi</TableCell>
+                                    <TableCell className="text-center text-amber-600 font-bold">42</TableCell>
+                                    <TableCell className="text-center">8.2</TableCell>
+                                    <TableCell className="text-center font-bold text-lg bg-emerald-50 text-emerald-700">100</TableCell>
+                                    <TableCell className="text-center"><Badge className="bg-amber-500 hover:bg-amber-600">Alto</Badge></TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    );
+};

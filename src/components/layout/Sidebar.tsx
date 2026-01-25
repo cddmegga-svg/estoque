@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu, DollarSign, Users, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu, DollarSign, Users, ClipboardList, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -33,9 +33,10 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
         { id: 'products', icon: Package, label: 'Produtos', path: '/products' }
     );
 
-    // Ballão/Vendas
+    // Balcão/Vendas
     if (isSales) {
         menuItems.push({ id: 'sales', icon: DollarSign, label: 'Pré-Venda (Balcão)', path: '/sales' });
+        if (isManager) menuItems.push({ id: 'reports', icon: BarChart3, label: 'Relatórios (BI)', path: '/reports' });
         menuItems.push({ id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' });
     }
 

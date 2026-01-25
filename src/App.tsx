@@ -15,6 +15,7 @@ import { SuppliersPage } from './pages/SuppliersPage';
 import { FinancialPage } from './pages/FinancialPage';
 import { PurchaseRequestsPage } from '@/pages/PurchaseRequestsPage';
 import { SalesPage } from '@/pages/SalesPage';
+import { ReportsPage } from '@/pages/ReportsPage';
 import { Toaster } from '@/components/ui/toaster';
 
 import { useProductSync } from '@/hooks/useProductSync';
@@ -78,6 +79,8 @@ function App() {
         return user.role === 'admin' ? <AdminPage currentUser={user} /> : <div className="text-center py-12 text-muted-foreground">Acesso restrito a administradores</div>;
       case 'sales':
         return <SalesPage />;
+      case 'reports':
+        return <ReportsPage />;
       default:
         return <DashboardPage user={user} onNavigate={setCurrentPage} />;
     }
