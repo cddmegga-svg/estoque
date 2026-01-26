@@ -27,7 +27,14 @@ export const fetchProducts = async (): Promise<Product[]> => {
         distributor: item.distributor,
         minStock: item.min_stock || 0,
         pmcPrice: item.pmc_price || 0,
-        commissionRate: item.commission_rate || 0
+        commissionRate: item.commission_rate || 0,
+        // Extended Data
+        profitMargin: item.profit_margin,
+        taxCfop: item.tax_cfop,
+        taxIcms: item.tax_icms,
+        taxPis: item.tax_pis,
+        taxCofins: item.tax_cofins,
+        taxIpi: item.tax_ipi,
     }));
 };
 

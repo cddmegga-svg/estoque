@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { db } from '@/lib/db';
 import { Package, Plus, Search, Barcode, Factory, FileText, Info, Trash2, Tag, Truck, AlertCircle, AlertTriangle } from 'lucide-react';
 import { PRODUCT_CATEGORIES } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,8 +79,34 @@ export const ProductsPage = () => {
     // Create Product Mutation
     const createProductMutation = useMutation({
         mutationFn: (data: any) => addProduct(data),
-        onSuccess: () => {
+        onSuccess: (newProduct) => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
+
+            // Sync with Dexie
+            const mappedProduct = {
+                id: newProduct.id,
+                name: newProduct.name,
+                activeIngredient: newProduct.active_ingredient,
+                manufacturer: newProduct.manufacturer,
+                ean: newProduct.ean,
+                ncm: newProduct.ncm,
+                costPrice: newProduct.cost_price || 0,
+                salePrice: newProduct.sale_price || 0,
+                imageUrl: newProduct.image_url,
+                category: newProduct.category,
+                distributor: newProduct.distributor,
+                minStock: newProduct.min_stock || 0,
+                pmcPrice: newProduct.pmc_price || 0,
+                commissionRate: newProduct.commission_rate || 0,
+                profitMargin: newProduct.profit_margin,
+                taxCfop: newProduct.tax_cfop,
+                taxIcms: newProduct.tax_icms,
+                taxPis: newProduct.tax_pis,
+                taxCofins: newProduct.tax_cofins,
+                taxIpi: newProduct.tax_ipi,
+            };
+            db.products.add(mappedProduct);
+
             toast({ title: 'Produto cadastrado!', description: `${formData.name} salvo com sucesso.` });
             setIsDialogOpen(false);
             resetForm();
@@ -90,8 +117,34 @@ export const ProductsPage = () => {
     // Update Product Mutation
     const updateProductMutation = useMutation({
         mutationFn: (variables: { id: string; data: any }) => updateProduct(variables.id, variables.data),
-        onSuccess: () => {
+        onSuccess: (updatedProduct) => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
+
+            // Sync with Dexie
+            const mappedProduct = {
+                id: updatedProduct.id,
+                name: updatedProduct.name,
+                activeIngredient: updatedProduct.active_ingredient,
+                manufacturer: updatedProduct.manufacturer,
+                ean: updatedProduct.ean,
+                ncm: updatedProduct.ncm,
+                costPrice: updatedProduct.cost_price || 0,
+                salePrice: updatedProduct.sale_price || 0,
+                imageUrl: updatedProduct.image_url,
+                category: updatedProduct.category,
+                distributor: updatedProduct.distributor,
+                minStock: updatedProduct.min_stock || 0,
+                pmcPrice: updatedProduct.pmc_price || 0,
+                commissionRate: updatedProduct.commission_rate || 0,
+                profitMargin: updatedProduct.profit_margin,
+                taxCfop: updatedProduct.tax_cfop,
+                taxIcms: updatedProduct.tax_icms,
+                taxPis: updatedProduct.tax_pis,
+                taxCofins: updatedProduct.tax_cofins,
+                taxIpi: updatedProduct.tax_ipi,
+            };
+            db.products.put(mappedProduct);
+
             toast({ title: 'Produto atualizado!', description: `${formData.name} foi atualizado.` });
             setIsDialogOpen(false);
             resetForm();
@@ -102,8 +155,9 @@ export const ProductsPage = () => {
     // Delete Product Mutation
     const deleteProductMutation = useMutation({
         mutationFn: deleteProduct,
-        onSuccess: () => {
+        onSuccess: (_, deletedId) => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
+            db.products.delete(deletedId);
             toast({ title: 'Produto removido', description: 'O produto foi excluído com sucesso.' });
         },
         onError: (error: any) => toast({ variant: 'destructive', title: 'Erro ao excluir', description: error.message })
