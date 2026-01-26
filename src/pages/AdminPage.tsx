@@ -28,6 +28,7 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
 
   // Permissions State
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
@@ -170,6 +171,11 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
         </TabsList>
 
         <TabsContent value="users">
+          <div className="flex justify-end mb-4">
+            <Button onClick={() => setIsCreateUserOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
+              <Plus className="w-4 h-4 mr-2" /> Adicionar Usuário
+            </Button>
+          </div>
           <Card>
             <CardHeader>
               <CardTitle>Usuários do Sistema</CardTitle>
@@ -327,6 +333,27 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
             ))}
           </div>
 
+          {/* Role Editor */}
+          <div className="border-t pt-4 mt-4">
+            <Label className="mb-2 block">Nível de Acesso (Role)</Label>
+            <Select
+              value={selectedUser?.role || 'viewer'}
+              onValueChange={(val: 'admin' | 'viewer') => {
+                if (selectedUser) handleRoleChange(selectedUser.id, val);
+                // Optimistic update for UI if needed, but react-query usually handles it
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="viewer">Colaborador (Visualizador)</SelectItem>
+                <SelectItem value="admin">Administrador (Total)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">Administradores têm acesso irrestrito.</p>
+          </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsPermissionsDialogOpen(false)}>Cancelar</Button>
             <Button onClick={handleSavePermissions} disabled={updateUserMutation.isPending}>
@@ -335,6 +362,97 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create User Dialog - reusing part of RegisterPage logic but inside Admin */}
+      <CreateUserDialog
+        isOpen={isCreateUserOpen}
+        onClose={() => setIsCreateUserOpen(false)}
+        filiais={filiais}
+      />
     </div>
   );
 };
+
+// Sub-component for Create User to keep file clean-ish
+import { useAuth } from '@/hooks/useAuth';
+
+const CreateUserDialog = ({ isOpen, onClose, filiais }: { isOpen: boolean, onClose: () => void, filiais: Filial[] }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [filialId, setFilialId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { signUp } = useAuth();
+  const { toast } = useToast();
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      // Note: Client-side signUp automatically signs in the new user, booting the Admin out.
+      // This is a limitation of Supabase Client SDK.
+      // We can try to use a secondary connection if we had one, but we don't.
+      // WARNING to User: This will likely logout.
+      // Workaround: We could just insert into 'users' table if we weren't using Auth mainly? 
+      // No, need Auth user. 
+      // Let's implement it and see. The user requested it here.
+
+      await signUp(email, password, {
+        name,
+        role: 'viewer',
+        filialId
+      });
+
+      toast({ title: 'Usuário Criado', description: 'O usuário foi criado. Verifique o email.' });
+      onClose();
+      setName('');
+      setEmail('');
+      setPassword('');
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Erro', description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Adicionar Usuário</DialogTitle>
+          <DialogDescription>
+            Cria um novo usuário no sistema.
+            <span className="block text-red-500 font-bold mt-2">Atenção: Ao criar um usuário aqui, sua sessão de Administrador pode ser encerrada (Limitação do sistema).</span>
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Nome</Label>
+            <Input value={name} onChange={e => setName(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label>Senha</Label>
+            <Input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+          </div>
+          <div className="space-y-2">
+            <Label>Filial</Label>
+            <Select value={filialId} onValueChange={setFilialId}>
+              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+              <SelectContent>
+                {filiais.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+            <Button type="submit" disabled={loading}>Criar Usuário</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
