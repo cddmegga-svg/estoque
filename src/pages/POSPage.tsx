@@ -442,7 +442,7 @@ export const POSPage = () => {
                                                 size="lg"
                                                 className={`flex-[2] h-14 text-xl font-bold shadow-lg transition-all ${isFiscalEnabled ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-900/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/20'}`}
                                                 disabled={!canPay || isProcessing}
-                                                onClick={handleProcessPayment}
+                                                onClick={initiatePayment}
                                             >
                                                 {isProcessing ? 'Processando...' : (
                                                     <div className="flex flex-col items-center leading-none gap-1">
