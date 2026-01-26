@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/lib/db';
@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { fetchProducts, createSale, fetchFiliais } from '@/services/api';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { Product } from '@/types';
 
 interface CartItem {
@@ -135,6 +135,72 @@ export const SalesPage = () => {
     // Manager Override State
     const [isManagerOverrideOpen, setIsManagerOverrideOpen] = useState(false);
     const [managerPin, setManagerPin] = useState('');
+
+    // Product History (Home Key)
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [selectedHistoryProduct, setSelectedHistoryProduct] = useState<any>(null);
+
+    // Key Listener for Home
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Home') {
+                e.preventDefault();
+                // If there's a search term or a selected item context, or just the last item added?
+                // User said: "Tocando da tecla HOME do teclado, em cima do produto"
+                // This implies "hover" or "selection". In a web app, "hover" is hard to track via keyboard.
+                // We'll assume "Last Added Item" or "Active Search Result" if we had keyboard nav.
+                // For MVP, if cart has items, pick the LAST item added? Or if search is open?
+                // Better approach: Since we don't have "selection state" on the table yet (no arrow key nav),
+                // We will open history for the *Last Item Added to Cart* OR requires user to click a "History" button.
+                // BUT User asked for Keyboard.
+                // Let's implement: If Search has result -> History of first result?
+                // If Cart has items -> History of last item?
+                // Let's prioritize: If Search Input is FOCUSED and has value -> First Result.
+                // Else if Cart has items -> Last Cart Item.
+
+                if (filteredProducts && filteredProducts.length > 0 && searchTerm) {
+                    openProductHistory(filteredProducts[0]);
+                } else if (cart.length > 0) {
+                    openProductHistory(cart[cart.length - 1].product);
+                }
+            }
+            if (e.key === 'F10') handleFinalizeClick();
+            if (e.key === 'F2') document.querySelector<HTMLInputElement>('input[placeholder*="BIPAR"]')?.focus();
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [cart, filteredProducts, searchTerm]);
+
+    const { data: productHistory = [], isLoading: isLoadingHistory } = useQuery({
+        queryKey: ['product_history', selectedHistoryProduct?.id],
+        queryFn: async () => {
+            if (!selectedHistoryProduct?.id) return [];
+            const { data, error } = await supabase
+                .from('sale_items')
+                .select(`
+                     unit_price, quantity, created_at,
+                     sale:sale_id (customer_name, created_at)
+                 `)
+                .eq('product_id', selectedHistoryProduct.id)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (error) throw error;
+            return data.map((item: any) => ({
+                date: item.sale?.created_at || item.created_at,
+                customer: item.sale?.customer_name || 'Consumidor',
+                price: item.unit_price,
+                quantity: item.quantity
+            }));
+        },
+        enabled: !!selectedHistoryProduct?.id && isHistoryOpen
+    });
+
+    const openProductHistory = (product: any) => {
+        setSelectedHistoryProduct(product);
+        setIsHistoryOpen(true);
+    };
     const [pendingSalespersonId, setPendingSalespersonId] = useState<string | null>(null);
 
     // Salesperson Identity State
@@ -509,6 +575,56 @@ export const SalesPage = () => {
                         <Button type="button" variant="secondary" onClick={() => setIsSalespersonDialogOpen(false)}>Cancelar</Button>
                         <Button type="button" onClick={checkSalesperson} disabled={!salespersonCode}>Confirmar</Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+                <DialogContent className="sm:max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <ShoppingBag className="w-5 h-5 text-emerald-600" />
+                            Histórico do Produto
+                        </DialogTitle>
+                        <DialogDescription>
+                            Últimas vendas de <span className="font-bold text-slate-800">{selectedHistoryProduct?.name}</span>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        {isLoadingHistory ? (
+                            <div className="flex justify-center p-8"><RefreshCw className="animate-spin text-emerald-600" /></div>
+                        ) : productHistory.length === 0 ? (
+                            <div className="text-center text-muted-foreground p-8">Nenhuma venda anterior encontrada.</div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Data</TableHead>
+                                        <TableHead>Cliente</TableHead>
+                                        <TableHead className="text-center">Qtd</TableHead>
+                                        <TableHead className="text-right">Valor Un.</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {productHistory.map((h: any, i: number) => (
+                                        <TableRow key={i}>
+                                            <TableCell className="text-xs text-muted-foreground">
+                                                {formatDate(h.date)}
+                                            </TableCell>
+                                            <TableCell className="font-medium text-slate-700">
+                                                {h.customer}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                {h.quantity}
+                                            </TableCell>
+                                            <TableCell className="text-right font-bold text-emerald-700">
+                                                {formatCurrency(h.price)}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
+                    </div>
                 </DialogContent>
             </Dialog>
 

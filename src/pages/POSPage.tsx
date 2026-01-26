@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertCircle, CheckCircle2, DollarSign, CreditCard, Wallet, RefreshCw, Lock, Printer, User as UserIcon, ShoppingBag } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { MoneyInput } from '@/components/ui/money-input';
 
 interface SaleQueueItem {
@@ -44,6 +45,7 @@ export const POSPage = () => {
 
     // State
     const [selectedSale, setSelectedSale] = useState<SaleQueueItem | null>(null);
+    const [isFiscalEnabled, setIsFiscalEnabled] = useState(true); // Default to Fiscal? Or User Config? Default True for now as requested skeleton.
     const [paymentMethod, setPaymentMethod] = useState<'money' | 'card' | 'pix'>('money');
     const [amountPaid, setAmountPaid] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -316,7 +318,7 @@ export const POSPage = () => {
                                                                 {sale.salesperson_name}
                                                             </Badge>
                                                             <span className="text-xs text-muted-foreground font-mono">
-                                                                {formatDate(sale.created_at).split(' ')[1].substring(0, 5)}
+                                                                {formatDate(sale.created_at) && formatDate(sale.created_at).includes(' ') ? formatDate(sale.created_at).split(' ')[1].substring(0, 5) : '--:--'}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -418,18 +420,38 @@ export const POSPage = () => {
                                         </div>
                                     </CardContent>
 
-                                    <CardFooter className="p-4 bg-slate-50 border-t flex gap-4">
-                                        <Button variant="outline" size="lg" className="flex-1 h-14 text-lg border-slate-300 hover:bg-slate-100 text-slate-600" onClick={() => setSelectedSale(null)}>
-                                            Cancelar
-                                        </Button>
-                                        <Button
-                                            size="lg"
-                                            className="flex-[2] bg-emerald-600 hover:bg-emerald-700 h-14 text-xl font-bold shadow-lg shadow-emerald-900/20"
-                                            disabled={!canPay || isProcessing}
-                                            onClick={handleProcessPayment}
-                                        >
-                                            {isProcessing ? 'Processando...' : `Confirmar Recebimento`}
-                                        </Button>
+                                    <CardFooter className="p-4 bg-slate-50 border-t flex flex-col gap-4">
+
+                                        {/* Fiscal Toggle */}
+                                        <div className="w-full flex justify-between items-center px-2 bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                                            <div className="flex items-center gap-2">
+                                                <Printer className={`w-5 h-5 ${isFiscalEnabled ? 'text-blue-600' : 'text-slate-400'}`} />
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-slate-700">Nota Fiscal (NFC-e)</span>
+                                                    <span className="text-xs text-muted-foreground">{isFiscalEnabled ? 'Será emitida ao finalizar' : 'Apenas controle interno'}</span>
+                                                </div>
+                                            </div>
+                                            <Switch checked={isFiscalEnabled} onCheckedChange={setIsFiscalEnabled} />
+                                        </div>
+
+                                        <div className="w-full flex gap-4">
+                                            <Button variant="outline" size="lg" className="flex-1 h-14 text-lg border-slate-300 hover:bg-slate-100 text-slate-600" onClick={() => setSelectedSale(null)}>
+                                                Cancelar
+                                            </Button>
+                                            <Button
+                                                size="lg"
+                                                className={`flex-[2] h-14 text-xl font-bold shadow-lg transition-all ${isFiscalEnabled ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-900/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/20'}`}
+                                                disabled={!canPay || isProcessing}
+                                                onClick={handleProcessPayment}
+                                            >
+                                                {isProcessing ? 'Processando...' : (
+                                                    <div className="flex flex-col items-center leading-none gap-1">
+                                                        <span>{isFiscalEnabled ? 'EMITIR NFC-e' : 'RECEBER'}</span>
+                                                        <span className="text-xs opacity-80 font-normal">{formatCurrency(selectedSale.final_value)}</span>
+                                                    </div>
+                                                )}
+                                            </Button>
+                                        </div>
                                     </CardFooter>
                                 </Card>
                             ) : (
