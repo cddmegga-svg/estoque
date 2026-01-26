@@ -36,6 +36,7 @@ interface CashRegister {
     opening_balance: number;
     closing_balance?: number;
     opened_at: string;
+    opening_employee_id?: string;
 }
 
 export const POSPage = () => {
@@ -46,7 +47,8 @@ export const POSPage = () => {
     // State
     const [selectedSale, setSelectedSale] = useState<SaleQueueItem | null>(null);
     const [isFiscalEnabled, setIsFiscalEnabled] = useState(true); // Default to Fiscal? Or User Config? Default True for now as requested skeleton.
-    const [paymentMethod, setPaymentMethod] = useState<'money' | 'card' | 'pix'>('money');
+    const [paymentMethod, setPaymentMethod] = useState<'money' | 'credit_card' | 'debit_card' | 'pix'>('money');
+    const [installments, setInstallments] = useState(1); // For Credit Card
     const [amountPaid, setAmountPaid] = useState(0);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -152,8 +154,8 @@ export const POSPage = () => {
 
     // Actions - Close Register
     const [isCloseRegisterOpen, setIsCloseRegisterOpen] = useState(false);
-    const [closingValues, setClosingValues] = useState({ money: 0, card: 0, pix: 0 });
-    const [calculatedTotals, setCalculatedTotals] = useState({ money: 0, card: 0, pix: 0, total: 0 });
+    const [closingValues, setClosingValues] = useState({ money: 0, credit_card: 0, debit_card: 0, pix: 0 });
+    const [calculatedTotals, setCalculatedTotals] = useState({ money: 0, credit_card: 0, debit_card: 0, pix: 0, total: 0 });
 
     const handleOpenRegister = async () => {
         if (!openingPin) {
@@ -211,11 +213,12 @@ export const POSPage = () => {
 
         if (!error && data) {
             const totals = data.reduce((acc: any, curr: any) => {
-                acc[curr.payment_method] = (acc[curr.payment_method] || 0) + curr.final_value;
+                const method = curr.payment_method;
+                acc[method] = (acc[method] || 0) + curr.final_value;
                 acc.total += curr.final_value;
                 return acc;
-            }, { money: 0, card: 0, pix: 0, total: 0 });
-            setClosingValues({ money: totals.money, card: totals.card, pix: totals.pix }); // Pre-fill with expected
+            }, { money: 0, credit_card: 0, debit_card: 0, pix: 0, total: 0 });
+            setClosingValues({ money: totals.money, credit_card: totals.credit_card, debit_card: totals.debit_card, pix: totals.pix }); // Pre-fill
             setCalculatedTotals(totals);
         }
 
@@ -225,7 +228,7 @@ export const POSPage = () => {
     const handleCloseRegister = async () => {
         if (!currentRegister) return;
 
-        const totalReported = closingValues.money + closingValues.card + closingValues.pix;
+        const totalReported = closingValues.money + closingValues.credit_card + closingValues.debit_card + closingValues.pix;
         const diff = totalReported - calculatedTotals.total; // Simple diff
 
         try {
@@ -457,30 +460,38 @@ export const POSPage = () => {
                                         </div>
 
                                         <div className="p-6 space-y-6 flex-1 bg-white">
-                                            <div className="grid grid-cols-3 gap-4">
+                                            <div className="grid grid-cols-2 gap-4">
                                                 <Button
                                                     variant={paymentMethod === 'money' ? 'default' : 'outline'}
-                                                    className={`h-24 flex flex-col gap-2 rounded-xl transition-all ${paymentMethod === 'money' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
+                                                    className={`h-20 flex flex-col gap-1 rounded-xl transition-all ${paymentMethod === 'money' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
                                                     onClick={() => setPaymentMethod('money')}
                                                 >
-                                                    <DollarSign className="w-8 h-8" />
-                                                    <span className="font-bold">Dinheiro (F1)</span>
-                                                </Button>
-                                                <Button
-                                                    variant={paymentMethod === 'card' ? 'default' : 'outline'}
-                                                    className={`h-24 flex flex-col gap-2 rounded-xl transition-all ${paymentMethod === 'card' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
-                                                    onClick={() => setPaymentMethod('card')}
-                                                >
-                                                    <CreditCard className="w-8 h-8" />
-                                                    <span className="font-bold">Cartão (F2)</span>
+                                                    <DollarSign className="w-6 h-6" />
+                                                    <span className="font-bold">Dinheiro</span>
                                                 </Button>
                                                 <Button
                                                     variant={paymentMethod === 'pix' ? 'default' : 'outline'}
-                                                    className={`h-24 flex flex-col gap-2 rounded-xl transition-all ${paymentMethod === 'pix' ? 'bg-teal-600 hover:bg-teal-700 shadow-teal-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
+                                                    className={`h-20 flex flex-col gap-1 rounded-xl transition-all ${paymentMethod === 'pix' ? 'bg-teal-600 hover:bg-teal-700 shadow-teal-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
                                                     onClick={() => setPaymentMethod('pix')}
                                                 >
-                                                    <Wallet className="w-8 h-8" />
-                                                    <span className="font-bold">PIX (F3)</span>
+                                                    <Wallet className="w-6 h-6" />
+                                                    <span className="font-bold">PIX</span>
+                                                </Button>
+                                                <Button
+                                                    variant={paymentMethod === 'debit_card' ? 'default' : 'outline'}
+                                                    className={`h-20 flex flex-col gap-1 rounded-xl transition-all ${paymentMethod === 'debit_card' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
+                                                    onClick={() => setPaymentMethod('debit_card')}
+                                                >
+                                                    <CreditCard className="w-6 h-6" />
+                                                    <span className="font-bold">Débito</span>
+                                                </Button>
+                                                <Button
+                                                    variant={paymentMethod === 'credit_card' ? 'default' : 'outline'}
+                                                    className={`h-20 flex flex-col gap-1 rounded-xl transition-all ${paymentMethod === 'credit_card' ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
+                                                    onClick={() => setPaymentMethod('credit_card')}
+                                                >
+                                                    <CreditCard className="w-6 h-6" />
+                                                    <span className="font-bold">Crédito</span>
                                                 </Button>
                                             </div>
 
@@ -589,8 +600,10 @@ export const POSPage = () => {
                                                 <TableCell>
                                                     <Badge variant="outline" className="uppercase text-[10px]">
                                                         {sale.payment_method === 'money' ? 'Dinheiro' :
-                                                            sale.payment_method === 'card' ? 'Cartão' :
-                                                                sale.payment_method === 'pix' ? 'PIX' : sale.payment_method}
+                                                            sale.payment_method === 'credit_card' ? 'Crédito' :
+                                                                sale.payment_method === 'debit_card' ? 'Débito' :
+                                                                    sale.payment_method === 'pix' ? 'PIX' :
+                                                                        sale.payment_method === 'card' ? 'Cartão (Antigo)' : sale.payment_method}
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right font-bold text-emerald-700">
@@ -624,8 +637,20 @@ export const POSPage = () => {
                     </DialogHeader>
                     <div className="py-4 space-y-4">
                         <div className="space-y-2">
+                            <Label>Funcionário (PIN)</Label>
+                            <Input
+                                type="password"
+                                inputMode="numeric"
+                                placeholder="Seu PIN de Acesso"
+                                className="text-center tracking-widest text-lg"
+                                value={openingPin}
+                                onChange={(e) => setOpeningPin(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                        <div className="space-y-2">
                             <Label>Saldo Inicial (R$)</Label>
-                            <MoneyInput value={openingBalance} onChange={setOpeningBalance} autoFocus />
+                            <MoneyInput value={openingBalance} onChange={setOpeningBalance} />
                         </div>
                     </div>
                     <DialogFooter>
@@ -638,23 +663,74 @@ export const POSPage = () => {
 
             {/* Close Register Dialog */}
             <Dialog open={isCloseRegisterOpen} onOpenChange={setIsCloseRegisterOpen}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Fechar Caixa</DialogTitle>
+                        <DialogTitle>Conferência de Fechamento</DialogTitle>
                         <DialogDescription>
-                            Realize a conferência dos valores antes de encerrar.
+                            Confira os valores computados vs valores em gaveta.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="py-4 space-y-4">
-                        <div className="p-4 bg-amber-50 text-amber-800 rounded-md text-sm mb-4">
-                            <strong>Atenção:</strong> Ao fechar o caixa, você não poderá realizar mais recebimentos nesta sessão.
+                    <div className="py-2 space-y-4">
+
+                        {/* Summary */}
+                        <div className="grid grid-cols-2 gap-2 bg-slate-50 p-4 rounded-lg border mb-4">
+                            <div className="col-span-2 text-sm font-bold text-slate-500 uppercase tracking-wider text-center border-b pb-2 mb-2">
+                                Valores Computados
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span>Dinheiro:</span>
+                                <span className="font-mono font-bold text-slate-700">{formatCurrency(calculatedTotals.money)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span>Débito:</span>
+                                <span className="font-mono font-bold text-slate-700">{formatCurrency(calculatedTotals.debit_card)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span>Crédito:</span>
+                                <span className="font-mono font-bold text-slate-700">{formatCurrency(calculatedTotals.credit_card)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span>PIX:</span>
+                                <span className="font-mono font-bold text-slate-700">{formatCurrency(calculatedTotals.pix)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm border-t pt-1 font-bold text-emerald-600 mt-2">
+                                <span>Total:</span>
+                                <span className="font-mono text-lg">{formatCurrency(calculatedTotals.total)}</span>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label>Dinheiro em Gaveta (R$)</Label>
-                            <MoneyInput
-                                value={closingValues.money}
-                                onChange={(v) => setClosingValues(prev => ({ ...prev, money: v }))}
-                            />
+
+                        <div className="space-y-3">
+                            <Label className="text-base font-bold text-slate-800">Valores em Gaveta/Filipeta</Label>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <Label className="text-xs">Dinheiro</Label>
+                                    <MoneyInput
+                                        value={closingValues.money}
+                                        onChange={(v) => setClosingValues(prev => ({ ...prev, money: v }))}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs">PIX</Label>
+                                    <MoneyInput
+                                        value={closingValues.pix}
+                                        onChange={(v) => setClosingValues(prev => ({ ...prev, pix: v }))}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs">Débito</Label>
+                                    <MoneyInput
+                                        value={closingValues.debit_card}
+                                        onChange={(v) => setClosingValues(prev => ({ ...prev, debit_card: v }))}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs">Crédito</Label>
+                                    <MoneyInput
+                                        value={closingValues.credit_card}
+                                        onChange={(v) => setClosingValues(prev => ({ ...prev, credit_card: v }))}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <DialogFooter>
@@ -665,6 +741,7 @@ export const POSPage = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
 
             {/* Cashier Identification Dialog - Used explicitly for sensitive ops, but regular flow is PIN-free per request */}
             <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
