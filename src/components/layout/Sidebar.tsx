@@ -24,7 +24,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
     ];
 
-    if (hasPermission('view_products') || hasPermission('manage_stock')) {
+    if (hasPermission('view_products') || hasPermission('manage_stock') || hasPermission('view_stock')) {
         menuItems.push(
             { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' },
             { id: 'products', icon: Package, label: 'Produtos', path: '/products' }

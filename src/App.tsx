@@ -76,8 +76,8 @@ function App() {
 
       case 'stock':
       case 'products':
-        if (!hasPermission('view_products') && !hasPermission('manage_stock'))
-          return <div className="p-8 text-center text-red-500">Acesso Negado: Você não tem permissão para ver produtos.</div>;
+        if (!hasPermission('view_products') && !hasPermission('manage_stock') && !hasPermission('view_stock'))
+          return <div className="p-8 text-center text-red-500">Acesso Negado: Você não tem permissão para ver produtos/estoque.</div>;
         return currentPage === 'stock' ? <StockPage user={user} params={pageParams} /> : <ProductsPage />;
 
       case 'import':

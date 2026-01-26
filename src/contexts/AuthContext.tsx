@@ -73,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     email: data.email,
                     role: data.role,
                     filialId: data.filial_id,
+                    permissions: data.permissions || [],
                 };
                 setUser(appUser);
             }

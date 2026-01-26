@@ -34,8 +34,9 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
 
   const AVAILABLE_PERMISSIONS = [
     { id: 'view_dashboard', label: 'Ver Dashboard' },
-    { id: 'view_products', label: 'Ver Produtos' },
-    { id: 'manage_stock', label: 'Movimentar Estoque' },
+    { id: 'view_products', label: 'Ver Produtos (Cadastro)' },
+    { id: 'view_stock', label: 'Ver Estoque (Quantidades)' },
+    { id: 'manage_stock', label: 'Movimentar Estoque (Entrada/Saída)' },
     { id: 'create_sale', label: 'Realizar Vendas' },
     { id: 'view_reports', label: 'Ver Relatórios (BI)' },
     { id: 'view_transfers', label: 'Ver Transferências' },
