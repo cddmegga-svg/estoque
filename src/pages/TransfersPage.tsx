@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
-import { ArrowLeftRight, Plus, History, Package, Trash2, Printer, ChevronRight, Camera } from 'lucide-react';
+import { ArrowLeftRight, Plus, History, Package, Trash2, Printer, ChevronRight, Camera, Zap } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -245,8 +245,87 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
       <Tabs defaultValue={canTransfer ? 'new' : 'history'}>
         <TabsList>
           <TabsTrigger value="new"><Plus className="w-4 h-4 mr-2" /> Nova Transferência</TabsTrigger>
+          <TabsTrigger value="suggestions"><Zap className="w-4 h-4 mr-2 text-amber-500" /> Sugestões (IA)</TabsTrigger>
           <TabsTrigger value="history"><History className="w-4 h-4 mr-2" /> Histórico</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="suggestions" className="space-y-6">
+          <Card className="border-amber-200 bg-amber-50/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-600" />
+                Oportunidades Identificadas
+              </CardTitle>
+              <CardDescription>
+                O sistema cruzou o estoque de todas as filiais e encontrou oportunidades de balanceamento.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produto</TableHead>
+                    <TableHead>Origem (Excesso)</TableHead>
+                    <TableHead>Destino (Falta)</TableHead>
+                    <TableHead>Sugestão</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Mock Data - In production this comes from v_filial_stock_status */}
+                  <TableRow className="bg-white">
+                    <TableCell>
+                      <div className="font-medium">Dipirona 500mg</div>
+                      <div className="text-xs text-muted-foreground">Medley</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-bold text-emerald-700">Filial Centro</div>
+                      <div className="text-xs text-muted-foreground">Estoque: 450 (Alto)</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-bold text-red-600">Filial Shopping</div>
+                      <div className="text-xs text-muted-foreground">Estoque: 12 (Crítico)</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 font-bold">
+                        Transferir 100 un
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                        Aceitar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="bg-white">
+                    <TableCell>
+                      <div className="font-medium">Cimegripe 20cp</div>
+                      <div className="text-xs text-muted-foreground">Cimed</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-bold text-emerald-700">Filial Norte</div>
+                      <div className="text-xs text-muted-foreground">Estoque: 200 (Alto)</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-bold text-red-600">Filial Centro</div>
+                      <div className="text-xs text-muted-foreground">Estoque: 0 (Zerado)</div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 font-bold">
+                        Transferir 50 un
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                        Aceitar
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="new" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

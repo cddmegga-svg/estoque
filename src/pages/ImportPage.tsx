@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, AlertCircle, CheckCircle, Package } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Package, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -604,6 +604,43 @@ export const ImportPage = ({ user }: ImportPageProps) => {
                                 </div>
                               </div>
                             </div>
+
+                            {/* Cost Divergence Alert */}
+                            {(() => {
+                              // Mock check - in prod check against products list
+                              // This demonstrates the UI for "Custo Diferente"
+                              const currentCost = 100; // Mock existing cost
+                              const newCost = item.unitPrice;
+                              const diffPercent = Math.abs((newCost - currentCost) / currentCost) * 100;
+
+                              // Only show if we found an existing product and diff is > 10%
+                              // For demo purposes we are hardcoding a logic check or just showing example
+                              return null;
+                            })()}
+
+                            {/* Real Check Logic */}
+                            {products.find(p => p.ean === item.ean) && (() => {
+                              const exist = products.find(p => p.ean === item.ean);
+                              if (!exist || !exist.costPrice) return null;
+
+                              const oldPrice = exist.costPrice;
+                              const newPrice = item.unitPrice;
+                              const diff = newPrice - oldPrice;
+                              const diffPercent = (diff / oldPrice) * 100;
+
+                              if (Math.abs(diffPercent) > 10) {
+                                return (
+                                  <Alert variant={diff > 0 ? "destructive" : "default"} className="mt-2 text-xs py-2 bg-amber-50 border-amber-200 text-amber-800">
+                                    <AlertTriangle className="w-3 h-3 text-amber-600 mr-2" />
+                                    <AlertDescription>
+                                      <strong>Alerta de Custo:</strong> {diff > 0 ? 'Aumento' : 'Redução'} de {diffPercent.toFixed(1)}% em relação ao cadastro.
+                                      (Anterior: {formatCurrency(oldPrice)} vs Atual: {formatCurrency(newPrice)})
+                                    </AlertDescription>
+                                  </Alert>
+                                );
+                              }
+                              return null;
+                            })()}
 
                             {hasLoteAndExpiration && (
                               <div className="flex items-center gap-2 text-sm text-green-600 mt-2">
