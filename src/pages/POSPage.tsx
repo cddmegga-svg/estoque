@@ -122,6 +122,9 @@ export const POSPage = () => {
     const [isCashierDialogOpen, setIsCashierDialogOpen] = useState(false);
 
     // Actions
+    const [isCloseRegisterOpen, setIsCloseRegisterOpen] = useState(false);
+    const [closingValues, setClosingValues] = useState({ money: 0, card: 0, pix: 0 });
+
     const handleOpenRegister = async () => {
         try {
             const { error } = await supabase
@@ -143,6 +146,32 @@ export const POSPage = () => {
         }
     };
 
+    const handleCloseRegister = async () => {
+        try {
+            if (!currentRegister) return;
+
+            const totalReported = closingValues.money; // Usually we just check money in drawer vs expected
+
+            const { error } = await supabase
+                .from('cash_registers')
+                .update({
+                    status: 'closed',
+                    closing_balance: totalReported,
+                    closed_at: new Date().toISOString()
+                })
+                .eq('id', currentRegister.id);
+
+            if (error) throw error;
+
+            toast({ title: 'Caixa Fechado', description: `Saldo final informado: ${formatCurrency(totalReported)}` });
+            queryClient.invalidateQueries({ queryKey: ['cash_register'] });
+            setIsCloseRegisterOpen(false);
+
+        } catch (err) {
+            toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao fechar caixa.' });
+        }
+    };
+
     const initiatePayment = () => {
         if (!selectedSale || !currentRegister) return;
         setCashierPin('');
@@ -159,12 +188,12 @@ export const POSPage = () => {
                 .from('employees')
                 .select('id, name, role')
                 .eq('pin', cashierPin)
-                .in('role', ['cashier', 'manager'])
+                .in('role', ['cashier', 'manager', 'admin'])
                 .eq('active', true)
                 .single();
 
             if (cashierError || !cashier) {
-                toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Apenas Caixas ou Gerentes podem finalizar.' });
+                toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Permissão insuficiente.' });
                 return;
             }
 
@@ -235,24 +264,35 @@ export const POSPage = () => {
                                     }}
                                 >
                                     <div className="flex justify-between mb-1">
-                                        <span className="font-bold text-slate-800">{sale.customer_name}</span>
-                                        <Badge variant="outline" className="text-xs">{sale.salesperson_code}</Badge>
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-slate-800 text-lg">{sale.customer_name}</span>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <Badge variant="secondary" className="text-[10px] px-1 py-0 h-5">
+                                                    {sale.salesperson_name}
+                                                </Badge>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {formatDate(sale.created_at)}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between text-sm text-muted-foreground">
-                                        <span>{sale.items_count} itens</span>
-                                        <span className="font-mono text-emerald-700 font-bold">{formatCurrency(sale.final_value)}</span>
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 mt-1">
-                                        {formatDate(sale.created_at)} • Vend: {sale.salesperson_name}
+                                    <div className="flex justify-between text-sm text-muted-foreground mt-2 border-t pt-2 border-slate-100">
+                                        <span>{sale.items_count} volumes</span>
+                                        <span className="font-mono text-emerald-700 font-bold text-lg">{formatCurrency(sale.final_value)}</span>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
                 </CardContent>
-                <CardFooter className="border-t p-2 bg-slate-100 flex justify-between text-xs text-muted-foreground">
-                    <span>Sessão: {currentRegister?.id.slice(0, 8)}</span>
-                    <span>Aberto em: {currentRegister && formatDate(currentRegister.opened_at)}</span>
+                <CardFooter className="border-t p-4 bg-slate-100 flex justify-between text-xs text-muted-foreground items-center">
+                    <div>
+                        <div className="font-bold text-slate-700">Sessão: {currentRegister?.id.slice(0, 8)}</div>
+                        <div>Aberto em: {currentRegister && formatDate(currentRegister.opened_at)}</div>
+                    </div>
+                    <Button variant="destructive" size="sm" onClick={() => setIsCloseRegisterOpen(true)}>
+                        Fechar Caixa
+                    </Button>
                 </CardFooter>
             </Card>
 
@@ -377,6 +417,36 @@ export const POSPage = () => {
                     <DialogFooter>
                         <Button onClick={handleOpenRegister}>
                             Abrir Caixa
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Close Register Dialog */}
+            <Dialog open={isCloseRegisterOpen} onOpenChange={setIsCloseRegisterOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Fechar Caixa</DialogTitle>
+                        <DialogDescription>
+                            Realize a conferência dos valores antes de encerrar.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="p-4 bg-amber-50 text-amber-800 rounded-md text-sm mb-4">
+                            <strong>Atenção:</strong> Ao fechar o caixa, você não poderá realizar mais recebimentos nesta sessão.
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Dinheiro em Gaveta (R$)</Label>
+                            <MoneyInput
+                                value={closingValues.money}
+                                onChange={(v) => setClosingValues(prev => ({ ...prev, money: v }))}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCloseRegisterOpen(false)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleCloseRegister}>
+                            Encerrar Sessão
                         </Button>
                     </DialogFooter>
                 </DialogContent>
