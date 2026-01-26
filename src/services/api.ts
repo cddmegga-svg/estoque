@@ -25,7 +25,8 @@ export const fetchProducts = async (): Promise<Product[]> => {
         imageUrl: item.image_url,
         category: item.category,
         distributor: item.distributor,
-        minStock: item.min_stock || 0
+        minStock: item.min_stock || 0,
+        pmcPrice: item.pmc_price || 0
     }));
 };
 
@@ -147,6 +148,7 @@ export const addProduct = async (product: any, userId?: string) => {
         category: product.category,
         distributor: product.distributor,
         min_stock: product.minStock,
+        pmc_price: product.pmcPrice,
         created_by: userId,
         updated_by: userId
     };
@@ -179,6 +181,7 @@ export const updateProduct = async (id: string, updates: any, userId?: string) =
     if (updates.category !== undefined) productData.category = updates.category;
     if (updates.distributor !== undefined) productData.distributor = updates.distributor;
     if (updates.minStock !== undefined) productData.min_stock = updates.minStock;
+    if (updates.pmcPrice !== undefined) productData.pmc_price = updates.pmcPrice;
     if (userId) productData.updated_by = userId;
 
     const { data, error } = await supabase

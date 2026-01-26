@@ -8,7 +8,7 @@ import { useState } from 'react';
 
 interface SidebarProps {
     currentPage: string;
-    onNavigate: (page: string) => void;
+    onNavigate: (page: string, params?: any) => void;
     user: User | null;
 }
 

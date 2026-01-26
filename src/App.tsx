@@ -23,6 +23,7 @@ import { useProductSync } from '@/hooks/useProductSync';
 function App() {
   const { user, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [pageParams, setPageParams] = useState<any>({});
   const [showRegister, setShowRegister] = useState(false);
 
   // Background Sync
@@ -53,36 +54,68 @@ function App() {
     );
   }
 
-  // Authenticated
+  // Check Permissions Helper
+  const hasPermission = (permission: string) => {
+    // Admin always allows
+    if (user.role === 'admin') return true;
+    // Check permissions array
+    return user.permissions?.includes(permission);
+  };
+
+  const handleNavigate = (page: string, params?: any) => {
+    setCurrentPage(page);
+    setPageParams(params || {});
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <DashboardPage user={user} onNavigate={setCurrentPage} />;
+        return <DashboardPage user={user} onNavigate={handleNavigate} />;
+
       case 'stock':
-        return <StockPage user={user} />;
-      case 'import':
-        return <ImportPage user={user} />;
-      case 'transfers':
-        return <TransfersPage user={user} />;
       case 'products':
-        return <ProductsPage />;
+        if (!hasPermission('view_products') && !hasPermission('manage_stock'))
+          return <div className="p-8 text-center text-red-500">Acesso Negado: Você não tem permissão para ver produtos.</div>;
+        return currentPage === 'stock' ? <StockPage user={user} params={pageParams} /> : <ProductsPage />;
+
+      case 'import':
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <ImportPage user={user} />;
+
+      case 'transfers':
+        if (!hasPermission('view_transfers')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <TransfersPage user={user} />;
+
       case 'movements':
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <MovementsPage user={user} />;
+
       case 'suppliers':
-        return <SuppliersPage />;
+        return <SuppliersPage />; // Usually open or sales
+
       case 'financial':
+        if (!hasPermission('view_financial')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <FinancialPage user={user} />;
+
       case 'purchaseRequests':
-      case 'orders': // Match sidebar 'orders' id
+      case 'orders':
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <PurchaseRequestsPage user={user} />;
+
       case 'admin':
-        return user.role === 'admin' ? <AdminPage currentUser={user} /> : <div className="text-center py-12 text-muted-foreground">Acesso restrito a administradores</div>;
+        if (!hasPermission('admin_access') && !hasPermission('manage_users')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <AdminPage currentUser={user} />;
+
       case 'sales':
+        if (!hasPermission('create_sale')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <SalesPage />;
+
       case 'reports':
+        if (!hasPermission('view_reports')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <ReportsPage />;
+
       default:
-        return <DashboardPage user={user} onNavigate={setCurrentPage} />;
+        return <DashboardPage user={user} onNavigate={handleNavigate} />;
     }
   };
 
@@ -91,14 +124,14 @@ function App() {
       {/* Mobile Header */}
       <MobileHeader
         currentPage={currentPage}
-        onNavigate={setCurrentPage}
+        onNavigate={handleNavigate}
         user={user}
       />
 
       {/* Desktop Sidebar */}
       <Sidebar
         currentPage={currentPage}
-        onNavigate={setCurrentPage}
+        onNavigate={handleNavigate}
         user={user}
       />
 

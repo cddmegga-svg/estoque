@@ -45,7 +45,8 @@ export const ProductsPage = () => {
         taxIcms: 0,
         taxPis: 0,
         taxCofins: 0,
-        taxIpi: 0
+        taxIpi: 0,
+        pmcPrice: 0
     });
 
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -154,7 +155,8 @@ export const ProductsPage = () => {
             taxIcms: product.taxIcms || 0,
             taxPis: product.taxPis || 0,
             taxCofins: product.taxCofins || 0,
-            taxIpi: product.taxIpi || 0
+            taxIpi: product.taxIpi || 0,
+            pmcPrice: product.pmcPrice || 0
         });
         setEditingId(product.id);
         setIsDialogOpen(true);
@@ -373,7 +375,6 @@ export const ProductsPage = () => {
                                             id="salePrice"
                                             value={formData.salePrice}
                                             onChange={(val) => {
-                                                // Inverse calculation? If user sets price manually, update margin
                                                 const price = val;
                                                 const cost = formData.costPrice;
                                                 const newMargin = calculateMargin(cost, price);
@@ -381,6 +382,16 @@ export const ProductsPage = () => {
                                             }}
                                             placeholder="R$ 0,00"
                                             className="font-bold text-emerald-700"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="pmcPrice">PMC (Tabela)</Label>
+                                        <MoneyInput
+                                            id="pmcPrice"
+                                            value={formData.pmcPrice || 0}
+                                            onChange={(val) => handleInputChange('pmcPrice', val)}
+                                            placeholder="R$ 0,00"
+                                            className="text-muted-foreground"
                                         />
                                     </div>
                                 </div>
@@ -492,6 +503,14 @@ export const ProductsPage = () => {
                                                         <div className="flex flex-wrap gap-2 mt-1">
                                                             {product.activeIngredient && <span className="text-xs text-muted-foreground">{product.activeIngredient}</span>}
                                                             {product.category && <Badge variant="secondary" className="text-[10px] h-4 px-1">{product.category}</Badge>}
+                                                            {product.abcCurve && (
+                                                                <Badge className={`text-[10px] h-4 px-1 ${product.abcCurve === 'A' ? 'bg-emerald-500 hover:bg-emerald-600' :
+                                                                    product.abcCurve === 'B' ? 'bg-blue-500 hover:bg-blue-600' :
+                                                                        'bg-slate-500 hover:bg-slate-600'
+                                                                    }`}>
+                                                                    Curva {product.abcCurve}
+                                                                </Badge>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

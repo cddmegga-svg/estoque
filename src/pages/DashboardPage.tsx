@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 
 interface DashboardPageProps {
   user: User;
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, params?: any) => void;
 }
 
 export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
@@ -75,11 +75,11 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
         expiringItems={stats.expiringItems}
         products={products}
         filiais={filiais}
-        onViewDetails={() => onNavigate('stock')}
+        onViewDetails={() => onNavigate('stock', { filterExpiration: 'expiring' })}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+        <Card onClick={() => onNavigate('products')} className="cursor-pointer hover:bg-slate-50 transition-colors">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>Total de Produtos</CardDescription>
@@ -105,7 +105,7 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card onClick={() => onNavigate('admin')} className="cursor-pointer hover:bg-slate-50 transition-colors">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>Filiais</CardDescription>
@@ -118,7 +118,10 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
           </CardContent>
         </Card>
 
-        <Card className="border-warning">
+        <Card
+          className="border-warning cursor-pointer hover:bg-amber-50/50 transition-colors"
+          onClick={() => onNavigate('stock', { filterExpiration: 'expiring' })}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>Próximos Vencimento</CardDescription>
@@ -132,7 +135,10 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
         </Card>
 
         {/* Financial Widget */}
-        <Card className={financialStats.overdueCount > 0 ? "border-red-400 bg-red-50/10" : "border-blue-200"}>
+        <Card
+          className={`cursor-pointer transition-colors ${financialStats.overdueCount > 0 ? "border-red-400 bg-red-50/10 hover:bg-red-100/20" : "border-blue-200 hover:bg-blue-50/20"}`}
+          onClick={() => onNavigate('financial')}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>Contas a Pagar (7 dias)</CardDescription>
@@ -157,7 +163,11 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
         <CardContent>
           <div className="space-y-4">
             {stats.stockByFilial.map(({ filial, items, quantity }) => (
-              <div key={filial.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+              <div
+                key={filial.id}
+                className="flex items-center justify-between p-4 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => onNavigate('stock', { filialId: filial.id })}
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                     <Building2 className="w-5 h-5 text-primary" />
