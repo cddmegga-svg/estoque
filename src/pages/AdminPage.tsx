@@ -15,6 +15,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmployeeManagement } from '@/components/EmployeeManagement';
+import { EditUserDialog } from '@/components/EditUserDialog';
 
 interface AdminPageProps {
   currentUser: User;
@@ -32,8 +33,6 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
   // Permissions State
   const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
   const AVAILABLE_PERMISSIONS = [
     { id: 'view_dashboard', label: 'Ver Dashboard' },
@@ -129,6 +128,15 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
     setFilialForm({ type: 'store', name: '', cnpj: '', address: '' });
   };
 
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+
+  const handleOpenEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsEditUserOpen(true);
+  };
+
   const handleOpenPermissions = (user: User) => {
     setSelectedUser(user);
     setSelectedPermissions(user.permissions || []);
@@ -221,6 +229,9 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
 
                           <div className="flex flex-col gap-2">
                             <div className="flex flex-wrap gap-2">
+                              <Button variant="outline" size="icon" onClick={() => handleOpenEditUser(user)} title="Editar Usuário">
+                                <Edit className="w-4 h-4 text-primary" />
+                              </Button>
                               <Button variant="outline" size="icon" onClick={() => handleOpenPermissions(user)} title="Gerenciar Permissões">
                                 <Shield className="w-4 h-4 text-amber-600" />
                               </Button>
@@ -382,9 +393,17 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
         onClose={() => setIsCreateUserOpen(false)}
         filiais={filiais}
       />
+
+      <EditUserDialog
+        isOpen={isEditUserOpen}
+        onClose={() => setIsEditUserOpen(false)}
+        user={selectedUser}
+        filiais={filiais}
+      />
     </div>
   );
 };
+
 
 // Sub-component for Create User to keep file clean-ish
 import { useAuth } from '@/hooks/useAuth';

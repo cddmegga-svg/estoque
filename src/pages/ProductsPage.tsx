@@ -77,7 +77,7 @@ export const ProductsPage = () => {
 
     // Create Product Mutation
     const createProductMutation = useMutation({
-        mutationFn: addProduct,
+        mutationFn: (data: any) => addProduct(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['products'] });
             toast({ title: 'Produto cadastrado!', description: `${formData.name} salvo com sucesso.` });
@@ -406,7 +406,29 @@ export const ProductsPage = () => {
                                         <MoneyInput
                                             id="pmcPrice"
                                             value={formData.pmcPrice || 0}
-                                            onChange={(val) => handleInputChange('pmcPrice', val)}
+                                            onChange={(val) => {
+                                                const pmc = val;
+                                                // If Cost Price is set, calculate the margin relative to PMC
+                                                // Margin = ((PMC - Cost) / Cost) * 100
+                                                const cost = formData.costPrice;
+                                                let newMargin = formData.profitMargin;
+
+                                                if (cost > 0 && pmc > 0) {
+                                                    newMargin = calculateMargin(cost, pmc);
+                                                }
+
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    pmcPrice: pmc,
+                                                    // Optionally update sales price to match PMC or just update margin
+                                                    // Requirement: "Already calculate margin"
+                                                    // We'll update the SalePrice to PMC (since it's max price) and Margin accordingly?
+                                                    // Or just show margin? Usually users want to Sell at PMC or with a small discount.
+                                                    // Let's set SalePrice = PMC and Margin = calculated.
+                                                    salePrice: pmc,
+                                                    profitMargin: newMargin
+                                                }));
+                                            }}
                                             placeholder="R$ 0,00"
                                             className="text-muted-foreground"
                                         />

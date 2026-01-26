@@ -141,7 +141,7 @@ export const MobileHeader = (props: SidebarProps) => {
     const [open, setOpen] = useState(false);
 
     return (
-        <div className="lg:hidden h-16 border-b bg-white flex items-center justify-between px-4 sticky top-0 z-40 shadow-sm">
+        <div className="h-16 border-b bg-white flex items-center justify-between px-4 sticky top-0 z-40 shadow-sm">
             <div className="flex items-center gap-2">
                 <div className="h-8 w-8">
                     <img src="/logo.png" alt="Mega Farma" className="h-full w-full object-contain" />
