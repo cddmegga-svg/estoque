@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EmployeeManagement } from '@/components/EmployeeManagement';
 
 interface AdminPageProps {
   currentUser: User;
@@ -171,9 +172,10 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
       </div>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="users">Usuários</TabsTrigger>
-          <TabsTrigger value="filiais">Filiais e Centros de Distribuição</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsTrigger value="users">Usuários (Login)</TabsTrigger>
+          <TabsTrigger value="employees">Equipe (Vendedores/Caixas)</TabsTrigger>
+          <TabsTrigger value="filiais">Filiais</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -235,6 +237,10 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="employees">
+          <EmployeeManagement currentUser={currentUser} filiais={filiais} />
         </TabsContent>
 
         <TabsContent value="filiais">

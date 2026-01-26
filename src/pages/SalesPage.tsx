@@ -19,6 +19,7 @@ import { Product } from '@/types';
 interface CartItem {
     product: Product;
     quantity: number;
+    unitDiscount: number; // Discount per unit in currency
 }
 
 export const SalesPage = () => {
@@ -66,10 +67,23 @@ export const SalesPage = () => {
     }, [filiais, user?.filialId]);
 
     const subtotal = cart.reduce((acc, item) => acc + (item.product.salePrice * item.quantity), 0);
-    const total = Math.max(0, subtotal - discountValue);
+    const totalItemDiscounts = cart.reduce((acc, item) => acc + (item.unitDiscount * item.quantity), 0);
+    const total = Math.max(0, subtotal - totalItemDiscounts - discountValue);
 
     // Handlers
     const addToCart = (product: Product) => {
+        const salePrice = (product.pmcPrice && product.pmcPrice > 0) ? product.pmcPrice : product.salePrice;
+
+        // We override the product's salePrice in the cart item relative to PMC logic request
+        // Or better, we keep the product object as is, but we might want to "lock" the price used for this sale?
+        // Let's create a mutated product or just trust the logic?
+        // Let's rely on the fact that we calculate totals based on `item.product.salePrice` usually.
+        // If we want PMC to BE the salePrice, we should probably update the product object we store in cart.
+        const effectiveProduct = {
+            ...product,
+            salePrice: salePrice
+        };
+
         setCart(prev => {
             const existing = prev.find(item => item.product.id === product.id);
             if (existing) {
@@ -79,7 +93,7 @@ export const SalesPage = () => {
                         : item
                 );
             }
-            return [...prev, { product, quantity: 1 }];
+            return [...prev, { product: effectiveProduct, quantity: 1, unitDiscount: 0 }];
         });
         setSearchTerm(''); // Clear search after adding
     };
@@ -364,10 +378,12 @@ export const SalesPage = () => {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Item</TableHead>
-                                            <TableHead className="text-center">Qtd</TableHead>
+                                            <TableHead>Produto</TableHead>
+                                            <TableHead className="w-[100px] text-center">Qtd</TableHead>
+                                            <TableHead className="text-right">Preço Unit.</TableHead>
+                                            <TableHead className="text-right w-28">Desc. Unit.</TableHead>
                                             <TableHead className="text-right">Total</TableHead>
-                                            <TableHead className="w-[30px]"></TableHead>
+                                            <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -389,7 +405,34 @@ export const SalesPage = () => {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right font-medium py-2">
-                                                    {formatCurrency(item.product.salePrice * item.quantity)}
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <span className="text-xs text-muted-foreground line-through">
+                                                            {item.product.pmcPrice > 0 && item.product.pmcPrice !== item.product.salePrice ? formatCurrency(item.product.pmcPrice) : ''}
+                                                        </span>
+                                                        <span>{formatCurrency(item.product.salePrice)}</span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="py-2 w-28">
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-xs text-muted-foreground">-R$</span>
+                                                        <Input
+                                                            className="h-7 text-right px-2"
+                                                            type="number"
+                                                            value={item.unitDiscount > 0 ? item.unitDiscount : ''}
+                                                            placeholder="0,00"
+                                                            onChange={(e) => {
+                                                                const val = parseFloat(e.target.value);
+                                                                const newDiscount = isNaN(val) ? 0 : val;
+                                                                // Limit to price?
+                                                                // const limit = item.product.salePrice; 
+                                                                // if(newDiscount > limit) return; 
+                                                                setCart(prev => prev.map(ci => ci.product.id === item.product.id ? { ...ci, unitDiscount: newDiscount } : ci));
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-right font-bold py-2 text-emerald-700">
+                                                    {formatCurrency((item.product.salePrice - item.unitDiscount) * item.quantity)}
                                                 </TableCell>
                                                 <TableCell className="py-2">
                                                     <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeFromCart(item.product.id)}>

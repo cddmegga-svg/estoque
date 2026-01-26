@@ -690,3 +690,54 @@ export const completeConference = async (conferenceId: string, status: 'complete
     if (error) throw error;
     return data;
 };
+
+// --- Employees Management ---
+export const fetchEmployees = async () => {
+    const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('active', true)
+        .order('name');
+
+    if (error) throw error;
+    return data || [];
+};
+
+export const addEmployee = async (employee: { name: string, role: string, pin: string, filial_id: string }) => {
+    const { data, error } = await supabase
+        .from('employees')
+        .insert([{
+            name: employee.name,
+            role: employee.role,
+            pin: employee.pin,
+            filial_id: employee.filial_id,
+            active: true
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const updateEmployee = async (id: string, updates: any) => {
+    const { data, error } = await supabase
+        .from('employees')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const deleteEmployee = async (id: string) => {
+    // Soft delete
+    const { error } = await supabase
+        .from('employees')
+        .update({ active: false })
+        .eq('id', id);
+
+    if (error) throw error;
+};
