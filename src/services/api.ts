@@ -585,3 +585,83 @@ export const fetchTransferSuggestions = async (): Promise<TransferSuggestion[]> 
     }
     return data as TransferSuggestion[];
 };
+
+// Conference API
+export const fetchPendingConferences = async (filialId: string) => {
+    // 1. Fetch transfers to this filial in the last 7 days (or simply all pending audits)
+    // Assuming we want to audit "completed" transfers that haven't been audited yet.
+    // Ideally we'd join with conference_sessions to see if already started.
+    // For MVP, letting user pick from list of transfers.
+    const { data: transfers, error } = await supabase
+        .from('transfers')
+        .select(`
+            *,
+            products (name, ean)
+        `)
+        .eq('to_filial_id', filialId)
+        .eq('status', 'completed') // Only completed transfers arrive physically
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+    if (error) throw error;
+    return transfers;
+};
+
+export const createConferenceSession = async (sourceId: string, sourceType: 'transfer' | 'nfe', filialId: string, userId: string, userName: string) => {
+    const { data, error } = await supabase
+        .from('conference_sessions')
+        .insert([{
+            source_id: sourceId,
+            source_type: sourceType,
+            filial_id: filialId,
+            user_id: userId,
+            user_name: userName,
+            status: 'in_progress'
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const fetchConferenceItems = async (conferenceId: string) => {
+    const { data, error } = await supabase
+        .from('conference_items')
+        .select(`
+            *,
+            products (name, ean)
+        `)
+        .eq('conference_id', conferenceId);
+
+    if (error) throw error;
+    return data;
+};
+
+export const saveConferenceItem = async (conferenceId: string, productId: string, expected: number, scanned: number) => {
+    const { data, error } = await supabase
+        .from('conference_items')
+        .insert([{
+            conference_id: conferenceId,
+            product_id: productId,
+            expected_quantity: expected,
+            scanned_quantity: scanned
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const completeConference = async (conferenceId: string, status: 'completed' | 'divergent', notes?: string) => {
+    const { data, error } = await supabase
+        .from('conference_sessions')
+        .update({ status, finished_at: new Date().toISOString(), notes })
+        .eq('id', conferenceId)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};

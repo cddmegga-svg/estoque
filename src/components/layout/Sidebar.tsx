@@ -45,6 +45,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
             { id: 'movements', icon: RefreshCw, label: 'Movimentação Manual', path: '/movements' },
             { id: 'import', label: 'Importar XML', icon: FileText, path: '/import' },
             { id: 'transfers', label: 'Transferências', icon: ArrowLeftRight, path: '/transfers' },
+            { id: 'conference', label: 'Conferência Cega', icon: ClipboardList, path: '/conference' },
             { id: 'orders', label: 'Encomendas', icon: ClipboardList, path: '/orders' }
         );
     }

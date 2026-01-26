@@ -16,6 +16,7 @@ import { FinancialPage } from './pages/FinancialPage';
 import { PurchaseRequestsPage } from '@/pages/PurchaseRequestsPage';
 import { SalesPage } from '@/pages/SalesPage';
 import { ReportsPage } from '@/pages/ReportsPage';
+import { ConferencePage } from '@/pages/ConferencePage';
 import { Toaster } from '@/components/ui/toaster';
 
 import { useProductSync } from '@/hooks/useProductSync';
@@ -113,6 +114,10 @@ function App() {
       case 'reports':
         if (!hasPermission('view_reports')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <ReportsPage />;
+
+      case 'conference':
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <ConferencePage user={user} />;
 
       default:
         return <DashboardPage user={user} onNavigate={handleNavigate} />;
