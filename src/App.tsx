@@ -17,6 +17,7 @@ import { PurchaseRequestsPage } from '@/pages/PurchaseRequestsPage';
 import { SalesPage } from '@/pages/SalesPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { ConferencePage } from '@/pages/ConferencePage';
+import { LogisticsPage } from '@/pages/LogisticsPage';
 import { Toaster } from '@/components/ui/toaster';
 
 import { useProductSync } from '@/hooks/useProductSync';
@@ -115,7 +116,11 @@ function App() {
         if (!hasPermission('view_reports')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <ReportsPage />;
 
-      case 'conference':
+      case 'logistics':
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <LogisticsPage user={user} />;
+
+      case 'conference': // Keeping for direct access if needed, or remove? User wants hidden.
         if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <ConferencePage user={user} />;
 

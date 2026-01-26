@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Package, Filter, AlertTriangle, Calendar } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,21 @@ import { ProductCombobox } from '@/components/ProductCombobox';
 
 interface StockPageProps {
   user: User;
+  params?: {
+    filialId?: string;
+    filterExpiration?: string;
+  };
 }
 
-export const StockPage = ({ user }: StockPageProps) => {
+export const StockPage = ({ user, params }: StockPageProps) => {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [filterFilial, setFilterFilial] = useState<string>('all');
   const [filterExpiration, setFilterExpiration] = useState<string>('all');
+
+  useEffect(() => {
+    if (params?.filialId) setFilterFilial(params.filialId);
+    if (params?.filterExpiration) setFilterExpiration(params.filterExpiration);
+  }, [params]);
   const [sortBy, setSortBy] = useState<string>('name');
 
   const { data: stock = [], isLoading: isLoadingStock, error: stockError } = useQuery({ queryKey: ['stock'], queryFn: fetchStock });

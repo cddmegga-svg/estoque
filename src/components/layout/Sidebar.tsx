@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu, DollarSign, Users, ClipboardList, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu, DollarSign, Users, ClipboardList, BarChart3, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,10 +42,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
 
     if (hasPermission('manage_stock')) {
         menuItems.push(
-            { id: 'movements', icon: RefreshCw, label: 'Movimentação Manual', path: '/movements' },
-            { id: 'import', label: 'Importar XML', icon: FileText, path: '/import' },
-            { id: 'transfers', label: 'Transferências', icon: ArrowLeftRight, path: '/transfers' },
-            { id: 'conference', label: 'Conferência Cega', icon: ClipboardList, path: '/conference' },
+            { id: 'logistics', icon: Truck, label: 'Logística & Operações', path: '/logistics' },
             { id: 'orders', label: 'Encomendas', icon: ClipboardList, path: '/orders' }
         );
     }
