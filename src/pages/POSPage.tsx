@@ -284,139 +284,142 @@ export const POSPage = () => {
                                             </div>
                                         </div>
                                     ))}
-                                    <div className="p-8 space-y-8 flex-1">
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <Button
-                                                variant={paymentMethod === 'money' ? 'default' : 'outline'}
-                                                className={`h-24 flex flex-col gap-2 ${paymentMethod === 'money' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
-                                                onClick={() => setPaymentMethod('money')}
-                                            >
-                                                <DollarSign className="w-8 h-8" />
-                                                Dinheiro (F1)
-                                            </Button>
-                                            <Button
-                                                variant={paymentMethod === 'card' ? 'default' : 'outline'}
-                                                className={`h-24 flex flex-col gap-2 ${paymentMethod === 'card' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                                                onClick={() => setPaymentMethod('card')}
-                                            >
-                                                <CreditCard className="w-8 h-8" />
-                                                Cartão (F2)
-                                            </Button>
-                                            <Button
-                                                variant={paymentMethod === 'pix' ? 'default' : 'outline'}
-                                                className={`h-24 flex flex-col gap-2 ${paymentMethod === 'pix' ? 'bg-teal-600 hover:bg-teal-700' : ''}`}
-                                                onClick={() => setPaymentMethod('pix')}
-                                            >
-                                                <Wallet className="w-8 h-8" />
-                                                PIX (F3)
-                                            </Button>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-8 pt-4">
-                                            <div className="space-y-2">
-                                                <Label className="text-lg">Valor Recebido</Label>
-                                                <MoneyInput
-                                                    value={amountPaid}
-                                                    onChange={setAmountPaid}
-                                                    className="h-16 text-3xl font-bold font-mono"
-                                                    autoFocus
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-lg">Troco</Label>
-                                                <div className={`h-16 flex items-center px-4 rounded-md border text-3xl font-bold font-mono ${change > 0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-400'}`}>
-                                                    {formatCurrency(change)}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-
-                                    <CardFooter className="p-4 bg-slate-50 border-t flex gap-4">
-                                        <Button variant="outline" size="lg" className="flex-1" onClick={() => setSelectedSale(null)}>
-                                            Cancelar
-                                        </Button>
-                                        <Button
-                                            size="lg"
-                                            className="flex-[2] bg-emerald-600 hover:bg-emerald-700 h-14 text-xl"
-                                            disabled={!canPay || isProcessing}
-                                            onClick={handleProcessPayment}
-                                        >
-                                            {isProcessing ? 'Processando...' : `Receber (${formatCurrency(selectedSale.final_value)})`}
-                                        </Button>
-                                    </CardFooter>
-                                </Card>
-                                ) : (
-                                <div className="flex-1 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-muted-foreground gap-4 bg-slate-50/50">
-                                    <DollarSign className="w-16 h-16 opacity-20" />
-                                    <p className="text-xl">Selecione uma venda na fila para receber.</p>
                                 </div>
-                )}
                             </div>
+                            <div className="p-8 space-y-8 flex-1">
+                                <div className="grid grid-cols-3 gap-4">
+                                    <Button
+                                        variant={paymentMethod === 'money' ? 'default' : 'outline'}
+                                        className={`h-24 flex flex-col gap-2 ${paymentMethod === 'money' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+                                        onClick={() => setPaymentMethod('money')}
+                                    >
+                                        <DollarSign className="w-8 h-8" />
+                                        Dinheiro (F1)
+                                    </Button>
+                                    <Button
+                                        variant={paymentMethod === 'card' ? 'default' : 'outline'}
+                                        className={`h-24 flex flex-col gap-2 ${paymentMethod === 'card' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                                        onClick={() => setPaymentMethod('card')}
+                                    >
+                                        <CreditCard className="w-8 h-8" />
+                                        Cartão (F2)
+                                    </Button>
+                                    <Button
+                                        variant={paymentMethod === 'pix' ? 'default' : 'outline'}
+                                        className={`h-24 flex flex-col gap-2 ${paymentMethod === 'pix' ? 'bg-teal-600 hover:bg-teal-700' : ''}`}
+                                        onClick={() => setPaymentMethod('pix')}
+                                    >
+                                        <Wallet className="w-8 h-8" />
+                                        PIX (F3)
+                                    </Button>
+                                </div>
 
-                            {/* Open Register Dialog */}
-                            <Dialog open={isRegisterOpenDialog} onOpenChange={(open) => {
-                                // Prevent closing if no register (must open to work)
-                                if (currentRegister) setIsRegisterOpenDialog(open);
-                            }}>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Abrir Caixa</DialogTitle>
-                                        <DialogDescription>
-                                            Informe o fundo de troco inicial para iniciar as operações.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="py-4 space-y-4">
-                                        <div className="space-y-2">
-                                            <Label>Saldo Inicial (R$)</Label>
-                                            <MoneyInput value={openingBalance} onChange={setOpeningBalance} autoFocus />
+                                <div className="grid grid-cols-2 gap-8 pt-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-lg">Valor Recebido</Label>
+                                        <MoneyInput
+                                            value={amountPaid}
+                                            onChange={setAmountPaid}
+                                            className="h-16 text-3xl font-bold font-mono"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-lg">Troco</Label>
+                                        <div className={`h-16 flex items-center px-4 rounded-md border text-3xl font-bold font-mono ${change > 0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-400'}`}>
+                                            {formatCurrency(change)}
                                         </div>
                                     </div>
-                                    <DialogFooter>
-                                        <Button onClick={handleOpenRegister}>
-                                            Abrir Caixa
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
+                                </div>
+                            </div>
+                        </CardContent>
 
-                            {/* Cashier Identification Dialog - Used explicitly for sensitive ops, but regular flow is PIN-free per request */}
-                            <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
-                                <DialogContent className="sm:max-w-md">
-                                    <DialogHeader>
-                                        <DialogTitle>Confirmação de Caixa</DialogTitle>
-                                        <DialogDescription>
-                                            Digite seu PIN para validar esta operação.
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="flex flex-col gap-4 py-4">
-                                        <div className="flex items-center gap-4">
-                                            <Label htmlFor="c-pin" className="text-right w-20">PIN</Label>
-                                            <Input
-                                                id="c-pin"
-                                                type="password"
-                                                inputMode="numeric"
-                                                className="col-span-3 text-center text-2xl tracking-widest"
-                                                placeholder="____"
-                                                maxLength={6}
-                                                value={cashierPin}
-                                                onChange={(e) => setCashierPin(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') handleProcessPayment();
-                                                }}
-                                                autoFocus
-                                            />
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <Button type="button" variant="secondary" onClick={() => setIsCashierDialogOpen(false)}>Cancelar</Button>
-                                        <Button type="button" onClick={handleProcessPayment} disabled={!cashierPin || isProcessing}>
-                                            Confirmar
-                                        </Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
+                        <CardFooter className="p-4 bg-slate-50 border-t flex gap-4">
+                            <Button variant="outline" size="lg" className="flex-1" onClick={() => setSelectedSale(null)}>
+                                Cancelar
+                            </Button>
+                            <Button
+                                size="lg"
+                                className="flex-[2] bg-emerald-600 hover:bg-emerald-700 h-14 text-xl"
+                                disabled={!canPay || isProcessing}
+                                onClick={handleProcessPayment}
+                            >
+                                {isProcessing ? 'Processando...' : `Receber (${formatCurrency(selectedSale.final_value)})`}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                ) : (
+                    <div className="flex-1 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-muted-foreground gap-4 bg-slate-50/50">
+                        <DollarSign className="w-16 h-16 opacity-20" />
+                        <p className="text-xl">Selecione uma venda na fila para receber.</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Open Register Dialog */}
+            <Dialog open={isRegisterOpenDialog} onOpenChange={(open) => {
+                // Prevent closing if no register (must open to work)
+                if (currentRegister) setIsRegisterOpenDialog(open);
+            }}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Abrir Caixa</DialogTitle>
+                        <DialogDescription>
+                            Informe o fundo de troco inicial para iniciar as operações.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label>Saldo Inicial (R$)</Label>
+                            <MoneyInput value={openingBalance} onChange={setOpeningBalance} autoFocus />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={handleOpenRegister}>
+                            Abrir Caixa
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Cashier Identification Dialog - Used explicitly for sensitive ops, but regular flow is PIN-free per request */}
+            <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Confirmação de Caixa</DialogTitle>
+                        <DialogDescription>
+                            Digite seu PIN para validar esta operação.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-4">
+                        <div className="flex items-center gap-4">
+                            <Label htmlFor="c-pin" className="text-right w-20">PIN</Label>
+                            <Input
+                                id="c-pin"
+                                type="password"
+                                inputMode="numeric"
+                                className="col-span-3 text-center text-2xl tracking-widest"
+                                placeholder="____"
+                                maxLength={6}
+                                value={cashierPin}
+                                onChange={(e) => setCashierPin(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleProcessPayment();
+                                }}
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="secondary" onClick={() => setIsCashierDialogOpen(false)}>Cancelar</Button>
+                        <Button type="button" onClick={handleProcessPayment} disabled={!cashierPin || isProcessing}>
+                            Confirmar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
 
-                        </div >
-                        );
+        </div >
+    );
 };
