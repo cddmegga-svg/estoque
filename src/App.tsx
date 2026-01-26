@@ -134,25 +134,31 @@ function App() {
     }
   };
 
+  const isFullScreenPage = ['sales', 'pos'].includes(currentPage);
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
-      {/* Mobile Header */}
-      <MobileHeader
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        user={user}
-      />
+      {/* Mobile Header (Shows on mobile OR on full screen desktop pages) */}
+      <div className={isFullScreenPage ? 'block' : 'lg:hidden'}>
+        <MobileHeader
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          user={user}
+        />
+      </div>
 
-      {/* Desktop Sidebar */}
-      <Sidebar
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        user={user}
-      />
+      {/* Desktop Sidebar (Hidden on full screen pages) */}
+      {!isFullScreenPage && (
+        <Sidebar
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          user={user}
+        />
+      )}
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-64 p-4 lg:p-8 overflow-y-auto h-[calc(100vh-64px)] lg:h-screen">
-        <div className="max-w-7xl mx-auto">
+      <main className={`flex-1 p-4 lg:p-8 overflow-y-auto h-[calc(100vh-64px)] lg:h-screen ${!isFullScreenPage ? 'lg:ml-64' : ''}`}>
+        <div className={`mx-auto ${isFullScreenPage ? 'max-w-full px-4' : 'max-w-7xl'}`}>
           {renderPage()}
         </div>
       </main>

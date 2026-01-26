@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Search, ShoppingCart, Trash2, Plus, Minus, DollarSign, User as UserIcon } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, Plus, Minus, DollarSign, User as UserIcon, Package, ShoppingBag, Shield, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { fetchProducts, createSale, fetchFiliais } from '@/services/api';
