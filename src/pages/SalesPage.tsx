@@ -107,45 +107,78 @@ export const SalesPage = () => {
             let pct = 0;
             const sub = item.product.salePrice * item.quantity;
 
-            // Rules
-            if (cat.includes('genérico') || cat.includes('generico')) {
-                pct = 0.20; // 20%
-            } else if (cat.includes('similar')) {
-                pct = 0.15; // 15%
-            } else if (cat.includes('ético') || cat.includes('etico') || cat.includes('referência')) {
-                pct = 0.15; // 15%
-            } else if (cat.includes('perfumaria') || cat.includes('alimentação') || cat.includes('higiene')) {
-                pct = 0; // 0% - Manager only
+            // Check for explicitly set Max Discount on product
+            if (item.product.maxDiscountPercent !== undefined && item.product.maxDiscountPercent > 0) {
+                pct = item.product.maxDiscountPercent / 100;
             } else {
-                // Default fallback for undefined categories (e.g. 5% safe bet or 0?)
-                pct = 0.05;
+                // Fallback to Category defaults if not set on product
+                if (cat.includes('genérico') || cat.includes('generico') ||
+                    cat.includes('similar') ||
+                    cat.includes('ético') || cat.includes('etico') || cat.includes('referência')) {
+                    pct = 0.30;
+                } else if (cat.includes('perfumaria') || cat.includes('alimentação') || cat.includes('higiene')) {
+                    pct = 0.05;
+                } else {
+                    pct = 0.10;
+                }
             }
 
             const itemMax = sub * pct;
             totalMax += itemMax;
-            // details.push(`${item.product.name.slice(0,10)}...: ${pct*100}%`);
         }
         return { max: totalMax, details };
     };
+
+    const [selectedSaleType, setSelectedSaleType] = useState<'budget' | 'order'>('budget');
+
+    // Manager Override State
+    const [isManagerOverrideOpen, setIsManagerOverrideOpen] = useState(false);
+    const [managerPin, setManagerPin] = useState('');
+    const [pendingSalespersonId, setPendingSalespersonId] = useState<string | null>(null);
 
     // Salesperson Identity State
     const [salespersonCode, setSalespersonCode] = useState('');
     const [isSalespersonDialogOpen, setIsSalespersonDialogOpen] = useState(false);
     const [identifiedSalesperson, setIdentifiedSalesperson] = useState<{ id: string, name: string } | null>(null);
 
-    const checkSalesperson = async () => {
-        // Find user by code
-        // Note: Ideally this should be a direct API call, but we can search the loaded users list if available, or fetch.
-        // For security/performance, let's fetch.
+    const handleManagerOverride = async () => {
         try {
             const { data, error } = await supabase
-                .from('users')
-                .select('id, name')
-                .eq('employee_code', salespersonCode)
+                .from('employees')
+                .select('id, role')
+                .eq('pin', managerPin)
+                .in('role', ['manager', 'admin']) // Only managers/admins
+                .eq('active', true)
                 .single();
 
             if (error || !data) {
-                toast({ variant: 'destructive', title: 'Código Inválido', description: 'Vendedor não encontrado.' });
+                toast({ variant: 'destructive', title: 'Acesso Negado', description: 'PIN de Gerente inválido.' });
+                return;
+            }
+
+            // Success
+            setIsManagerOverrideOpen(false);
+            setManagerPin('');
+            if (pendingSalespersonId) {
+                finishPreSale(pendingSalespersonId, true); // true = override authorized
+            }
+        } catch (err) {
+            toast({ variant: 'destructive', title: 'Erro', description: 'Falha na validação.' });
+        }
+    };
+
+    const checkSalesperson = async () => {
+        try {
+            // Check in Employees table
+            const { data, error } = await supabase
+                .from('employees')
+                .select('id, name')
+                .eq('pin', salespersonCode)
+                .eq('active', true)
+                .single();
+
+            if (error || !data) {
+                toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Colaborador não encontrado.' });
                 return;
             }
 
@@ -153,7 +186,7 @@ export const SalesPage = () => {
             setIsSalespersonDialogOpen(false);
             finishPreSale(data.id);
         } catch (err) {
-            toast({ variant: 'destructive', title: 'Erro', description: 'Erro ao validar vendedor.' });
+            toast({ variant: 'destructive', title: 'Erro', description: 'Erro ao validar colaborador.' });
         }
     };
 
@@ -253,24 +286,36 @@ export const SalesPage = () => {
                         </CardHeader>
                         <CardContent className="flex-1 overflow-auto">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {filteredProducts?.map(product => (
-                                    <div
-                                        key={product.id}
-                                        className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition-colors flex flex-col justify-between"
-                                        onClick={() => addToCart(product)}
-                                    >
-                                        <div>
-                                            <h3 className="font-semibold line-clamp-2">{product.name}</h3>
-                                            <p className="text-sm text-muted-foreground mt-1">{product.manufacturer}</p>
+                                {filteredProducts?.map(product => {
+                                    const isMedicine = ['genérico', 'generico', 'similar', 'ético', 'etico', 'referência'].some(c => product.category?.toLowerCase().includes(c));
+
+                                    return (
+                                        <div
+                                            key={product.id}
+                                            className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition-colors flex flex-col justify-between"
+                                            onClick={() => addToCart(product)}
+                                        >
+                                            <div>
+                                                <h3 className="font-semibold line-clamp-2">{product.name}</h3>
+                                                <p className="text-sm text-muted-foreground mt-1">{product.manufacturer}</p>
+                                            </div>
+                                            <div className="mt-4 flex flex-col gap-1">
+                                                {isMedicine && product.pmcPrice > 0 && (
+                                                    <span className="text-xs text-muted-foreground line-through">
+                                                        PMC: {formatCurrency(product.pmcPrice)}
+                                                    </span>
+                                                )}
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-bold text-lg text-emerald-600">
+                                                        {/* Validate Price is not 0 */}
+                                                        {product.salePrice > 0 ? formatCurrency(product.salePrice) : 'R$ --'}
+                                                    </span>
+                                                    <Button size="sm" variant="secondary"><Plus className="w-4 h-4" /></Button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="mt-4 flex items-center justify-between">
-                                            <span className="font-bold text-lg text-emerald-600">
-                                                {formatCurrency(product.salePrice)}
-                                            </span>
-                                            <Button size="sm" variant="secondary"><Plus className="w-4 h-4" /></Button>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 {searchTerm && filteredProducts.length === 0 && (
                                     <div className="col-span-full text-center py-8 text-muted-foreground">
                                         Nenhum produto encontrado.
@@ -423,6 +468,42 @@ export const SalesPage = () => {
                     <DialogFooter>
                         <Button type="button" variant="secondary" onClick={() => setIsSalespersonDialogOpen(false)}>Cancelar</Button>
                         <Button type="button" onClick={checkSalesperson} disabled={!salespersonCode}>Confirmar</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Manager Override Dialog */}
+            <Dialog open={isManagerOverrideOpen} onOpenChange={setIsManagerOverrideOpen}>
+                <DialogContent className="sm:max-w-md border-red-200">
+                    <DialogHeader>
+                        <DialogTitle className="text-red-600 flex items-center gap-2">
+                            Autorização de Gerente
+                        </DialogTitle>
+                        <DialogDescription>
+                            Desconto acima do permitido. Solicite a senha do gerente.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-4">
+                        <div className="flex items-center gap-4">
+                            <Label htmlFor="mgr-pin" className="text-right w-20">PIN</Label>
+                            <Input
+                                id="mgr-pin"
+                                type="password"
+                                inputMode="numeric"
+                                className="col-span-3 text-center text-2xl tracking-widest"
+                                placeholder="____"
+                                value={managerPin}
+                                onChange={(e) => setManagerPin(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleManagerOverride();
+                                }}
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="secondary" onClick={() => setIsManagerOverrideOpen(false)}>Cancelar</Button>
+                        <Button type="button" variant="destructive" onClick={handleManagerOverride}>Autorizar</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

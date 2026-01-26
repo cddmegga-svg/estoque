@@ -12,6 +12,8 @@ import { fetchUsers, fetchFiliais, updateUser, deleteUser, addFilial, updateFili
 import { User, Filial } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface AdminPageProps {
   currentUser: User;

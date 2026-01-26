@@ -41,6 +41,7 @@ export interface Product {
   taxCofins?: number;
   taxIpi?: number;
   commissionRate?: number; // %
+  maxDiscountPercent?: number; // Added per user request
 }
 
 export const PRODUCT_CATEGORIES = [

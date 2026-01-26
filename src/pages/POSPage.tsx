@@ -78,12 +78,12 @@ export const POSPage = () => {
                 .from('sales')
                 .select(`
                     id, customer_name, total_value, discount_value, final_value, created_at,
-                    salesperson:salesperson_id(name, employee_code),
+                    employee:employee_id(name, pin), 
                     sale_items(count)
                 `)
                 .eq('filial_id', user?.filialId)
                 .eq('payment_status', 'pending')
-                .eq('status', 'open') // or 'completed' if using our previous logic, but we changed to 'open' in SalesPage
+                .eq('status', 'open')
                 .order('created_at', { ascending: true });
 
             if (error) throw error;
@@ -95,8 +95,8 @@ export const POSPage = () => {
                 discount_value: item.discount_value,
                 final_value: item.final_value,
                 created_at: item.created_at,
-                salesperson_name: item.salesperson?.name || 'Sistema',
-                salesperson_code: item.salesperson?.employee_code || '-',
+                salesperson_name: item.employee?.name || 'Sistema',
+                salesperson_code: item.employee?.pin || '-',
                 items_count: item.sale_items?.[0]?.count || 0
             }));
         },
@@ -114,6 +114,10 @@ export const POSPage = () => {
     const change = Math.max(0, amountPaid - (selectedSale?.final_value || 0));
     const pending = Math.max(0, (selectedSale?.final_value || 0) - amountPaid);
     const canPay = amountPaid >= (selectedSale?.final_value || 0);
+
+    // Cashier Identity State
+    const [cashierPin, setCashierPin] = useState('');
+    const [isCashierDialogOpen, setIsCashierDialogOpen] = useState(false);
 
     // Actions
     const handleOpenRegister = async () => {
@@ -137,11 +141,31 @@ export const POSPage = () => {
         }
     };
 
+    const initiatePayment = () => {
+        if (!selectedSale || !currentRegister) return;
+        setCashierPin('');
+        setIsCashierDialogOpen(true);
+    };
+
     const handleProcessPayment = async () => {
         if (!selectedSale || !currentRegister) return;
 
         setIsProcessing(true);
         try {
+            // Validate Cashier PIN
+            const { data: cashier, error: cashierError } = await supabase
+                .from('employees')
+                .select('id, name, role')
+                .eq('pin', cashierPin)
+                .in('role', ['cashier', 'manager'])
+                .eq('active', true)
+                .single();
+
+            if (cashierError || !cashier) {
+                toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Apenas Caixas ou Gerentes podem finalizar.' });
+                return;
+            }
+
             // Update Sale
             const { error } = await supabase
                 .from('sales')
@@ -150,6 +174,8 @@ export const POSPage = () => {
                     payment_status: 'paid',
                     payment_method: paymentMethod,
                     cashier_id: user?.id,
+                    employee_id: selectedSale.salesperson_code !== '-' ? undefined : cashier.id, // Only overwrite if needed? No, salesperson is Sales, Cashier is who received.
+                    cashier_employee_id: cashier.id, // New field for Cashier Person
                     cash_register_id: currentRegister.id,
                     // Store change?
                 })
@@ -165,6 +191,8 @@ export const POSPage = () => {
 
             setSelectedSale(null);
             setAmountPaid(0);
+            setIsCashierDialogOpen(false);
+            setCashierPin('');
             refetchQueue();
 
         } catch (error) {
@@ -297,7 +325,7 @@ export const POSPage = () => {
                                 disabled={!canPay || isProcessing}
                                 onClick={handleProcessPayment}
                             >
-                                {isProcessing ? 'Processando...' : `Confirmar Pagamento (${formatCurrency(selectedSale.final_value)})`}
+                                {isProcessing ? 'Processando...' : `Receber (${formatCurrency(selectedSale.final_value)})`}
                             </Button>
                         </CardFooter>
                     </Card>
@@ -334,6 +362,45 @@ export const POSPage = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Cashier Identification Dialog - Used explicitly for sensitive ops, but regular flow is PIN-free per request */}
+            <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Confirmação de Caixa</DialogTitle>
+                        <DialogDescription>
+                            Digite seu PIN para validar esta operação.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-4">
+                        <div className="flex items-center gap-4">
+                            <Label htmlFor="c-pin" className="text-right w-20">PIN</Label>
+                            <Input
+                                id="c-pin"
+                                type="password"
+                                inputMode="numeric"
+                                className="col-span-3 text-center text-2xl tracking-widest"
+                                placeholder="____"
+                                maxLength={6}
+                                value={cashierPin}
+                                onChange={(e) => setCashierPin(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleProcessPayment();
+                                }}
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="secondary" onClick={() => setIsCashierDialogOpen(false)}>Cancelar</Button>
+                        <Button type="button" onClick={handleProcessPayment} disabled={!cashierPin || isProcessing}>
+                            Confirmar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+
         </div>
     );
 };

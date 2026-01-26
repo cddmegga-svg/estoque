@@ -547,14 +547,13 @@ export const createSale = async (
             total_value: subtotal,
             discount_value: discount,
             final_value: total,
-            status: status,
             payment_status: paymentStatus,
             payment_method: paymentMethod,
             user_id: userId,
             user_name: userName,
             filial_id: filialId,
-            salesperson_id: salespersonId,
-            cashier_id: cashierId,
+            employee_id: salespersonId, // Using the new column
+            cashier_employee_id: cashierId && salespersonId !== cashierId ? cashierId : null, // If passed
             cash_register_id: cashRegisterId
         })
         .select()
