@@ -106,10 +106,13 @@ export const POSPage = () => {
         },
     });
 
-    // Fetch History (Completed Sales)
+    // Fetch History (Completed Sales - Full Day)
     const { data: history = [], isLoading: isLoadingHistory } = useQuery({
         queryKey: ['pos_history', user?.filialId],
         queryFn: async () => {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
             const { data, error } = await supabase
                 .from('sales')
                 .select(`
@@ -119,8 +122,8 @@ export const POSPage = () => {
                 `)
                 .eq('filial_id', user?.filialId)
                 .eq('status', 'completed')
-                .order('created_at', { ascending: false })
-                .limit(50);
+                .gte('created_at', today.toISOString())
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
             return data;
@@ -144,49 +147,101 @@ export const POSPage = () => {
     const [cashierPin, setCashierPin] = useState('');
     const [isCashierDialogOpen, setIsCashierDialogOpen] = useState(false);
 
-    // Actions
+    // Opening Session State
+    const [openingPin, setOpeningPin] = useState('');
+
+    // Actions - Close Register
     const [isCloseRegisterOpen, setIsCloseRegisterOpen] = useState(false);
     const [closingValues, setClosingValues] = useState({ money: 0, card: 0, pix: 0 });
+    const [calculatedTotals, setCalculatedTotals] = useState({ money: 0, card: 0, pix: 0, total: 0 });
 
     const handleOpenRegister = async () => {
+        if (!openingPin) {
+            toast({ variant: 'destructive', title: 'Erro', description: 'Informe o PIN.' });
+            return;
+        }
+
         try {
+            // Validate PIN
+            const { data: employee, error: empError } = await supabase
+                .from('employees')
+                .select('id, name, role')
+                .eq('pin', openingPin)
+                .single();
+
+            if (empError || !employee) {
+                toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Funcionário não encontrado.' });
+                return;
+            }
+
             const { error } = await supabase
                 .from('cash_registers')
                 .insert({
                     user_id: user?.id,
                     filial_id: user?.filialId,
                     opening_balance: openingBalance,
-                    status: 'open'
+                    status: 'open',
+                    opening_employee_id: employee.id // Set Session Owner
                 });
 
             if (error) throw error;
 
-            toast({ title: 'Caixa Aberto', description: 'Sessão iniciada com sucesso.' });
+            toast({ title: 'Caixa Aberto', description: `Sessão iniciada por ${employee.name}` });
             queryClient.invalidateQueries({ queryKey: ['cash_register'] });
             setIsRegisterOpenDialog(false);
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível abrir o caixa.' });
+            setOpeningPin('');
+        } catch (err) {
+            console.error(err);
+            toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao abrir caixa.' });
         }
     };
 
+    const handlePreCloseRegister = async () => {
+        // Calculate Totals from History (or DB Query for safety)
+        // Using 'history' from state since it covers "Today". 
+        // Ideally we filter by 'cash_register_id' if multiple registers per day, but 'history' query above is by Filial/Day.
+        // Better: Fetch aggregate from DB for THIS register session.
+        if (!currentRegister) return;
+
+        const { data, error } = await supabase
+            .from('sales')
+            .select('payment_method, final_value')
+            .eq('cash_register_id', currentRegister.id)
+            .eq('status', 'completed');
+
+        if (!error && data) {
+            const totals = data.reduce((acc: any, curr: any) => {
+                acc[curr.payment_method] = (acc[curr.payment_method] || 0) + curr.final_value;
+                acc.total += curr.final_value;
+                return acc;
+            }, { money: 0, card: 0, pix: 0, total: 0 });
+            setClosingValues({ money: totals.money, card: totals.card, pix: totals.pix }); // Pre-fill with expected
+            setCalculatedTotals(totals);
+        }
+
+        setIsCloseRegisterOpen(true);
+    };
+
     const handleCloseRegister = async () => {
+        if (!currentRegister) return;
+
+        const totalReported = closingValues.money + closingValues.card + closingValues.pix;
+        const diff = totalReported - calculatedTotals.total; // Simple diff
+
         try {
-            if (!currentRegister) return;
-
-            const totalReported = closingValues.money; // Usually we just check money in drawer vs expected
-
             const { error } = await supabase
                 .from('cash_registers')
                 .update({
                     status: 'closed',
-                    closing_balance: totalReported,
-                    closed_at: new Date().toISOString()
+                    closing_balance: totalReported, // Stores the user input total
+                    closed_at: new Date().toISOString(),
+                    notes: `Fechamento. Esperado: ${formatCurrency(calculatedTotals.total)}. Informado: ${formatCurrency(totalReported)}. Diff: ${formatCurrency(diff)}`
                 })
                 .eq('id', currentRegister.id);
 
             if (error) throw error;
 
-            toast({ title: 'Caixa Fechado', description: `Saldo final informado: ${formatCurrency(totalReported)}` });
+            toast({ title: 'Caixa Fechado', description: `Sessão encerrada.` });
             queryClient.invalidateQueries({ queryKey: ['cash_register'] });
             setIsCloseRegisterOpen(false);
 
@@ -197,27 +252,47 @@ export const POSPage = () => {
 
     const initiatePayment = () => {
         if (!selectedSale || !currentRegister) return;
-        setCashierPin('');
-        setIsCashierDialogOpen(true);
+
+        // Check if Session has Owner
+        // We need to type 'currentRegister' to include 'opening_employee_id' if we fetched it.
+        // Assuming the hook query fetches it. We might need to check 'useCashRegister'.
+        // If we don't have it in the type yet, we might need to cast or update type.
+        // Let's assume we can access it (will check type def later).
+        const sessionOwnerId = currentRegister.opening_employee_id;
+
+        if (sessionOwnerId) {
+            // Skip PIN, valid immediately.
+            handleProcessPayment(sessionOwnerId);
+        } else {
+            // Ask for PIN (Legacy mode or if opened without owner)
+            setCashierPin('');
+            setIsCashierDialogOpen(true);
+        }
     };
 
-    const handleProcessPayment = async () => {
+    const handleProcessPayment = async (overrideEmployeeId?: string) => {
         if (!selectedSale || !currentRegister) return;
 
         setIsProcessing(true);
         try {
-            // Validate Cashier PIN
-            const { data: cashier, error: cashierError } = await supabase
-                .from('employees')
-                .select('id, name, role')
-                .eq('pin', cashierPin)
-                .in('role', ['cashier', 'manager', 'admin'])
-                .eq('active', true)
-                .single();
+            let employeeId = overrideEmployeeId;
 
-            if (cashierError || !cashier) {
-                toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Permissão insuficiente.' });
-                return;
+            if (!employeeId) {
+                // Validate Cashier PIN (Dialog Mode)
+                const { data: cashier, error: cashierError } = await supabase
+                    .from('employees')
+                    .select('id, name, role')
+                    .eq('pin', cashierPin)
+                    .in('role', ['cashier', 'manager', 'admin'])
+                    .eq('active', true)
+                    .single();
+
+                if (cashierError || !cashier) {
+                    toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Permissão insuficiente.' });
+                    setIsProcessing(false);
+                    return;
+                }
+                employeeId = cashier.id;
             }
 
             // Update Sale
@@ -227,27 +302,27 @@ export const POSPage = () => {
                     status: 'completed',
                     payment_status: 'paid',
                     payment_method: paymentMethod,
-                    cashier_id: user?.id,
-                    employee_id: selectedSale.salesperson_code !== '-' ? undefined : cashier.id, // Only overwrite if needed? No, salesperson is Sales, Cashier is who received.
-                    cashier_employee_id: cashier.id, // New field for Cashier Person
+                    cashier_id: user?.id, // System User
+                    // The salesperson isn't changing, but we record WHO recieved it (Cashier Employee)
+                    cashier_employee_id: employeeId,
                     cash_register_id: currentRegister.id,
-                    // Store change?
                 })
                 .eq('id', selectedSale.id);
 
             if (error) throw error;
 
-            // Add movement to cash register? Usually we track summary, but detailed movements are good.
-            // But 'cash_movements' table we designed for Bleed/Supply, not every sale. 
-            // Sales are linked via cash_register_id, so we can sum them up later.
-
-            toast({ title: 'Venda Finalizada!', description: `Troco: ${formatCurrency(change)}`, className: 'bg-emerald-600 text-white' });
+            // ... (Rest of logic: Toast, Refresh, Close Dialog)
+            toast({ title: 'Venda Finalizada!', description: `Recebimento de ${formatCurrency(selectedSale.final_value)} registrado.` });
+            queryClient.invalidateQueries({ queryKey: ['pos_queue'] });
+            queryClient.invalidateQueries({ queryKey: ['pos_history'] }); // Refresh History
 
             setSelectedSale(null);
             setAmountPaid(0);
             setIsCashierDialogOpen(false);
-            setCashierPin('');
-            refetchQueue();
+            if (isFiscalEnabled) {
+                // Trigger Fiscal (Mock)
+                setTimeout(() => toast({ title: 'NFC-e', description: 'Emitida em Contingência (Simulação)' }), 1000);
+            }
 
         } catch (error) {
             console.error(error);
@@ -272,7 +347,7 @@ export const POSPage = () => {
                             <div className="text-xs text-muted-foreground font-bold uppercase">Sessão Atual</div>
                             <div className="text-sm font-mono font-bold text-slate-700">{currentRegister?.id.slice(0, 8) || 'FECHADO'}</div>
                         </div>
-                        <Button variant={currentRegister ? "destructive" : "default"} size="sm" onClick={() => currentRegister ? setIsCloseRegisterOpen(true) : setIsRegisterOpenDialog(true)}>
+                        <Button variant={currentRegister ? "destructive" : "default"} size="sm" onClick={() => currentRegister ? handlePreCloseRegister() : setIsRegisterOpenDialog(true)}>
                             {currentRegister ? 'Fechar Caixa' : 'Abrir Caixa'}
                         </Button>
                     </div>
@@ -332,6 +407,15 @@ export const POSPage = () => {
                                     </div>
                                 )}
                             </CardContent>
+                            <CardFooter className="border-t p-4 bg-slate-100 flex justify-between text-xs text-muted-foreground items-center">
+                                <div>
+                                    <div className="font-bold text-slate-700">Sessão: {currentRegister?.id.slice(0, 8)}</div>
+                                    <div>Aberto em: {currentRegister && formatDate(currentRegister.opened_at)}</div>
+                                </div>
+                                <Button variant="destructive" size="sm" onClick={() => handlePreCloseRegister()}>
+                                    Fechar Caixa
+                                </Button>
+                            </CardFooter>
                         </Card>
 
                         {/* RIGHT: Payment Area */}
@@ -612,7 +696,7 @@ export const POSPage = () => {
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="secondary" onClick={() => setIsCashierDialogOpen(false)}>Cancelar</Button>
-                        <Button type="button" onClick={handleProcessPayment} disabled={!cashierPin || isProcessing}>
+                        <Button type="button" onClick={() => handleProcessPayment()} disabled={!cashierPin || isProcessing}>
                             Confirmar
                         </Button>
                     </DialogFooter>

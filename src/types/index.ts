@@ -212,6 +212,7 @@ export interface CashRegister {
   openedAt: string;
   closedAt?: string;
   notes?: string;
+  opening_employee_id?: string; // ID of the employee who opened the session
 }
 
 export interface CashMovement {
