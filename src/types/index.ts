@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role: 'admin' | 'manager' | 'sales' | 'cashier' | 'stock' | 'viewer';
   filialId: string;
+  permissions?: string[];
 }
 
 export interface Filial {
@@ -190,4 +191,16 @@ export interface Sale {
   filialId: string;
   createdAt: string;
   items?: SaleItem[];
+}
+
+export interface TransferSuggestion {
+  filial_id: string;
+  filial_name: string;
+  product_id: string;
+  product_name: string;
+  current_qty: number;
+  velocity: number;
+  min_stock?: number;
+  max_stock?: number;
+  status: 'LOW' | 'HIGH' | 'OK';
 }

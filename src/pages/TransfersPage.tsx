@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { fetchStock, fetchProducts, fetchFiliais, fetchTransfers, createTransfer } from '@/services/api';
-import { User, StockItem, Transfer } from '@/types';
+import { fetchStock, fetchProducts, fetchFiliais, fetchTransfers, createTransfer, fetchTransferSuggestions } from '@/services/api';
+import { User, StockItem, Transfer, TransferSuggestion } from '@/types';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -97,6 +97,33 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
   const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: fetchProducts });
   const { data: filiais = [] } = useQuery({ queryKey: ['filiais'], queryFn: fetchFiliais });
   const { data: transfers = [] } = useQuery({ queryKey: ['transfers'], queryFn: fetchTransfers });
+  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({ queryKey: ['transferSuggestions'], queryFn: fetchTransferSuggestions });
+
+  // Matchmaking Logic (High vs Low)
+  const matchedSuggestions = useMemo(() => {
+    const highStock = suggestions.filter(s => s.status === 'HIGH');
+    const lowStock = suggestions.filter(s => s.status === 'LOW');
+    const matches: any[] = [];
+
+    highStock.forEach(high => {
+      // Find low stock matches for same product
+      const lowMatches = lowStock.filter(low => low.product_id === high.product_id && low.filial_id !== high.filial_id);
+
+      lowMatches.forEach(low => {
+        matches.push({
+          productId: high.product_id,
+          productName: high.product_name,
+          fromFilialId: high.filial_id,
+          fromFilialName: high.filial_name,
+          fromQty: high.current_qty,
+          toFilialId: low.filial_id,
+          toFilialName: low.filial_name,
+          toQty: low.current_qty
+        });
+      });
+    });
+    return matches;
+  }, [suggestions]);
 
   // Helpers
   const getProductName = (id: string) => products.find(p => p.id === id)?.name || 'Produto desconhecido';

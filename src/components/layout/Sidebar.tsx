@@ -14,34 +14,33 @@ interface SidebarProps {
 
 const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClose }: SidebarProps & { isMobile?: boolean, onClose?: () => void }) => {
     const { signOut } = useAuth();
-    // Role-based Menu Logic
-    const role = user?.role || 'viewer';
 
-    // Derived Permissions
-    const isAdmin = role === 'admin';
-    const isManager = ['admin', 'manager'].includes(role);
-    const isStock = ['admin', 'manager', 'stock'].includes(role);
-    const isSales = ['admin', 'manager', 'sales'].includes(role);
+    // Permission Checks
+    const hasPermission = (permission: string) => {
+        return user?.permissions?.includes(permission) || user?.role === 'admin'; // Admin always has access
+    };
 
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
     ];
 
-    // Todos (exceto viewer?) veem estoque para consulta
-    menuItems.push(
-        { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' },
-        { id: 'products', icon: Package, label: 'Produtos', path: '/products' }
-    );
+    if (hasPermission('view_products') || hasPermission('manage_stock')) {
+        menuItems.push(
+            { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' },
+            { id: 'products', icon: Package, label: 'Produtos', path: '/products' }
+        );
+    }
 
-    // Balcão/Vendas
-    if (isSales) {
+    if (hasPermission('create_sale')) {
         menuItems.push({ id: 'sales', icon: DollarSign, label: 'Pré-Venda (Balcão)', path: '/sales' });
-        if (isManager) menuItems.push({ id: 'reports', icon: BarChart3, label: 'Relatórios (BI)', path: '/reports' });
         menuItems.push({ id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' });
     }
 
-    // Estoque/Gerente (Movimentação e Importação)
-    if (isStock) {
+    if (hasPermission('view_reports')) {
+        menuItems.push({ id: 'reports', icon: BarChart3, label: 'Relatórios (BI)', path: '/reports' });
+    }
+
+    if (hasPermission('manage_stock')) {
         menuItems.push(
             { id: 'movements', icon: RefreshCw, label: 'Movimentação Manual', path: '/movements' },
             { id: 'import', label: 'Importar XML', icon: FileText, path: '/import' },
@@ -50,9 +49,11 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
         );
     }
 
-    // Financeiro (Só Admin e Gerente Financeiro se tivesse)
-    if (isAdmin) {
+    if (hasPermission('view_financial')) {
         menuItems.push({ id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' });
+    }
+
+    if (hasPermission('manage_users') || user?.role === 'admin') {
         menuItems.push({ id: 'admin', label: 'Administração', icon: Shield, path: '/admin' });
     }
 

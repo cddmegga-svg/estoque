@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { Product, StockItem, Filial, Transfer, Movement, User, Supplier, AccountPayable } from '@/types';
+import { Product, StockItem, Filial, Transfer, Movement, User, Supplier, AccountPayable, TransferSuggestion } from '@/types';
 
 // Products
 export const fetchProducts = async (): Promise<Product[]> => {
@@ -301,7 +301,8 @@ export const fetchUsers = async (): Promise<User[]> => {
         name: user.name,
         email: user.email,
         role: user.role,
-        filialId: user.filial_id
+        filialId: user.filial_id,
+        permissions: user.permissions || []
     }));
 };
 
@@ -313,7 +314,8 @@ export const addUser = async (user: User) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            filial_id: user.filialId
+            filial_id: user.filialId,
+            permissions: user.permissions || []
         }])
         .select()
         .single();
@@ -330,6 +332,7 @@ export const updateUser = async (id: string, updates: Partial<User>) => {
     if (updates.name) dbUpdates.name = updates.name;
     if (updates.role) dbUpdates.role = updates.role;
     if (updates.filialId) dbUpdates.filial_id = updates.filialId;
+    if (updates.permissions) dbUpdates.permissions = updates.permissions;
 
     const { data, error } = await supabase
         .from('users')
@@ -565,4 +568,17 @@ export const createSale = async (subtotal: number, discount: number, total: numb
     }
 
     return sale;
+};
+
+export const fetchTransferSuggestions = async (): Promise<TransferSuggestion[]> => {
+    const { data, error } = await supabase
+        .from('v_filial_stock_status')
+        .select('*')
+        .or('status.eq.LOW,status.eq.HIGH');
+
+    if (error) {
+        console.error('Error fetching suggestions:', error);
+        return [];
+    }
+    return data as TransferSuggestion[];
 };

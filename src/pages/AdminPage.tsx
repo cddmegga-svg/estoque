@@ -26,6 +26,24 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
   const [editingFilial, setEditingFilial] = useState<Filial | null>(null);
   const [filialForm, setFilialForm] = useState<Partial<Filial>>({ type: 'store' });
 
+  // Permissions State
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+
+  const AVAILABLE_PERMISSIONS = [
+    { id: 'view_dashboard', label: 'Ver Dashboard' },
+    { id: 'view_products', label: 'Ver Produtos' },
+    { id: 'manage_stock', label: 'Movimentar Estoque' },
+    { id: 'create_sale', label: 'Realizar Vendas' },
+    { id: 'view_reports', label: 'Ver Relatórios (BI)' },
+    { id: 'view_transfers', label: 'Ver Transferências' },
+    { id: 'create_transfer', label: 'Criar Transferências' },
+    { id: 'manage_users', label: 'Gerenciar Usuários' },
+    { id: 'view_financial', label: 'Ver Financeiro' },
+    { id: 'admin_access', label: 'Acesso Admin Completo' },
+  ];
+
   // Queries
   const { data: users = [] } = useQuery({ queryKey: ['users'], queryFn: fetchUsers });
   const { data: filiais = [] } = useQuery({ queryKey: ['filiais'], queryFn: fetchFiliais });
@@ -103,6 +121,22 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
     setFilialForm({ type: 'store', name: '', cnpj: '', address: '' });
   };
 
+  const handleOpenPermissions = (user: User) => {
+    setSelectedUser(user);
+    setSelectedPermissions(user.permissions || []);
+    setIsPermissionsDialogOpen(true);
+  };
+
+  const handleSavePermissions = () => {
+    if (!selectedUser) return;
+    updateUserMutation.mutate({
+      id: selectedUser.id,
+      updates: { permissions: selectedPermissions }
+    }, {
+      onSuccess: () => setIsPermissionsDialogOpen(false)
+    });
+  };
+
   const handleFilialSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!filialForm.name || !filialForm.cnpj) {
@@ -172,29 +206,9 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
 
                           <div className="flex flex-col gap-2">
                             <div className="flex flex-wrap gap-2">
-                              <Select
-                                value={user.role}
-                                onValueChange={(val) => handleRoleChange(user.id, val as 'admin' | 'viewer')}
-                                disabled={updateUserMutation.isPending}
-                              >
-                                <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="viewer">Consulta</SelectItem>
-                                  <SelectItem value="admin">Administrador</SelectItem>
-                                </SelectContent>
-                              </Select>
-
-                              <Select
-                                value={user.filialId}
-                                onValueChange={(val) => handleUserFilialChange(user.id, val)}
-                                disabled={updateUserMutation.isPending}
-                              >
-                                <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  {filiais.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
-                                </SelectContent>
-                              </Select>
-
+                              <Button variant="outline" size="icon" onClick={() => handleOpenPermissions(user)} title="Gerenciar Permissões">
+                                <Shield className="w-4 h-4 text-amber-600" />
+                              </Button>
                               <Button variant="outline" size="icon" onClick={() => handleDeleteUser(user.id)} disabled={user.id === currentUser.id}>
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -278,6 +292,47 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPermissionsDialogOpen} onOpenChange={setIsPermissionsDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Permissões de Acesso</DialogTitle>
+            <DialogDescription>
+              Defina o que <strong>{selectedUser?.name}</strong> pode fazer no sistema.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {AVAILABLE_PERMISSIONS.map(perm => (
+              <div key={perm.id} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id={perm.id}
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                  checked={selectedPermissions.includes(perm.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedPermissions([...selectedPermissions, perm.id]);
+                    } else {
+                      setSelectedPermissions(selectedPermissions.filter(p => p !== perm.id));
+                    }
+                  }}
+                />
+                <Label htmlFor={perm.id} className="text-sm font-normal cursor-pointer">
+                  {perm.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPermissionsDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSavePermissions} disabled={updateUserMutation.isPending}>
+              {updateUserMutation.isPending ? 'Salvando...' : 'Salvar Permissões'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
