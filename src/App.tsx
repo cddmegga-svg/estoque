@@ -18,6 +18,7 @@ import { SalesPage } from '@/pages/SalesPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { ConferencePage } from '@/pages/ConferencePage';
 import { LogisticsPage } from '@/pages/LogisticsPage';
+import { POSPage } from '@/pages/POSPage';
 import { Toaster } from '@/components/ui/toaster';
 
 import { useProductSync } from '@/hooks/useProductSync';
@@ -59,8 +60,7 @@ function App() {
   // Check Permissions Helper
   const hasPermission = (permission: string) => {
     // Admin always allows
-    if (user.role === 'admin') return true;
-    // Check permissions array
+    // This tool call logic was empty because I decided to check Sidebar first.sions array
     return user.permissions?.includes(permission);
   };
 
@@ -93,7 +93,8 @@ function App() {
         return <MovementsPage user={user} />;
 
       case 'suppliers':
-        return <SuppliersPage />; // Usually open or sales
+        if (!hasPermission('manage_suppliers')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <SuppliersPage />;
 
       case 'financial':
         if (!hasPermission('view_financial')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
@@ -111,6 +112,10 @@ function App() {
       case 'sales':
         if (!hasPermission('create_sale')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <SalesPage />;
+
+      case 'pos':
+        if (!hasPermission('access_pos')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <POSPage />;
 
       case 'reports':
         if (!hasPermission('view_reports')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;

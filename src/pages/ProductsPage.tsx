@@ -46,7 +46,8 @@ export const ProductsPage = () => {
         taxPis: 0,
         taxCofins: 0,
         taxIpi: 0,
-        pmcPrice: 0
+        pmcPrice: 0,
+        commissionRate: 0
     });
 
     const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -132,7 +133,9 @@ export const ProductsPage = () => {
             taxIcms: 0,
             taxPis: 0,
             taxCofins: 0,
-            taxIpi: 0
+            taxIpi: 0,
+            pmcPrice: 0,
+            commissionRate: 0
         });
         setEditingId(null);
     };
@@ -156,7 +159,8 @@ export const ProductsPage = () => {
             taxPis: product.taxPis || 0,
             taxCofins: product.taxCofins || 0,
             taxIpi: product.taxIpi || 0,
-            pmcPrice: product.pmcPrice || 0
+            pmcPrice: product.pmcPrice || 0,
+            commissionRate: product.commissionRate || 0
         });
         setEditingId(product.id);
         setIsDialogOpen(true);
@@ -365,6 +369,19 @@ export const ProductsPage = () => {
                                                     const newPrice = calculateSmartPrice(formData.costPrice, margin);
                                                     setFormData(prev => ({ ...prev, profitMargin: margin, salePrice: newPrice }));
                                                 }}
+                                            />
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">%</span>
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="commissionRate" className="text-blue-600">Comissão (%)</Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="commissionRate"
+                                                type="number"
+                                                className="border-blue-200"
+                                                value={formData.commissionRate}
+                                                onChange={(e) => handleInputChange('commissionRate', parseFloat(e.target.value) || 0)}
                                             />
                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">%</span>
                                         </div>

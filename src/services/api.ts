@@ -26,7 +26,8 @@ export const fetchProducts = async (): Promise<Product[]> => {
         category: item.category,
         distributor: item.distributor,
         minStock: item.min_stock || 0,
-        pmcPrice: item.pmc_price || 0
+        pmcPrice: item.pmc_price || 0,
+        commissionRate: item.commission_rate || 0
     }));
 };
 
@@ -149,6 +150,7 @@ export const addProduct = async (product: any, userId?: string) => {
         distributor: product.distributor,
         min_stock: product.minStock,
         pmc_price: product.pmcPrice,
+        commission_rate: product.commissionRate,
         created_by: userId,
         updated_by: userId
     };
@@ -521,7 +523,22 @@ export const deletePurchaseRequest = async (id: string) => {
 };
 
 // --- Sales ---
-export const createSale = async (subtotal: number, discount: number, total: number, items: any[], customerName?: string, userId?: string, userName?: string, filialId?: string) => {
+export const createSale = async (
+    subtotal: number,
+    discount: number,
+    total: number,
+    items: any[],
+    customerName?: string,
+    userId?: string,
+    userName?: string,
+    filialId?: string,
+    salespersonId?: string,
+    paymentStatus: 'pending' | 'paid' = 'paid',
+    status: 'open' | 'completed' = 'completed',
+    paymentMethod?: string,
+    cashRegisterId?: string,
+    cashierId?: string
+) => {
     // 1. Create Sale Header
     const { data: sale, error: saleError } = await supabase
         .from('sales')
@@ -530,10 +547,15 @@ export const createSale = async (subtotal: number, discount: number, total: numb
             total_value: subtotal,
             discount_value: discount,
             final_value: total,
-            status: 'completed',
+            status: status,
+            payment_status: paymentStatus,
+            payment_method: paymentMethod,
             user_id: userId,
             user_name: userName,
-            filial_id: filialId
+            filial_id: filialId,
+            salesperson_id: salespersonId,
+            cashier_id: cashierId,
+            cash_register_id: cashRegisterId
         })
         .select()
         .single();
@@ -547,7 +569,8 @@ export const createSale = async (subtotal: number, discount: number, total: numb
         product_name: item.product.name,
         quantity: item.quantity,
         unit_price: item.product.salePrice,
-        total_price: item.quantity * item.product.salePrice
+        total_price: item.quantity * item.product.salePrice,
+        commission_value: (item.product.salePrice * item.quantity) * ((item.product.commissionRate || 0) / 100)
     }));
 
     const { error: itemsError } = await supabase
@@ -557,6 +580,9 @@ export const createSale = async (subtotal: number, discount: number, total: numb
     if (itemsError) throw itemsError;
 
     // 3. Deduct Stock via Movements
+    // Only deduct if status is completed OR if we decide pre-sales verify stock immediately.
+    // Usually Pre-Sales reserve stock. Let's assume Pre-Sale ALSO deducts to avoid overselling.
+    // If cancelled later, we return stock.
     for (const item of items) {
         await addMovement({
             productId: item.product.id,
@@ -566,7 +592,7 @@ export const createSale = async (subtotal: number, discount: number, total: numb
             quantity: item.quantity,
             userId: userId!,
             userName: userName!,
-            notes: `Venda #${sale.id.slice(0, 8)}`
+            notes: `Venda ${status === 'open' ? '(Pré-Venda)' : ''} #${sale.id.slice(0, 8)}`
         });
     }
 

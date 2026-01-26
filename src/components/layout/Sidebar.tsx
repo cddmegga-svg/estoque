@@ -33,6 +33,9 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
 
     if (hasPermission('create_sale')) {
         menuItems.push({ id: 'sales', icon: DollarSign, label: 'Pré-Venda (Balcão)', path: '/sales' });
+    }
+
+    if (hasPermission('manage_suppliers')) {
         menuItems.push({ id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' });
     }
 
@@ -49,6 +52,10 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
 
     if (hasPermission('view_financial')) {
         menuItems.push({ id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' });
+    }
+
+    if (hasPermission('access_pos')) {
+        menuItems.push({ id: 'pos', label: 'Frente de Caixa', icon: DollarSign, path: '/pos' });
     }
 
     if (hasPermission('manage_users') || user?.role === 'admin') {

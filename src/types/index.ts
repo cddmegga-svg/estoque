@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role: 'admin' | 'manager' | 'sales' | 'cashier' | 'stock' | 'viewer';
   filialId: string;
+  employeeCode?: string;
   permissions?: string[];
 }
 
@@ -39,6 +40,7 @@ export interface Product {
   taxPis?: number;
   taxCofins?: number;
   taxIpi?: number;
+  commissionRate?: number; // %
 }
 
 export const PRODUCT_CATEGORIES = [
@@ -175,6 +177,7 @@ export interface SaleItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  commissionValue?: number;
 }
 
 export interface Sale {
@@ -185,12 +188,39 @@ export interface Sale {
   discountValue: number;
   finalValue: number;
   status: 'open' | 'completed' | 'cancelled';
+  paymentStatus?: 'pending' | 'paid';
   paymentMethod?: string;
-  userId?: string;
+  userId?: string; // Created By
   userName?: string;
+  salespersonId?: string; // Vendedor Real (Comissionado)
+  cashierId?: string; // Quem recebeu
+  cashRegisterId?: string; // Sessão de Caixa
   filialId: string;
   createdAt: string;
   items?: SaleItem[];
+}
+
+export interface CashRegister {
+  id: string;
+  filialId: string;
+  userId: string;
+  userName?: string; // Joined
+  openingBalance: number;
+  closingBalance?: number;
+  status: 'open' | 'closed';
+  openedAt: string;
+  closedAt?: string;
+  notes?: string;
+}
+
+export interface CashMovement {
+  id: string;
+  cashRegisterId: string;
+  userId: string;
+  type: 'supply' | 'bleed'; // Suprimento / Sangria
+  amount: number;
+  reason?: string;
+  createdAt: string;
 }
 
 export interface TransferSuggestion {

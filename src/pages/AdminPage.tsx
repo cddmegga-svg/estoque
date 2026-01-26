@@ -38,11 +38,14 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
     { id: 'view_stock', label: 'Ver Estoque (Quantidades)' },
     { id: 'manage_stock', label: 'Movimentar Estoque (Entrada/Saída)' },
     { id: 'create_sale', label: 'Realizar Vendas' },
+    { id: 'manage_suppliers', label: 'Gerenciar Fornecedores' },
     { id: 'view_reports', label: 'Ver Relatórios (BI)' },
     { id: 'view_transfers', label: 'Ver Transferências' },
     { id: 'create_transfer', label: 'Criar Transferências' },
     { id: 'manage_users', label: 'Gerenciar Usuários' },
     { id: 'view_financial', label: 'Ver Financeiro' },
+    { id: 'access_pos', label: 'Acessar Frente de Caixa (PDV)' },
+    { id: 'manage_cash', label: 'Gerenciar Caixa (Sangria/Fechamento)' },
     { id: 'admin_access', label: 'Acesso Admin Completo' },
   ];
 
@@ -202,6 +205,7 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
                                 {user.id === currentUser.id && <Badge variant="outline" className="text-xs">Você</Badge>}
                               </div>
                               <p className="text-sm text-muted-foreground">{user.email}</p>
+                              {user.employeeCode && <Badge variant="outline" className="mt-1 bg-slate-50 text-slate-600">PIN: {user.employeeCode}</Badge>}
                               <div className="flex flex-wrap items-center gap-2 mt-2">
                                 <Badge variant="secondary">{filial?.name}</Badge>
                                 <Badge variant={user.role === 'admin' ? 'default' : 'outline'}>
@@ -380,6 +384,7 @@ import { useAuth } from '@/hooks/useAuth';
 const CreateUserDialog = ({ isOpen, onClose, filiais }: { isOpen: boolean, onClose: () => void, filiais: Filial[] }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [employeeCode, setEmployeeCode] = useState('');
   const [password, setPassword] = useState('');
   const [filialId, setFilialId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -401,7 +406,8 @@ const CreateUserDialog = ({ isOpen, onClose, filiais }: { isOpen: boolean, onClo
       await signUp(email, password, {
         name,
         role: 'viewer',
-        filialId
+        filialId,
+        employeeCode
       });
 
       toast({ title: 'Usuário Criado', description: 'O usuário foi criado. Verifique o email.' });
@@ -434,6 +440,15 @@ const CreateUserDialog = ({ isOpen, onClose, filiais }: { isOpen: boolean, onClo
           <div className="space-y-2">
             <Label>Email</Label>
             <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label>Código / PIN (Para PDV)</Label>
+            <Input
+              value={employeeCode}
+              onChange={e => setEmployeeCode(e.target.value)}
+              placeholder="Ex: 101"
+              maxLength={10}
+            />
           </div>
           <div className="space-y-2">
             <Label>Senha</Label>
