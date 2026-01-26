@@ -112,6 +112,16 @@ export const SalesPage = () => {
         }));
     };
 
+    const updateItemDiscountPercent = (productId: string, percent: number) => {
+        setCart(prev => prev.map(item => {
+            if (item.product.id === productId) {
+                const discountValue = item.product.salePrice * (percent / 100);
+                return { ...item, unitDiscount: discountValue };
+            }
+            return item;
+        }));
+    };
+
     const calculateMaxAllowedDiscount = (): { max: number; details: string[] } => {
         let totalMax = 0;
         const details: string[] = [];
@@ -246,214 +256,225 @@ export const SalesPage = () => {
     };
 
     return (
-        <>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-6rem)]">
-                {/* LEFT COLUMN: Product Catalog / Search */}
-                <div className="lg:col-span-2 flex flex-col gap-4">
-                    <Card className="flex-1 flex flex-col">
-                        <CardHeader className="pb-4">
-                            <CardTitle>Catálogo de Produtos</CardTitle>
-                            <div className="relative">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Buscar por nome, EAN ou princípio ativo... (F2)"
-                                    className="pl-9 h-12 text-lg"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    autoFocus
-                                />
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex-1 overflow-auto">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {filteredProducts?.map(product => {
-                                    const isMedicine = ['genérico', 'generico', 'similar', 'ético', 'etico', 'referência'].some(c => product.category?.toLowerCase().includes(c));
-
-                                    return (
-                                        <div
-                                            key={product.id}
-                                            className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition-colors flex flex-col justify-between"
-                                            onClick={() => addToCart(product)}
-                                        >
-                                            <div>
-                                                <h3 className="font-semibold line-clamp-2">{product.name}</h3>
-                                                <p className="text-sm text-muted-foreground mt-1">{product.manufacturer}</p>
-                                            </div>
-                                            <div className="mt-4 flex flex-col gap-1">
-                                                {isMedicine && product.pmcPrice > 0 && (
-                                                    <span className="text-xs text-muted-foreground line-through">
-                                                        PMC: {formatCurrency(product.pmcPrice)}
-                                                    </span>
-                                                )}
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-bold text-lg text-emerald-600">
-                                                        {product.salePrice > 0 ? formatCurrency(product.salePrice) : 'R$ --'}
-                                                    </span>
-                                                    <Button size="sm" variant="secondary"><Plus className="w-4 h-4" /></Button>
-                                                </div>
+        <div className="flex flex-col h-[calc(100vh-6rem)] bg-slate-50">
+            {/* TOP BAR: Search */}
+            <div className="bg-white border-b px-6 py-4 flex gap-4 items-center shadow-sm z-20">
+                <div className="flex-1 relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-400" />
+                    <Input
+                        placeholder="BIPAR OU PESQUISAR PRODUTO (F2)..."
+                        className="pl-12 h-16 text-2xl shadow-inner bg-slate-50 border-slate-200 uppercase font-semibold text-slate-700 placeholder:text-slate-300"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        autoFocus
+                    />
+                    {/* Results Overlay */}
+                    {searchTerm && filteredProducts && filteredProducts.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 max-h-[70vh] overflow-y-auto">
+                            {filteredProducts.map(product => {
+                                const isMedicine = ['genérico', 'generico', 'similar', 'ético', 'etico', 'referência'].some(c => product.category?.toLowerCase().includes(c));
+                                return (
+                                    <div
+                                        key={product.id}
+                                        className="p-6 border-b hover:bg-emerald-50 cursor-pointer flex justify-between items-center group transition-all"
+                                        onClick={() => addToCart(product)}
+                                    >
+                                        <div>
+                                            <div className="font-bold text-2xl text-slate-800">{product.name}</div>
+                                            <div className="text-base text-slate-500 flex gap-4 mt-1">
+                                                <span>{product.manufacturer}</span>
+                                                {product.ean && <span>GTIN: {product.ean}</span>}
+                                                <span className="uppercase bg-slate-100 px-2 rounded text-xs py-0.5">{product.category || 'Geral'}</span>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                                {searchTerm && filteredProducts.length === 0 && (
-                                    <div className="col-span-full text-center py-8 text-muted-foreground">
-                                        Nenhum produto encontrado.
+                                        <div className="text-right">
+                                            {isMedicine && product.pmcPrice > 0 && (
+                                                <div className="text-sm text-muted-foreground line-through">
+                                                    PMC: {formatCurrency(product.pmcPrice)}
+                                                </div>
+                                            )}
+                                            <div className="font-black text-3xl text-emerald-600">
+                                                {formatCurrency(product.salePrice)}
+                                            </div>
+                                        </div>
                                     </div>
-                                )}
-                                {!searchTerm && (
-                                    <div className="col-span-full text-center py-8 text-muted-foreground">
-                                        Comece digitando para buscar produtos...
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                )
+                            })}
+                        </div>
+                    )}
                 </div>
 
-                {/* RIGHT COLUMN: Cart / Point of Sale */}
-                <div className="flex flex-col gap-4">
-                    <Card className="flex-1 flex flex-col border-emerald-100 shadow-md">
-                        <CardHeader className="bg-emerald-50/50 pb-4">
-                            <div className="flex justify-between items-center">
-                                <CardTitle className="flex items-center gap-2">
-                                    <ShoppingCart className="w-5 h-5" /> Cesta de Compras
-                                </CardTitle>
-                                <span className="text-xs font-mono text-muted-foreground">{currentFilialName}</span>
-                            </div>
-                            <div className="mt-4">
-                                <Label className="text-xs text-muted-foreground">Cliente (Opcional)</Label>
-                                <div className="flex items-center gap-2">
-                                    <UserIcon className="w-4 h-4 text-muted-foreground" />
-                                    <Input
-                                        className="h-8 bg-background"
-                                        placeholder="Consumidor Final"
-                                        value={customerName}
-                                        onChange={(e) => setCustomerName(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex-1 overflow-auto p-0">
-                            {cart.length === 0 ? (
-                                <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 space-y-4">
-                                    <ShoppingCart className="w-12 h-12 opacity-20" />
-                                    <p className="text-center">Cesta vazia.<br />Bipe ou pesquise produtos.</p>
-                                </div>
-                            ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Produto</TableHead>
-                                            <TableHead className="w-[100px] text-center">Qtd</TableHead>
-                                            <TableHead className="text-right">Preço Unit.</TableHead>
-                                            <TableHead className="text-right w-28">Desc. Unit.</TableHead>
-                                            <TableHead className="text-right">Total</TableHead>
-                                            <TableHead className="w-[50px]"></TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {cart.map(item => (
-                                            <TableRow key={item.product.id}>
-                                                <TableCell className="py-2">
-                                                    <div className="font-medium text-sm line-clamp-1">{item.product.name}</div>
-                                                    <div className="text-xs text-muted-foreground">{formatCurrency(item.product.salePrice)} Un.</div>
+                <div className="w-[300px]">
+                    <div className="relative">
+                        <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                        <Input
+                            className="pl-10 h-16 text-lg bg-white border-slate-200"
+                            placeholder="Identificar Cliente"
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* MAIN CHART TABLE */}
+            <div className="flex-1 overflow-auto p-4 md:p-6 bg-slate-100/50">
+                <Card className="min-h-full border-0 shadow-sm flex flex-col">
+                    <div className="flex-1 overflow-auto">
+                        <Table>
+                            <TableHeader className="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                                <TableRow className="h-14">
+                                    <TableHead className="w-[60px] text-center font-bold text-slate-400">#</TableHead>
+                                    <TableHead className="w-[40%] font-bold text-slate-600 text-lg">PRODUTO</TableHead>
+                                    <TableHead className="text-right font-bold text-slate-600 text-lg">PREÇO UN.</TableHead>
+                                    <TableHead className="text-center w-[140px] font-bold text-slate-600 text-lg">QTD</TableHead>
+                                    <TableHead className="text-right w-[140px] font-bold text-slate-600 text-lg">DESC (%)</TableHead>
+                                    <TableHead className="text-right font-bold text-slate-600 text-lg">TOTAL</TableHead>
+                                    <TableHead className="w-[80px]"></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {cart.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={7} className="h-96 text-center text-slate-300">
+                                            <div className="flex flex-col items-center justify-center gap-4">
+                                                <ShoppingBag className="w-24 h-24 opacity-20" />
+                                                <span className="text-2xl font-light">Cesta Vazia</span>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    cart.map((item, index) => {
+                                        // Calculate percentage for display
+                                        // item.unitDiscount is currently VALUE. Logic needs to handle input as % and store as value, or vice-versa.
+                                        // The helper `updateItemDiscountPercent` below handles the conversion.
+                                        const discountPercent = item.product.salePrice > 0 ? (item.unitDiscount / item.product.salePrice) * 100 : 0;
+
+                                        // Helper to calculate Line Total
+                                        const lineTotal = (item.product.salePrice - item.unitDiscount) * item.quantity;
+
+                                        return (
+                                            <TableRow key={item.product.id} className="hover:bg-slate-50 transition-colors h-20">
+                                                <TableCell className="text-center font-mono text-slate-400 text-lg">
+                                                    {String(index + 1).padStart(2, '0')}
                                                 </TableCell>
-                                                <TableCell className="text-center py-2">
-                                                    <div className="flex items-center justify-center gap-1">
-                                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => updateQuantity(item.product.id, -1)}>
-                                                            <Minus className="w-3 h-3" />
+                                                <TableCell>
+                                                    <div className="font-bold text-xl text-slate-800 line-clamp-2 leading-tight">{item.product.name}</div>
+                                                    <div className="text-sm text-slate-500 mt-1">{item.product.activeIngredient}</div>
+                                                </TableCell>
+                                                <TableCell className="text-right font-medium text-slate-600 text-xl">
+                                                    {formatCurrency(item.product.salePrice)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center justify-center gap-2 bg-slate-100 rounded-lg p-1.5 w-fit mx-auto border border-slate-200">
+                                                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md" onClick={() => updateQuantity(item.product.id, -1)}>
+                                                            <Minus className="w-4 h-4" />
                                                         </Button>
-                                                        <span className="w-4 text-center text-sm">{item.quantity}</span>
-                                                        <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => updateQuantity(item.product.id, 1)}>
-                                                            <Plus className="w-3 h-3" />
+                                                        <span className="w-8 text-center font-bold text-xl">{item.quantity}</span>
+                                                        <Button size="icon" variant="ghost" className="h-8 w-8 rounded-md" onClick={() => updateQuantity(item.product.id, 1)}>
+                                                            <Plus className="w-4 h-4" />
                                                         </Button>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-right font-medium py-2">
-                                                    <div className="flex flex-col items-end gap-1">
-                                                        <span className="text-xs text-muted-foreground line-through">
-                                                            {item.product.pmcPrice > 0 && item.product.pmcPrice !== item.product.salePrice ? formatCurrency(item.product.pmcPrice) : ''}
-                                                        </span>
-                                                        <span>{formatCurrency(item.product.salePrice)}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="py-2 w-28">
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-xs text-muted-foreground">-R$</span>
+                                                <TableCell className="text-right">
+                                                    <div className="relative w-28 ml-auto">
                                                         <Input
-                                                            className="h-7 text-right px-2"
+                                                            className="h-10 text-right pr-8 text-lg font-medium"
                                                             type="number"
-                                                            value={item.unitDiscount > 0 ? item.unitDiscount : ''}
-                                                            placeholder="0,00"
-                                                            onChange={(e) => {
-                                                                const val = parseFloat(e.target.value);
-                                                                const newDiscount = isNaN(val) ? 0 : val;
-                                                                setCart(prev => prev.map(ci => ci.product.id === item.product.id ? { ...ci, unitDiscount: newDiscount } : ci));
-                                                            }}
+                                                            min={0}
+                                                            max={100}
+                                                            placeholder="0"
+                                                            value={discountPercent > 0 ? Math.round(discountPercent) : ''}
+                                                            onChange={(e) => updateItemDiscountPercent(item.product.id, parseFloat(e.target.value) || 0)}
                                                         />
+                                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-slate-400">%</span>
                                                     </div>
+                                                    {item.unitDiscount > 0 && (
+                                                        <div className="text-xs text-red-500 text-right mt-1 font-medium">
+                                                            -{formatCurrency(item.unitDiscount * item.quantity)}
+                                                        </div>
+                                                    )}
                                                 </TableCell>
-                                                <TableCell className="text-right font-bold py-2 text-emerald-700">
-                                                    {formatCurrency((item.product.salePrice - item.unitDiscount) * item.quantity)}
+                                                <TableCell className="text-right font-black text-2xl text-emerald-700">
+                                                    {formatCurrency(lineTotal)}
                                                 </TableCell>
-                                                <TableCell className="py-2">
-                                                    <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeFromCart(item.product.id)}>
-                                                        <Trash2 className="w-3 h-3" />
+                                                <TableCell className="text-center">
+                                                    <Button size="icon" variant="ghost" className="h-10 w-10 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg" onClick={() => removeFromCart(item.product.id)}>
+                                                        <Trash2 className="w-5 h-5" />
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            )}
-                        </CardContent>
+                                        );
+                                    })
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </Card>
+            </div>
 
-                        {/* TOTALS SECTION */}
-                        <div className="p-6 bg-slate-50 border-t space-y-4">
-                            <div className="flex justify-between text-sm text-muted-foreground">
-                                <span>Subtotal (Capa):</span>
-                                <span>{formatCurrency(subtotal)}</span>
+            {/* BOTTOM FOOTER */}
+            <div className="bg-slate-900 text-white p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.2)] z-30">
+                <div className="flex justify-between items-end max-w-[1920px] mx-auto gap-8">
+
+                    <div className="flex items-center gap-12 flex-1">
+                        <div className="flex gap-2 items-center text-slate-400">
+                            <ShoppingBag className="w-6 h-6" />
+                            <div className="flex flex-col">
+                                <span className="text-xs uppercase tracking-wider font-bold">Volumes</span>
+                                <span className="text-2xl font-mono text-white leading-none">{cart.reduce((a, b) => a + b.quantity, 0)}</span>
                             </div>
-
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="font-medium text-slate-700">Desconto Global (%):</span>
-                                <div className="flex items-center gap-2 w-32 relative">
-                                    <Input
-                                        type="number"
-                                        className="h-8 text-right pr-6"
-                                        placeholder="0"
-                                        min={0}
-                                        max={100}
-                                        value={discountPercent}
-                                        onChange={(e) => setDiscountPercent(parseFloat(e.target.value) || 0)}
-                                    />
-                                    <span className="absolute right-2 text-xs text-muted-foreground">%</span>
-                                </div>
-                            </div>
-
-                            <div className="border-t pt-4">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-sm text-muted-foreground line-through decoration-red-400 decoration-1">
-                                        De: {formatCurrency(subtotal)}
-                                    </span>
-                                    <div className="flex items-baseline gap-2">
-                                        <span className="text-sm font-medium text-slate-500">Por:</span>
-                                        <span className="text-4xl font-extrabold text-emerald-600 tracking-tight">
-                                            {formatCurrency(total)}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <Button
-                                className="w-full bg-emerald-600 hover:bg-emerald-700 h-14 text-xl font-bold mt-2 shadow-emerald-200 shadow-lg"
-                                disabled={cart.length === 0 || isFinalizing}
-                                onClick={handleFinalizeClick}
-                            >
-                                {isFinalizing ? 'Enviando...' : 'Finalizar (F10)'}
-                            </Button>
                         </div>
-                    </Card>
+
+                        {/* Global Discount R$ */}
+                        <div className="space-y-1">
+                            <Label className="text-slate-400 text-xs uppercase tracking-wider font-bold">Desconto Global (R$)</Label>
+                            <div className="flex items-center bg-slate-800 rounded-xl border border-slate-700 px-4 h-16 w-52 focus-within:ring-2 ring-emerald-500/50 transition-all">
+                                <span className="text-slate-500 font-bold mr-2 text-xl">R$</span>
+                                <Input
+                                    type="number"
+                                    className="bg-transparent border-0 text-white text-3xl font-bold text-right focus-visible:ring-0 placeholder:text-slate-700 p-0 h-full"
+                                    placeholder="0,00"
+                                    min={0}
+                                    value={discountValue > 0 ? discountValue : ''}
+                                    onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {/* Totals */}
+                    <div className="flex gap-8 items-center bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 pr-8">
+                        <div className="text-right space-y-1 border-r border-slate-700 pr-8 mr-4">
+                            <div className="text-sm text-slate-400 uppercase tracking-widest font-medium">Subtotal</div>
+                            <div className="text-3xl font-medium text-slate-300">
+                                {formatCurrency(subtotal)}
+                            </div>
+                        </div>
+
+                        <div className="text-right space-y-0">
+                            <div className="text-sm text-emerald-500 uppercase tracking-widest font-bold mb-1">Total Final</div>
+                            <div className="text-6xl font-black text-emerald-400 tracking-tighter leading-none filters drop-shadow-lg">
+                                {formatCurrency(total)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <Button
+                        className="h-24 w-60 text-2xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-900/60 rounded-2xl transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-center gap-1"
+                        disabled={cart.length === 0 || isFinalizing}
+                        onClick={handleFinalizeClick}
+                    >
+                        {isFinalizing ? (
+                            <RefreshCw className="w-10 h-10 animate-spin" />
+                        ) : (
+                            <>
+                                <span className="text-3xl tracking-tight">FINALIZAR</span>
+                                <span className="text-sm opacity-80 font-medium tracking-widest uppercase bg-emerald-700/50 px-3 py-0.5 rounded-full">Atalho F10</span>
+                            </>
+                        )}
+                    </Button>
                 </div>
             </div>
 
@@ -525,6 +546,6 @@ export const SalesPage = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </>
+        </div>
     );
 };

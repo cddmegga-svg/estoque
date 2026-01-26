@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertCircle, CheckCircle2, DollarSign, CreditCard, Wallet, RefreshCw, Lock, Printer } from 'lucide-react';
+import { AlertCircle, CheckCircle2, DollarSign, CreditCard, Wallet, RefreshCw, Lock, Printer, User as UserIcon, ShoppingBag } from 'lucide-react';
 import { MoneyInput } from '@/components/ui/money-input';
 
 interface SaleQueueItem {
@@ -102,8 +102,29 @@ export const POSPage = () => {
                 items: item.sale_items
             }));
         },
+    });
+
+    // Fetch History (Completed Sales)
+    const { data: history = [], isLoading: isLoadingHistory } = useQuery({
+        queryKey: ['pos_history', user?.filialId],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('sales')
+                .select(`
+                    id, customer_name, total_value, discount_value, final_value, created_at, payment_method,
+                    employee:employee_id(name),
+                    sale_items(quantity, unit_price, product_name)
+                `)
+                .eq('filial_id', user?.filialId)
+                .eq('status', 'completed')
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (error) throw error;
+            return data;
+        },
         enabled: !!user?.filialId,
-        refetchInterval: 10000 // Auto-refresh every 10s
+        refetchInterval: 30000
     });
 
     // Validations
@@ -237,165 +258,252 @@ export const POSPage = () => {
     if (isLoadingRegister) return <div className="p-8">Carregando Frente de Caixa...</div>;
 
     return (
-        <div className="flex h-[calc(100vh-6rem)] gap-4">
-            {/* LEFT: Queue */}
-            <Card className="w-1/3 flex flex-col">
-                <CardHeader className="bg-slate-50 pb-4">
-                    <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg">Fila de Atendimento</CardTitle>
-                        <Button variant="ghost" size="icon" onClick={() => refetchQueue()}><RefreshCw className="w-4 h-4" /></Button>
-                    </div>
-                </CardHeader>
-                <CardContent className="p-0 flex-1 overflow-auto">
-                    {queue.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
-                            <CheckCircle2 className="w-8 h-8 opacity-20 mb-2" />
-                            <p>Nenhum pedido pendente.</p>
+        <div className="flex flex-col h-[calc(100vh-6rem)] gap-4">
+            <Tabs defaultValue="queue" className="flex-1 flex flex-col">
+                <div className="flex justify-between items-center bg-white p-2 rounded-lg border shadow-sm mb-4">
+                    <TabsList className="bg-slate-100">
+                        <TabsTrigger value="queue" className="px-8">Fila de Atendimento</TabsTrigger>
+                        <TabsTrigger value="history" className="px-8">Histórico de Vendas</TabsTrigger>
+                    </TabsList>
+                    <div className="flex items-center gap-4 pr-4">
+                        <div className="text-right">
+                            <div className="text-xs text-muted-foreground font-bold uppercase">Sessão Atual</div>
+                            <div className="text-sm font-mono font-bold text-slate-700">{currentRegister?.id.slice(0, 8) || 'FECHADO'}</div>
                         </div>
-                    ) : (
-                        <div className="divide-y relative">
-                            {queue.map((sale: SaleQueueItem) => (
-                                <div
-                                    key={sale.id}
-                                    className={`p-4 cursor-pointer hover:bg-slate-50 transition-colors ${selectedSale?.id === sale.id ? 'bg-emerald-50 border-l-4 border-emerald-500' : ''}`}
-                                    onClick={() => {
-                                        setSelectedSale(sale);
-                                        setAmountPaid(sale.final_value); // Auto-fill exact amount for convenience
-                                    }}
-                                >
-                                    <div className="flex justify-between mb-1">
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-slate-800 text-lg">{sale.customer_name}</span>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <Badge variant="secondary" className="text-[10px] px-1 py-0 h-5">
-                                                    {sale.salesperson_name}
-                                                </Badge>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {formatDate(sale.created_at)}
-                                                </span>
+                        <Button variant={currentRegister ? "destructive" : "default"} size="sm" onClick={() => currentRegister ? setIsCloseRegisterOpen(true) : setIsRegisterOpenDialog(true)}>
+                            {currentRegister ? 'Fechar Caixa' : 'Abrir Caixa'}
+                        </Button>
+                    </div>
+                </div>
+
+                <TabsContent value="queue" className="flex-1 mt-0">
+                    <div className="flex h-full gap-4">
+                        {/* LEFT: Queue */}
+                        <Card className="w-1/3 flex flex-col">
+                            <CardHeader className="bg-slate-50 pb-4 py-3">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex gap-2 items-center">
+                                        <div className="bg-emerald-100 p-2 rounded-full">
+                                            <AlertCircle className="w-4 h-4 text-emerald-600" />
+                                        </div>
+                                        <CardTitle className="text-base">Aguardando Pagamento</CardTitle>
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => refetchQueue()}><RefreshCw className="w-4 h-4" /></Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="p-0 flex-1 overflow-auto bg-white/50">
+                                {queue.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+                                        <CheckCircle2 className="w-8 h-8 opacity-20 mb-2" />
+                                        <p>Nenhum pedido na fila.</p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y relative">
+                                        {queue.map((sale: SaleQueueItem) => (
+                                            <div
+                                                key={sale.id}
+                                                className={`p-4 cursor-pointer hover:bg-slate-50 transition-colors group ${selectedSale?.id === sale.id ? 'bg-emerald-50 border-l-4 border-emerald-500' : 'border-l-4 border-transparent'}`}
+                                                onClick={() => {
+                                                    setSelectedSale(sale);
+                                                    setAmountPaid(sale.final_value);
+                                                }}
+                                            >
+                                                <div className="flex justify-between mb-1">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-slate-800 text-lg group-hover:text-emerald-700 transition-colors">{sale.customer_name}</span>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 bg-white border-slate-200 text-slate-500">
+                                                                {sale.salesperson_name}
+                                                            </Badge>
+                                                            <span className="text-xs text-muted-foreground font-mono">
+                                                                {formatDate(sale.created_at).split(' ')[1].substring(0, 5)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between text-sm text-muted-foreground mt-3 border-t pt-2 border-slate-100">
+                                                    <span>{sale.items_count} volumes</span>
+                                                    <span className="font-mono text-emerald-700 font-bold text-lg">{formatCurrency(sale.final_value)}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* RIGHT: Payment Area */}
+                        <div className="flex-1 flex flex-col gap-4">
+                            {selectedSale ? (
+                                <Card className="flex-1 flex flex-col border-emerald-500/20 shadow-lg ring-1 ring-emerald-100">
+                                    <CardHeader className="border-b pb-6 bg-emerald-50/10">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <CardTitle className="text-2xl text-slate-700">Pagamento</CardTitle>
+                                                <CardDescription className="mt-1 flex items-center gap-2">
+                                                    <UserIcon className="w-4 h-4" /> {selectedSale.customer_name}
+                                                </CardDescription>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm text-muted-foreground uppercase tracking-widest font-bold">Total a Pagar</div>
+                                                <div className="text-emerald-600 font-black text-4xl tracking-tighter">{formatCurrency(selectedSale.final_value)}</div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex justify-between text-sm text-muted-foreground mt-2 border-t pt-2 border-slate-100">
-                                        <span>{sale.items_count} volumes</span>
-                                        <span className="font-mono text-emerald-700 font-bold text-lg">{formatCurrency(sale.final_value)}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </CardContent>
-                <CardFooter className="border-t p-4 bg-slate-100 flex justify-between text-xs text-muted-foreground items-center">
-                    <div>
-                        <div className="font-bold text-slate-700">Sessão: {currentRegister?.id.slice(0, 8)}</div>
-                        <div>Aberto em: {currentRegister && formatDate(currentRegister.opened_at)}</div>
-                    </div>
-                    <Button variant="destructive" size="sm" onClick={() => setIsCloseRegisterOpen(true)}>
-                        Fechar Caixa
-                    </Button>
-                </CardFooter>
-            </Card>
+                                    </CardHeader>
 
-            {/* RIGHT: Payment Area */}
-            <div className="flex-1 flex flex-col gap-4">
-                {selectedSale ? (
-                    <Card className="flex-1 flex flex-col border-emerald-500/20 shadow-lg">
-                        <CardHeader className="border-b pb-6">
-                            <CardTitle className="flex justify-between items-center text-2xl">
-                                <span>Pagamento</span>
-                                <span className="text-emerald-600 font-bold text-3xl">{formatCurrency(selectedSale.final_value)}</span>
-                            </CardTitle>
-                            <CardDescription>
-                                Cliente: {selectedSale.customer_name}
-                            </CardDescription>
+                                    <CardContent className="flex-1 p-0 flex flex-col">
+                                        {/* Product List */}
+                                        <div className="bg-slate-50/50 border-b p-4 max-h-48 overflow-y-auto">
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-500 mb-3 uppercase tracking-wider">
+                                                <ShoppingBag className="w-4 h-4" /> Resumo do Pedido
+                                            </div>
+                                            <div className="space-y-1">
+                                                {selectedSale.items?.map((item: any, idx: number) => (
+                                                    <div key={idx} className="flex justify-between text-sm py-2 px-3 bg-white rounded border border-slate-100 shadow-sm">
+                                                        <span className="flex-1 truncate pr-4 font-medium text-slate-700">{item.product_name}</span>
+                                                        <div className="flex gap-6 text-slate-600 font-mono">
+                                                            <span>{item.quantity}x</span>
+                                                            <span className="font-bold">{formatCurrency(item.unit_price)}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 space-y-6 flex-1 bg-white">
+                                            <div className="grid grid-cols-3 gap-4">
+                                                <Button
+                                                    variant={paymentMethod === 'money' ? 'default' : 'outline'}
+                                                    className={`h-24 flex flex-col gap-2 rounded-xl transition-all ${paymentMethod === 'money' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
+                                                    onClick={() => setPaymentMethod('money')}
+                                                >
+                                                    <DollarSign className="w-8 h-8" />
+                                                    <span className="font-bold">Dinheiro (F1)</span>
+                                                </Button>
+                                                <Button
+                                                    variant={paymentMethod === 'card' ? 'default' : 'outline'}
+                                                    className={`h-24 flex flex-col gap-2 rounded-xl transition-all ${paymentMethod === 'card' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
+                                                    onClick={() => setPaymentMethod('card')}
+                                                >
+                                                    <CreditCard className="w-8 h-8" />
+                                                    <span className="font-bold">Cartão (F2)</span>
+                                                </Button>
+                                                <Button
+                                                    variant={paymentMethod === 'pix' ? 'default' : 'outline'}
+                                                    className={`h-24 flex flex-col gap-2 rounded-xl transition-all ${paymentMethod === 'pix' ? 'bg-teal-600 hover:bg-teal-700 shadow-teal-200 shadow-lg scale-[1.02]' : 'hover:bg-slate-50'}`}
+                                                    onClick={() => setPaymentMethod('pix')}
+                                                >
+                                                    <Wallet className="w-8 h-8" />
+                                                    <span className="font-bold">PIX (F3)</span>
+                                                </Button>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-8 pt-2">
+                                                <div className="space-y-2">
+                                                    <Label className="text-lg text-slate-600 font-bold">Valor Recebido</Label>
+                                                    <MoneyInput
+                                                        value={amountPaid}
+                                                        onChange={setAmountPaid}
+                                                        className="h-16 text-3xl font-bold font-mono border-slate-300 focus:ring-emerald-500"
+                                                        autoFocus
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label className="text-lg text-slate-600 font-bold">Troco</Label>
+                                                    <div className={`h-16 flex items-center px-4 rounded-md border text-3xl font-bold font-mono transition-colors ${change > 0 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-400'}`}>
+                                                        {formatCurrency(change)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+
+                                    <CardFooter className="p-4 bg-slate-50 border-t flex gap-4">
+                                        <Button variant="outline" size="lg" className="flex-1 h-14 text-lg border-slate-300 hover:bg-slate-100 text-slate-600" onClick={() => setSelectedSale(null)}>
+                                            Cancelar
+                                        </Button>
+                                        <Button
+                                            size="lg"
+                                            className="flex-[2] bg-emerald-600 hover:bg-emerald-700 h-14 text-xl font-bold shadow-lg shadow-emerald-900/20"
+                                            disabled={!canPay || isProcessing}
+                                            onClick={handleProcessPayment}
+                                        >
+                                            {isProcessing ? 'Processando...' : `Confirmar Recebimento`}
+                                        </Button>
+                                    </CardFooter>
+                                </Card>
+                            ) : (
+                                <div className="flex-1 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-muted-foreground gap-4 bg-slate-50/30">
+                                    <div className="bg-slate-100 p-6 rounded-full">
+                                        <DollarSign className="w-16 h-16 opacity-20" />
+                                    </div>
+                                    <p className="text-xl font-medium text-slate-400">Selecione uma venda para iniciar o recebimento.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="history" className="flex-1 mt-0">
+                    <Card className="h-full flex flex-col border-none shadow-sm bg-white">
+                        <CardHeader className="border-b pb-4">
+                            <CardTitle>Histórico de Vendas (Últimas 50)</CardTitle>
+                            <CardDescription>Vendas concluídas recentemente nesta filial.</CardDescription>
                         </CardHeader>
-
-                        <CardContent className="flex-1 p-0 flex flex-col">
-                            {/* Product List in Payment Screen */}
-                            <div className="bg-slate-50 border-b p-4 max-h-48 overflow-y-auto">
-                                <h4 className="text-sm font-semibold text-muted-foreground mb-2">Resumo do Pedido</h4>
-                                <div className="space-y-2">
-                                    {selectedSale.items?.map((item: any) => (
-                                        <div key={item.product_name} className="flex justify-between text-sm">
-                                            <span className="flex-1 truncate pr-4">{item.product_name}</span>
-                                            <div className="flex gap-4 text-emerald-700 font-mono">
-                                                <span>{item.quantity}x</span>
-                                                <span>{formatCurrency(item.unit_price)}</span>
-                                            </div>
-                                        </div>
-                                    ))}
+                        <CardContent className="flex-1 overflow-auto p-0">
+                            {history.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                                    <ShoppingBag className="w-12 h-12 opacity-20 mb-4" />
+                                    <p>Nenhuma venda registrada no histórico recente.</p>
                                 </div>
-                            </div>
-                            <div className="p-8 space-y-8 flex-1">
-                                <div className="grid grid-cols-3 gap-4">
-                                    <Button
-                                        variant={paymentMethod === 'money' ? 'default' : 'outline'}
-                                        className={`h-24 flex flex-col gap-2 ${paymentMethod === 'money' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
-                                        onClick={() => setPaymentMethod('money')}
-                                    >
-                                        <DollarSign className="w-8 h-8" />
-                                        Dinheiro (F1)
-                                    </Button>
-                                    <Button
-                                        variant={paymentMethod === 'card' ? 'default' : 'outline'}
-                                        className={`h-24 flex flex-col gap-2 ${paymentMethod === 'card' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                                        onClick={() => setPaymentMethod('card')}
-                                    >
-                                        <CreditCard className="w-8 h-8" />
-                                        Cartão (F2)
-                                    </Button>
-                                    <Button
-                                        variant={paymentMethod === 'pix' ? 'default' : 'outline'}
-                                        className={`h-24 flex flex-col gap-2 ${paymentMethod === 'pix' ? 'bg-teal-600 hover:bg-teal-700' : ''}`}
-                                        onClick={() => setPaymentMethod('pix')}
-                                    >
-                                        <Wallet className="w-8 h-8" />
-                                        PIX (F3)
-                                    </Button>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-8 pt-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-lg">Valor Recebido</Label>
-                                        <MoneyInput
-                                            value={amountPaid}
-                                            onChange={setAmountPaid}
-                                            className="h-16 text-3xl font-bold font-mono"
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-lg">Troco</Label>
-                                        <div className={`h-16 flex items-center px-4 rounded-md border text-3xl font-bold font-mono ${change > 0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-400'}`}>
-                                            {formatCurrency(change)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            ) : (
+                                <Table>
+                                    <TableHeader className="bg-slate-50 sticky top-0">
+                                        <TableRow>
+                                            <TableHead>Horário</TableHead>
+                                            <TableHead>Cliente</TableHead>
+                                            <TableHead>Vendedor</TableHead>
+                                            <TableHead>Pagamento</TableHead>
+                                            <TableHead className="text-right">Total</TableHead>
+                                            <TableHead className="w-[100px]"></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {history.map((sale: any) => (
+                                            <TableRow key={sale.id} className="hover:bg-slate-50">
+                                                <TableCell className="font-mono text-xs">
+                                                    {formatDate(sale.created_at)}
+                                                </TableCell>
+                                                <TableCell className="font-medium text-slate-700">
+                                                    {sale.customer_name || 'Consumidor Final'}
+                                                </TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">
+                                                    {sale.employee?.name || '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline" className="uppercase text-[10px]">
+                                                        {sale.payment_method === 'money' ? 'Dinheiro' :
+                                                            sale.payment_method === 'card' ? 'Cartão' :
+                                                                sale.payment_method === 'pix' ? 'PIX' : sale.payment_method}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right font-bold text-emerald-700">
+                                                    {formatCurrency(sale.final_value)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                        <Printer className="w-4 h-4 text-slate-400" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            )}
                         </CardContent>
-
-                        <CardFooter className="p-4 bg-slate-50 border-t flex gap-4">
-                            <Button variant="outline" size="lg" className="flex-1" onClick={() => setSelectedSale(null)}>
-                                Cancelar
-                            </Button>
-                            <Button
-                                size="lg"
-                                className="flex-[2] bg-emerald-600 hover:bg-emerald-700 h-14 text-xl"
-                                disabled={!canPay || isProcessing}
-                                onClick={handleProcessPayment}
-                            >
-                                {isProcessing ? 'Processando...' : `Receber (${formatCurrency(selectedSale.final_value)})`}
-                            </Button>
-                        </CardFooter>
                     </Card>
-                ) : (
-                    <div className="flex-1 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-muted-foreground gap-4 bg-slate-50/50">
-                        <DollarSign className="w-16 h-16 opacity-20" />
-                        <p className="text-xl">Selecione uma venda na fila para receber.</p>
-                    </div>
-                )}
-            </div>
-
+                </TabsContent>
+            </Tabs>
             {/* Open Register Dialog */}
             <Dialog open={isRegisterOpenDialog} onOpenChange={(open) => {
                 // Prevent closing if no register (must open to work)
