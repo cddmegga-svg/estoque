@@ -244,30 +244,42 @@ export const POSPage = () => {
     const handlePreCloseRegister = async () => {
         if (!currentRegister) return;
 
-        // Fetch payments for this register session
-        // Only payments for completed sales in this register
-        const { data: paymentsData, error } = await supabase
-            .from('sale_payments')
-            .select(`
-                amount, 
-                method, 
-                sales!inner(cash_register_id, status)
-            `)
-            .eq('sales.cash_register_id', currentRegister.id)
-            .eq('sales.status', 'completed');
+        // 1. Get Completed Sales IDs for this Register
+        const { data: sales, error: salesError } = await supabase
+            .from('sales')
+            .select('id')
+            .eq('cash_register_id', currentRegister.id)
+            .eq('status', 'completed');
 
-        if (!error && paymentsData) {
-            const totals = paymentsData.reduce((acc: any, curr: any) => {
-                const method = curr.method;
-                acc[method] = (acc[method] || 0) + curr.amount;
-                acc.total += curr.amount;
-                return acc;
-            }, { money: 0, credit_card: 0, debit_card: 0, pix: 0, total: 0 });
-
-            setClosingValues({ money: totals.money, credit_card: totals.credit_card, debit_card: totals.debit_card, pix: totals.pix });
-            setCalculatedTotals(totals);
+        if (salesError || !sales) {
+            console.error(salesError);
+            return;
         }
 
+        const saleIds = sales.map(s => s.id);
+
+        let totals = { money: 0, credit_card: 0, debit_card: 0, pix: 0, total: 0 };
+
+        if (saleIds.length > 0) {
+            // 2. Fetch Payments for these Sales
+            const { data: payments, error: payError } = await supabase
+                .from('sale_payments')
+                .select('amount, method')
+                .in('sale_id', saleIds);
+
+            if (!payError && payments) {
+                totals = payments.reduce((acc: any, curr: any) => {
+                    const method = curr.method;
+                    acc[method] = (acc[method] || 0) + curr.amount;
+                    acc.total += curr.amount;
+                    return acc;
+                }, { money: 0, credit_card: 0, debit_card: 0, pix: 0, total: 0 });
+            }
+        }
+
+        // Do NOT pre-fill closingValues (User must count drawer)
+        setClosingValues({ money: 0, credit_card: 0, debit_card: 0, pix: 0 });
+        setCalculatedTotals(totals);
         setIsCloseRegisterOpen(true);
     };
 
