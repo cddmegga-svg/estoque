@@ -388,7 +388,7 @@ export const POSPage = () => {
 
         } catch (error) {
             console.error(error);
-            toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao processar pagamento.' });
+            toast({ variant: 'destructive', title: 'Erro', description: error.message || 'Falha ao processar pagamento.' });
         } finally {
             setIsProcessing(false);
         }
@@ -520,62 +520,82 @@ export const POSPage = () => {
                                         </div>
 
                                         <div className="p-6 space-y-6 flex-1 bg-white">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <Button
-                                                    variant="outline"
-                                                    className="h-20 flex flex-col gap-1 rounded-xl hover:bg-emerald-50 border-slate-200"
-                                                    onClick={() => addPayment('money')}
-                                                >
-                                                    <DollarSign className="w-6 h-6 text-emerald-600" />
-                                                    <span className="font-bold text-emerald-700">Dinheiro</span>
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    className="h-20 flex flex-col gap-1 rounded-xl hover:bg-teal-50 border-slate-200"
-                                                    onClick={() => addPayment('pix')}
-                                                >
-                                                    <Wallet className="w-6 h-6 text-teal-600" />
-                                                    <span className="font-bold text-teal-700">PIX</span>
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    className="h-20 flex flex-col gap-1 rounded-xl hover:bg-blue-50 border-slate-200"
-                                                    onClick={() => addPayment('debit_card')}
-                                                >
-                                                    <CreditCard className="w-6 h-6 text-blue-600" />
-                                                    <span className="font-bold text-blue-700">Débito</span>
-                                                </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    className="h-20 flex flex-col gap-1 rounded-xl hover:bg-indigo-50 border-slate-200"
-                                                    onClick={() => addPayment('credit_card')}
-                                                >
-                                                    <CreditCard className="w-6 h-6 text-indigo-600" />
-                                                    <span className="font-bold text-indigo-700">Crédito</span>
-                                                </Button>
-                                            </div>
-
                                             <div className="space-y-4 pt-2">
                                                 <div className="space-y-2">
-                                                    <Label className="text-lg text-slate-600 font-bold">Valor do Pagamento</Label>
+                                                    <div className="flex justify-between items-center">
+                                                        <Label className="text-lg text-slate-600 font-bold">Valor a Lançar</Label>
+                                                        {remainingToPay > 0 && remainingToPay !== currentPaymentAmount && (
+                                                            <Button
+                                                                variant="link"
+                                                                className="h-auto p-0 text-emerald-600 font-bold"
+                                                                onClick={() => setCurrentPaymentAmount(remainingToPay)}
+                                                            >
+                                                                Usar Restante ({formatCurrency(remainingToPay)})
+                                                            </Button>
+                                                        )}
+                                                    </div>
                                                     <MoneyInput
                                                         value={currentPaymentAmount}
                                                         onChange={setCurrentPaymentAmount}
-                                                        className="h-16 text-3xl font-bold font-mono border-slate-300 focus:ring-emerald-500"
+                                                        className="h-16 text-3xl font-bold font-mono border-slate-300 focus:ring-emerald-500 bg-white shadow-inner"
                                                         autoFocus
                                                     />
                                                 </div>
 
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <Button
+                                                        variant="outline"
+                                                        className="h-20 flex flex-col gap-1 rounded-xl hover:bg-emerald-50 border-slate-200 active:scale-95 transition-all"
+                                                        onClick={() => addPayment('money')}
+                                                        disabled={currentPaymentAmount <= 0}
+                                                    >
+                                                        <DollarSign className="w-6 h-6 text-emerald-600" />
+                                                        <span className="font-bold text-emerald-700">Lançar Dinheiro</span>
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        className="h-20 flex flex-col gap-1 rounded-xl hover:bg-teal-50 border-slate-200 active:scale-95 transition-all"
+                                                        onClick={() => addPayment('pix')}
+                                                        disabled={currentPaymentAmount <= 0}
+                                                    >
+                                                        <Wallet className="w-6 h-6 text-teal-600" />
+                                                        <span className="font-bold text-teal-700">Lançar PIX</span>
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        className="h-20 flex flex-col gap-1 rounded-xl hover:bg-blue-50 border-slate-200 active:scale-95 transition-all"
+                                                        onClick={() => addPayment('debit_card')}
+                                                        disabled={currentPaymentAmount <= 0}
+                                                    >
+                                                        <CreditCard className="w-6 h-6 text-blue-600" />
+                                                        <span className="font-bold text-blue-700">Lançar Débito</span>
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        className="h-20 flex flex-col gap-1 rounded-xl hover:bg-indigo-50 border-slate-200 active:scale-95 transition-all"
+                                                        onClick={() => addPayment('credit_card')}
+                                                        disabled={currentPaymentAmount <= 0}
+                                                    >
+                                                        <CreditCard className="w-6 h-6 text-indigo-600" />
+                                                        <span className="font-bold text-indigo-700">Lançar Crédito</span>
+                                                    </Button>
+                                                </div>
+
                                                 {/* Partial Payments List */}
-                                                {payments.length > 0 && (
-                                                    <div className="space-y-2">
-                                                        <Label className="text-xs font-bold uppercase text-muted-foreground">Pagamentos Lançados</Label>
-                                                        <div className="space-y-1">
+                                                {(payments.length > 0 || remainingToPay > 0) && (
+                                                    <div className="space-y-2 mt-4 bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200">
+                                                        <Label className="text-xs font-bold uppercase text-muted-foreground">Resumo de Pagamentos</Label>
+
+                                                        {payments.length === 0 && (
+                                                            <div className="text-center text-sm text-muted-foreground italic py-2">Nenhum pagamento lançado.</div>
+                                                        )}
+
+                                                        <div className="space-y-2">
                                                             {payments.map((p, idx) => (
-                                                                <div key={idx} className="flex justify-between items-center bg-slate-100 p-2 rounded px-3">
+                                                                <div key={idx} className="flex justify-between items-center bg-white p-2 rounded border shadow-sm">
                                                                     <div className="flex items-center gap-2">
-                                                                        <Badge variant="outline" className="bg-white uppercase text-[10px]">{p.method.replace('_', ' ')}</Badge>
-                                                                        <span className="font-mono font-bold">{formatCurrency(p.amount)}</span>
+                                                                        <Badge variant="outline" className="text-[10px] uppercase font-bold">{p.method.replace('_', ' ')}</Badge>
+                                                                        <span className="font-mono font-bold text-slate-700">{formatCurrency(p.amount)}</span>
                                                                     </div>
                                                                     <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => removePayment(idx)}>
                                                                         X
@@ -583,11 +603,20 @@ export const POSPage = () => {
                                                                 </div>
                                                             ))}
                                                         </div>
-                                                        <div className="flex justify-between pt-2 border-t border-slate-100">
-                                                            <span className="text-sm font-bold text-slate-500">Total Pago: {formatCurrency(totalPaid)}</span>
-                                                            <span className={`text-sm font-bold ${remainingToPay > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
-                                                                {remainingToPay > 0 ? `Falta: ${formatCurrency(remainingToPay)}` : `Troco: ${formatCurrency(change)}`}
-                                                            </span>
+
+                                                        <div className="flex justify-between pt-3 border-t border-slate-200 mt-2">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs text-slate-500 font-bold">Total Pago</span>
+                                                                <span className="text-lg font-bold text-slate-700">{formatCurrency(totalPaid)}</span>
+                                                            </div>
+                                                            <div className="flex flex-col text-right">
+                                                                <span className="text-xs text-slate-500 font-bold">
+                                                                    {remainingToPay > 0 ? 'Restante a Pagar' : 'Troco'}
+                                                                </span>
+                                                                <span className={`text-2xl font-black ${remainingToPay > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                                                                    {remainingToPay > 0 ? formatCurrency(remainingToPay) : formatCurrency(change)}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 )}
