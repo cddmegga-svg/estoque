@@ -65,11 +65,18 @@ export const POSPage = () => {
                 .select('*')
                 .eq('user_id', user?.id)
                 .eq('status', 'open')
+                .order('opened_at', { ascending: false })
+                .limit(1)
                 .maybeSingle();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error fetching register:', error);
+                throw error;
+            }
             return data as CashRegister | null;
-        }
+        },
+        retry: 1, // Don't retry indefinitely if there's a logic error
+        refetchOnWindowFocus: false // Prevent flashing on focus
     });
 
     // Fetch Queue (Pending Sales)
@@ -335,7 +342,7 @@ export const POSPage = () => {
         }
     };
 
-    if (isLoadingRegister) return <div className="p-8">Carregando Frente de Caixa...</div>;
+    // if (isLoadingRegister) return <div className="p-8">Carregando Frente de Caixa...</div>; // Removed blocking load to prevent loop flash
 
     return (
         <div className="flex flex-col h-full gap-4">
