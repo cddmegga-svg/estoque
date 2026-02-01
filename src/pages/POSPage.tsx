@@ -142,11 +142,11 @@ export const POSPage = () => {
     });
 
     // Validations
-    useEffect(() => {
-        if (!isLoadingRegister && !currentRegister) {
-            setIsRegisterOpenDialog(true);
-        }
-    }, [currentRegister, isLoadingRegister]);
+    // useEffect(() => {
+    //     if (!isLoadingRegister && !currentRegister) {
+    //         setIsRegisterOpenDialog(true);
+    //     }
+    // }, [currentRegister, isLoadingRegister]);
 
     const change = Math.max(0, amountPaid - (selectedSale?.final_value || 0));
     const pending = Math.max(0, (selectedSale?.final_value || 0) - amountPaid);
@@ -631,10 +631,7 @@ export const POSPage = () => {
                 </TabsContent>
             </Tabs>
             {/* Open Register Dialog */}
-            <Dialog open={isRegisterOpenDialog} onOpenChange={(open) => {
-                // Prevent closing if no register (must open to work)
-                if (currentRegister) setIsRegisterOpenDialog(open);
-            }}>
+            <Dialog open={isRegisterOpenDialog} onOpenChange={setIsRegisterOpenDialog}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Abrir Caixa</DialogTitle>
