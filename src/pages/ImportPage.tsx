@@ -41,10 +41,32 @@ export const ImportPage = ({ user }: ImportPageProps) => {
   const { data: filiais = [] } = useQuery({ queryKey: ['filiais'], queryFn: fetchFiliais });
   const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: fetchProducts });
 
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  // Drag & Drop Handlers
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (file) handleFile(file);
+  };
 
+  const handleFile = (file: File) => {
     setError('');
     setNfeData(null);
 
@@ -64,9 +86,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
           setNewSupplierData({
             name: parsedNFe.supplier,
             cnpj: parsedNFe.cnpj,
-            // Tentar extrair endereço se possível no futuro
           });
-          // Delay slightly to let UI render, then show prompt or auto-open
           toast({
             title: 'Fornecedor Novo!',
             description: 'Fornecedor não encontrado. Clique em "Cadastrar" para adicionar.',
@@ -80,7 +100,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
           setExtractedBills(parsedNFe.duplicates.map(d => ({
             ...d,
             barcode: '',
-            include: true // Default to include
+            include: true
           })));
         } else {
           setExtractedBills([]);
@@ -101,7 +121,6 @@ export const ImportPage = ({ user }: ImportPageProps) => {
 
     reader.readAsText(file);
   };
-
   const handleUseSampleXML = () => {
     const parsedNFe = parseNFeXML(SAMPLE_NFE_XML);
     if (parsedNFe) {
@@ -149,62 +168,69 @@ export const ImportPage = ({ user }: ImportPageProps) => {
         const finalName = editedItem.name || item.name;
         const finalManufacturer = editedItem.manufacturer || item.manufacturer;
         const finalCategory = editedItem.category;
-        const finalDistributor = editedItem.distributor || nfeData.supplier; // Default to NFe supplier
+        const finalDistributor = editedItem.distributor || nfeData.supplier;
 
         if (!finalLote || !finalExpiration) {
           continue; // Pular itens sem lote/validade
         }
 
-        // Verificar se produto já existe (na lista carregada ou criado agora)
+        // 1. Try Match by EAN
         let product = products.find(p => p.ean === item.ean) || sessionCreatedProducts.get(item.ean);
+
+        // 2. Strict EAN Rule: Logic removed. In Pharma, different EAN means different product (Manufacturer specific).
+        // if (!product) { ... name match logic removed ... }
 
         if (!product) {
           // Criar novo produto
           const newProductID = generateId('prod');
           const newProduct = {
-            id: newProductID, // Note: API service will use this ID
+            id: newProductID,
             name: finalName,
             activeIngredient: finalName.split(' ')[0],
             manufacturer: finalManufacturer,
             ean: item.ean,
-            ncm: item.ncm,
+            ncm: item.ncm, // Ensure NCM is passed
             category: finalCategory,
             distributor: finalDistributor,
             // Extended Data
             costPrice: item.unitPrice,
             profitMargin: editedItem.profitMargin || 30.0,
-            price: editedItem.salePrice || calculateSmartPrice(item.unitPrice, 30.0),
+            salePrice: editedItem.salePrice || calculateSmartPrice(item.unitPrice, editedItem.profitMargin || 30.0), // Use salePrice prop not price
+            // Note: addProduct uses camelCase but maps to snake_case in API.
+            // We need to pass properties expected by addProduct.
+            // API expects camelCase and maps it.
+            // Checking api.ts addProduct: expects product.salePrice, product.costPrice.
+            minStock: 10,  // Default min stock?
+            pmcPrice: 0,
+            commissionRate: 0,
             taxCfop: item.cfop,
             taxIcms: item.taxes?.icms,
             taxPis: item.taxes?.pis,
             taxCofins: item.taxes?.cofins,
             taxIpi: item.taxes?.ipi,
-            // Manufacturing Date logic for Stock Item comes later, stored in item/editedItem
           };
 
           await addProduct(newProduct, user.id);
 
           product = {
+            // Mock expected Product structure for next steps
             id: newProduct.id,
             name: newProduct.name,
             activeIngredient: newProduct.activeIngredient,
             manufacturer: newProduct.manufacturer,
             ean: newProduct.ean,
             ncm: newProduct.ncm,
-            category: newProduct.category,
-            distributor: newProduct.distributor
+            category: newProduct.category || '',
+            distributor: newProduct.distributor || '',
+            costPrice: newProduct.costPrice,
+            salePrice: newProduct.salePrice,
+            imageUrl: '',
+            minStock: newProduct.minStock,
+            pmcPrice: newProduct.pmcPrice,
+            commissionRate: newProduct.commissionRate
           };
 
           sessionCreatedProducts.set(item.ean, product);
-        } else {
-          // If product exists, we might want to update it? 
-          // For now, let's assume we don't overwrite existing product data on import unless explicitly asked.
-          // But the user MIGHT be correcting data. 
-          // Let's stick to "Creating new" logic for now as requested "Register items".
-          // If the user wants to update, they usually go to Products page.
-          // However, if they just added Category/Distributor here, it won't save if product exists.
-          // We can skip update for existing products to stick to safety, or simple update.
-          // Given the instructions, let's just use existing product.
         }
 
         if (!product) continue;
@@ -215,7 +241,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
           filialId: selectedFilial,
           lote: finalLote,
           expirationDate: finalExpiration,
-          manufacturingDate: item.manufacturingDate, // From parsed XML
+          manufacturingDate: item.manufacturingDate,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           entryDate: new Date().toISOString().split('T')[0],
@@ -231,7 +257,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
           quantity: item.quantity,
           date: new Date().toISOString(),
           userId: user.id,
-          userName: user.name, // from AuthContext user
+          userName: user.name,
           nfeNumber: nfeData.number,
           notes: `Importação NFe ${nfeData.number}`,
         });
@@ -268,7 +294,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
             amount: bill.value,
             dueDate: bill.dueDate,
             status: 'pending',
-            filialId: selectedFilial, // Bill goes to the receiving filial
+            filialId: selectedFilial,
             supplierId: supplier?.id,
             entityName: supplier ? supplier.name : nfeData?.supplier,
             invoiceNumber: nfeData?.number,
@@ -326,21 +352,35 @@ export const ImportPage = ({ user }: ImportPageProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="xml-file">Arquivo XML (NFe)</Label>
-            <div className="flex gap-2">
+            <Label>Arquivo XML (NFe)</Label>
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${isDragOver ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 hover:border-emerald-400 hover:bg-slate-50'}`}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+            >
               <Input
                 id="xml-file"
                 type="file"
                 accept=".xml"
                 onChange={handleFileUpload}
-                className="flex-1"
+                className="hidden"
                 disabled={isImporting || !selectedFilial}
               />
-              <Button variant="outline" onClick={handleUseSampleXML} disabled={isImporting || !selectedFilial}>
-                Usar Exemplo
+              <label htmlFor="xml-file" className="cursor-pointer flex flex-col items-center gap-2">
+                <div className="bg-emerald-100 p-3 rounded-full">
+                  <Upload className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div className="font-semibold text-slate-700">Clique para selecionar ou arraste o XML aqui</div>
+                <p className="text-xs text-muted-foreground">Suporta apenas arquivos .xml de NFe</p>
+              </label>
+            </div>
+            <div className="flex justify-end mt-2">
+              <Button variant="ghost" size="sm" onClick={handleUseSampleXML} disabled={isImporting || !selectedFilial} className="text-xs text-muted-foreground">
+                Usar XML de Exemplo
               </Button>
             </div>
-            {!selectedFilial && <p className="text-xs text-muted-foreground text-orange-600">Selecione uma filial para habilitar o upload.</p>}
+            {!selectedFilial && <p className="text-xs text-muted-foreground text-orange-600 mt-2">Selecione uma filial para habilitar o upload.</p>}
           </div>
 
           {/* Validation Logic */}

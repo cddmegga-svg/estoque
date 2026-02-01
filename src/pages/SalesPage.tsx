@@ -313,6 +313,7 @@ export const SalesPage = () => {
                     'pending',
                     'open',
                     undefined,
+                    [], // payments
                     undefined,
                     undefined,
                     selectedCustomerId || undefined

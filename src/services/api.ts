@@ -542,7 +542,8 @@ export const createSale = async (
     salespersonId?: string,
     paymentStatus: 'pending' | 'paid' = 'paid',
     status: 'open' | 'completed' = 'completed',
-    paymentMethod?: string,
+    paymentMethod?: string, // Legacy/Primary method
+    payments: { method: string, amount: number }[] = [], // NEW: Split Payments
     cashRegisterId?: string,
     cashierId?: string,
     customerId?: string
@@ -556,11 +557,11 @@ export const createSale = async (
             discount_value: discount,
             final_value: total,
             payment_status: paymentStatus,
-            payment_method: paymentMethod,
+            payment_method: payments.length > 1 ? 'split' : (payments[0]?.method || paymentMethod || 'money'),
             user_id: userId,
             user_name: userName,
             filial_id: filialId,
-            employee_id: salespersonId, // Using the new column
+            employee_id: salespersonId,
             cashier_employee_id: cashierId && salespersonId !== cashierId ? cashierId : null,
             cash_register_id: cashRegisterId,
             customer_id: customerId
@@ -587,24 +588,109 @@ export const createSale = async (
 
     if (itemsError) throw itemsError;
 
-    // 3. Deduct Stock via Movements
-    // Only deduct if status is completed OR if we decide pre-sales verify stock immediately.
-    // Usually Pre-Sales reserve stock. Let's assume Pre-Sale ALSO deducts to avoid overselling.
-    // If cancelled later, we return stock.
+    // 2.1 Create Sale Payments (Split)
+    if (payments.length > 0) {
+        const paymentRecords = payments.map(p => ({
+            sale_id: sale.id,
+            method: p.method,
+            amount: p.amount
+        }));
+
+        const { error: payError } = await supabase
+            .from('sale_payments')
+            .insert(paymentRecords);
+
+        if (payError) throw payError;
+    }
+
+    // 3. Deduct Stock via FEFO (First Expired, First Out)
     for (const item of items) {
-        await addMovement({
-            productId: item.product.id,
-            filialId: filialId!,
-            lote: 'PRE-VENDA',
-            type: 'exit',
-            quantity: item.quantity,
-            userId: userId!,
-            userName: userName!,
-            notes: `Venda ${status === 'open' ? '(Pré-Venda)' : ''} #${sale.id.slice(0, 8)}`
-        });
+        await deductStockFEFO(
+            item.product.id,
+            item.quantity,
+            filialId!,
+            userId!,
+            userName!,
+            sale.id
+        );
     }
 
     return sale;
+};
+
+// Helper: FEFO Stock Deduction
+const deductStockFEFO = async (
+    productId: string,
+    quantity: number,
+    filialId: string,
+    userId: string,
+    userName: string,
+    saleId: string
+) => {
+    let remaining = quantity;
+
+    // 1. Fetch valid stock items sorted by expiration date (FEFO)
+    const { data: lots, error } = await supabase
+        .from('stock_items')
+        .select('*')
+        .eq('product_id', productId)
+        .eq('filial_id', filialId)
+        .gt('quantity', 0)
+        .order('expiration_date', { ascending: true });
+
+    if (error) {
+        console.error('FEFO Fetch Error:', error);
+        throw error;
+    }
+
+    // 2. Iterate and Deduct
+    for (const lot of (lots || [])) {
+        if (remaining <= 0) break;
+
+        const deduct = Math.min(lot.quantity, remaining);
+
+        // Update Stock Item
+        const { error: updateError } = await supabase
+            .from('stock_items')
+            .update({ quantity: lot.quantity - deduct })
+            .eq('id', lot.id);
+
+        if (updateError) throw updateError;
+
+        // Create Movement
+        await addMovement({
+            productId,
+            filialId,
+            lote: lot.lote,
+            type: 'exit',
+            quantity: deduct,
+            date: new Date().toISOString(), // Ensure date is set
+            userId,
+            userName,
+            notes: `Venda #${saleId.slice(0, 8)} (Auto: ${lot.lote || 'Geral'})`,
+            nfeNumber: lot.nfe_number // Track origin NFe if possible
+        });
+
+        remaining -= deduct;
+    }
+
+    // 3. Handle Insufficient Stock (Remaining > 0)
+    // If we ran out of lots but still need to deduct, we assume a "General" deduction or allow negative
+    // For now, we record a movement to track the inconsistency, but we don't have a "negative stock_item" to update easily without PK issues.
+    if (remaining > 0) {
+        console.warn(`Stock inconsistency for Product ${productId}. Sold ${quantity}, found ${quantity - remaining}.`);
+        await addMovement({
+            productId,
+            filialId,
+            lote: 'ESTOQUE_NEGATIVO',
+            type: 'exit',
+            quantity: remaining,
+            date: new Date().toISOString(),
+            userId,
+            userName,
+            notes: `Venda #${saleId.slice(0, 8)} (Saldo Descoberto)`
+        });
+    }
 };
 
 export const fetchTransferSuggestions = async (): Promise<TransferSuggestion[]> => {
