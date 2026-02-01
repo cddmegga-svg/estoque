@@ -23,6 +23,7 @@ import { formatCurrency } from '@/lib/utils';
 import { calculateSmartPrice, calculateMargin } from '@/lib/pricingUtils';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 
 export const ProductsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -564,7 +565,9 @@ export const ProductsPage = () => {
                         </div>
                         <div className="divide-y">
                             {isLoading ? (
-                                <div className="p-8 text-center text-muted-foreground">Carregando produtos...</div>
+                                <div className="p-0">
+                                    <TableSkeleton rows={10} columns={5} showHeaders={false} />
+                                </div>
                             ) : filteredProducts.length === 0 ? (
                                 <div className="p-8 text-center text-muted-foreground">Nenhum produto encontrado.</div>
                             ) : (

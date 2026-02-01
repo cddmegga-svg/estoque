@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchCustomers, createCustomer, updateCustomer } from '@/services/api';
 import { Plus, Search, Edit, User, Phone, MapPin, Mail } from 'lucide-react';
 import { Customer } from '@/types';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 
 export const CustomersPage = () => {
     const { toast } = useToast();
@@ -136,7 +137,11 @@ export const CustomersPage = () => {
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="text-center py-8">Carregando...</TableCell>
+                                    <TableCell colSpan={4} className="p-0 border-0">
+                                        <div className="w-full">
+                                            <TableSkeleton rows={5} columns={4} showHeaders={false} />
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             ) : customers.length === 0 ? (
                                 <TableRow>

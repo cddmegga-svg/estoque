@@ -145,7 +145,8 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
       {/* Mobile Header (Shows on mobile OR on full screen desktop pages) */}
-      <div className={isFullScreenPage ? 'block' : 'lg:hidden'}>
+      {/* Mobile Header (Only on mobile) */}
+      <div className="lg:hidden">
         <MobileHeader
           currentPage={currentPage}
           onNavigate={handleNavigate}
@@ -154,16 +155,17 @@ function App() {
       </div>
 
       {/* Desktop Sidebar (Hidden on full screen pages) */}
-      {!isFullScreenPage && (
-        <Sidebar
-          currentPage={currentPage}
-          onNavigate={handleNavigate}
-          user={user}
-        />
-      )}
+      {/* Desktop Sidebar */}
+      <Sidebar
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        user={user}
+        collapsed={isFullScreenPage}
+        className={isFullScreenPage ? 'hidden lg:flex' : 'hidden lg:flex'}
+      />
 
       {/* Main Content */}
-      <main className={`flex-1 p-4 lg:p-8 overflow-y-auto h-[calc(100vh-64px)] lg:h-screen ${!isFullScreenPage ? 'lg:ml-64' : ''}`}>
+      <main className={`flex-1 p-4 lg:p-8 overflow-y-auto h-[calc(100vh-64px)] lg:h-screen lg:ml-64 ${isFullScreenPage ? 'lg:ml-16' : ''}`}>
         <div className={`mx-auto ${isFullScreenPage ? 'max-w-full px-4' : 'max-w-7xl'}`}>
           {renderPage()}
         </div>

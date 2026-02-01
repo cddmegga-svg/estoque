@@ -10,9 +10,11 @@ interface SidebarProps {
     currentPage: string;
     onNavigate: (page: string, params?: any) => void;
     user: User | null;
+    collapsed?: boolean;
+    className?: string;
 }
 
-const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClose }: SidebarProps & { isMobile?: boolean, onClose?: () => void }) => {
+const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClose, collapsed = false }: SidebarProps & { isMobile?: boolean, onClose?: () => void }) => {
     const { signOut } = useAuth();
 
     // Permission Checks
@@ -67,17 +69,19 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
         <div className="flex flex-col h-full bg-white">
             {/* Header */}
             <div className="h-20 flex items-center px-6 border-b border-border/50 gap-3 flex-shrink-0">
-                <div className="h-10 w-10 flex-shrink-0">
+                <div className={cn("flex-shrink-0 transition-all duration-300", collapsed ? "h-8 w-8" : "h-10 w-10")}>
                     <img src="/logo.png" alt="Mega Farma" className="h-full w-full object-contain" />
                 </div>
-                <div>
-                    <h1 className="text-lg font-extrabold text-[#d32f2f] leading-none tracking-tight">MEGA FARMA</h1>
-                    <p className="text-xs font-semibold text-[#1976d2] tracking-wider">POPULAR</p>
-                </div>
+                {!collapsed && (
+                    <div className="min-w-0">
+                        <h1 className="text-lg font-extrabold text-[#d32f2f] leading-none tracking-tight">MEGA FARMA</h1>
+                        <p className="text-xs font-semibold text-[#1976d2] tracking-wider">POPULAR</p>
+                    </div>
+                )}
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+            <nav className={cn("flex-1 py-6 space-y-1 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
                 {menuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = currentPage === item.id;
@@ -90,14 +94,16 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
                                 if (isMobile && onClose) onClose();
                             }}
                             className={cn(
-                                'w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all',
+                                'w-full flex items-center gap-3 py-2.5 text-sm font-medium rounded-lg transition-all',
+                                collapsed ? 'justify-center px-0' : 'px-3',
                                 isActive
                                     ? 'bg-emerald-50 text-emerald-700'
                                     : 'text-muted-foreground hover:bg-slate-50 hover:text-foreground'
                             )}
+                            title={collapsed ? item.label : undefined}
                         >
-                            <Icon className={cn("w-5 h-5", isActive ? "text-emerald-600" : "text-muted-foreground")} />
-                            {item.label}
+                            <Icon className={cn("flex-shrink-0", collapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-emerald-600" : "text-muted-foreground")} />
+                            {!collapsed && item.label}
                         </button>
                     );
                 })}
@@ -105,25 +111,28 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
 
             {/* Footer / User Profile */}
             <div className="p-4 border-t border-border/50 bg-slate-50/50 flex-shrink-0">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
+                <div className={cn("flex items-center gap-3 mb-4", collapsed && "justify-center")}>
+                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold flex-shrink-0">
                         {user?.name?.charAt(0) || 'U'}
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
-                        <p className="text-xs text-muted-foreground truncate capitalize">
-                            {user?.role === 'admin' ? 'Administrador' : 'Colaborador'}
-                        </p>
-                    </div>
+                    {!collapsed && (
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
+                            <p className="text-xs text-muted-foreground truncate capitalize">
+                                {user?.role === 'admin' ? 'Administrador' : 'Colaborador'}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 <Button
                     variant="outline"
-                    className="w-full justify-start gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                    className={cn("w-full gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200", collapsed ? "justify-center px-0" : "justify-start")}
                     onClick={() => signOut()}
+                    title={collapsed ? "Sair" : undefined}
                 >
                     <LogOut className="w-4 h-4" />
-                    Sair
+                    {!collapsed && "Sair"}
                 </Button>
             </div>
         </div>
@@ -132,7 +141,11 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
 
 export const Sidebar = (props: SidebarProps) => {
     return (
-        <aside className="w-64 border-r border-border min-h-screen hidden lg:flex flex-col fixed left-0 top-0 h-full z-50 bg-white shadow-sm">
+        <aside className={cn(
+            "border-r border-border min-h-screen hidden lg:flex flex-col fixed left-0 top-0 h-full z-50 bg-white shadow-sm transition-all duration-300",
+            props.collapsed ? "w-16" : "w-64",
+            props.className
+        )}>
             <SidebarContent {...props} />
         </aside>
     );

@@ -9,6 +9,7 @@ import { formatDate, formatCurrency, isExpiringSoon, isExpired } from '@/lib/uti
 import { User } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { ProductCombobox } from '@/components/ProductCombobox';
+import { CardListSkeleton } from '@/components/ui/card-list-skeleton';
 
 interface StockPageProps {
   user: User;
@@ -164,7 +165,9 @@ export const StockPage = ({ user, params }: StockPageProps) => {
       </Card>
 
       <div className="grid gap-4">
-        {filteredAndSortedStock.length === 0 ? (
+        {isLoading ? (
+          <CardListSkeleton count={5} />
+        ) : filteredAndSortedStock.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
