@@ -19,7 +19,9 @@ import { ReportsPage } from '@/pages/ReportsPage';
 import { ConferencePage } from '@/pages/ConferencePage';
 import { LogisticsPage } from '@/pages/LogisticsPage';
 import { POSPage } from '@/pages/POSPage';
+import { CustomersPage } from '@/pages/CustomersPage';
 import { Toaster } from '@/components/ui/toaster';
+import { CommandMenu } from '@/components/CommandMenu';
 
 import { useProductSync } from '@/hooks/useProductSync';
 
@@ -129,6 +131,10 @@ function App() {
         if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <ConferencePage user={user} />;
 
+      case 'customers':
+        // Assuming allow basic roles for now
+        return <CustomersPage />;
+
       default:
         return <DashboardPage user={user} onNavigate={handleNavigate} />;
     }
@@ -164,6 +170,7 @@ function App() {
       </main>
 
       <Toaster />
+      <CommandMenu onNavigate={handleNavigate} />
     </div>
   );
 }

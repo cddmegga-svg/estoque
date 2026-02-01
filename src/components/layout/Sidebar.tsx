@@ -33,6 +33,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
 
     if (hasPermission('create_sale')) {
         menuItems.push({ id: 'sales', icon: DollarSign, label: 'Pré-Venda (Balcão)', path: '/sales' });
+        menuItems.push({ id: 'customers', label: 'Clientes (CRM)', icon: Users, path: '/customers' });
     }
 
     if (hasPermission('manage_suppliers')) {

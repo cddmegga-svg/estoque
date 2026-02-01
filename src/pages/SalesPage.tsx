@@ -13,7 +13,7 @@ import { Search, ShoppingCart, Trash2, Plus, Minus, DollarSign, User as UserIcon
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { fetchProducts, createSale, fetchFiliais } from '@/services/api';
+import { fetchProducts, createSale, fetchFiliais, fetchCustomers } from '@/services/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Product } from '@/types';
 
@@ -34,6 +34,20 @@ export const SalesPage = () => {
     const [customerName, setCustomerName] = useState('');
     const [discountValue, setDiscountValue] = useState(0);
     const [isFinalizing, setIsFinalizing] = useState(false);
+    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+    const [showCustomerResults, setShowCustomerResults] = useState(false);
+
+    const { data: customerResults = [] } = useQuery({
+        queryKey: ['customers_search', customerName],
+        queryFn: () => fetchCustomers(customerName),
+        enabled: customerName.length > 2 && !selectedCustomerId // Only search if typing and not already selected
+    });
+
+    const selectCustomer = (customer: any) => {
+        setCustomerName(customer.name);
+        setSelectedCustomerId(customer.id);
+        setShowCustomerResults(false);
+    };
 
     // Queries
     // Queries & Local DB
@@ -297,7 +311,11 @@ export const SalesPage = () => {
                     user?.filialId,
                     salespersonId,
                     'pending',
-                    'open'
+                    'open',
+                    undefined,
+                    undefined,
+                    undefined,
+                    selectedCustomerId || undefined
                 );
                 toast({ title: 'Pré-Venda Enviada!', description: `Código enviado para o Caixa. Total: ${formatCurrency(total)}`, className: "bg-emerald-600 text-white" });
             } else {
@@ -306,6 +324,7 @@ export const SalesPage = () => {
 
             setCart([]);
             setCustomerName('');
+            setSelectedCustomerId(null);
             setDiscountPercent(0);
 
             if (navigator.onLine) {
@@ -374,11 +393,40 @@ export const SalesPage = () => {
                     <div className="relative">
                         <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                         <Input
-                            className="pl-10 h-16 text-lg bg-white border-slate-200"
+                            className={`pl-10 h-16 text-lg bg-white border-slate-200 ${selectedCustomerId ? 'border-emerald-500 ring-1 ring-emerald-500 text-emerald-700 font-bold' : ''}`}
                             placeholder="Identificar Cliente"
                             value={customerName}
-                            onChange={(e) => setCustomerName(e.target.value)}
+                            onChange={(e) => {
+                                setCustomerName(e.target.value);
+                                setSelectedCustomerId(null); // Reset selection on edit
+                                setShowCustomerResults(true);
+                            }}
+                            onFocus={() => setShowCustomerResults(true)}
+                            onBlur={() => setTimeout(() => setShowCustomerResults(false), 200)} // Delay to allow click
                         />
+                        {selectedCustomerId && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-emerald-600 font-bold bg-emerald-100 px-2 py-1 rounded-full">
+                                CRM
+                            </div>
+                        )}
+                        {/* Customer Search Results */}
+                        {showCustomerResults && customerResults && customerResults.length > 0 && !selectedCustomerId && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border border-slate-200 z-50 max-h-[300px] overflow-y-auto">
+                                {customerResults.map((c: any) => (
+                                    <div
+                                        key={c.id}
+                                        className="p-3 hover:bg-slate-50 cursor-pointer border-b last:border-0"
+                                        onClick={() => selectCustomer(c)}
+                                    >
+                                        <div className="font-bold text-slate-800">{c.name}</div>
+                                        <div className="text-xs text-slate-500 flex gap-2">
+                                            {c.cpf && <span>{c.cpf}</span>}
+                                            {c.phone && <span>{c.phone}</span>}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

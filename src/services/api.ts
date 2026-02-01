@@ -544,7 +544,8 @@ export const createSale = async (
     status: 'open' | 'completed' = 'completed',
     paymentMethod?: string,
     cashRegisterId?: string,
-    cashierId?: string
+    cashierId?: string,
+    customerId?: string
 ) => {
     // 1. Create Sale Header
     const { data: sale, error: saleError } = await supabase
@@ -560,8 +561,9 @@ export const createSale = async (
             user_name: userName,
             filial_id: filialId,
             employee_id: salespersonId, // Using the new column
-            cashier_employee_id: cashierId && salespersonId !== cashierId ? cashierId : null, // If passed
-            cash_register_id: cashRegisterId
+            cashier_employee_id: cashierId && salespersonId !== cashierId ? cashierId : null,
+            cash_register_id: cashRegisterId,
+            customer_id: customerId
         })
         .select()
         .single();
@@ -747,4 +749,87 @@ export const deleteEmployee = async (id: string) => {
         .eq('id', id);
 
     if (error) throw error;
+};
+
+// --- Customers ---
+export const fetchCustomers = async (search?: string) => {
+    let query = supabase
+        .from('customers')
+        .select('*')
+        .order('name');
+
+    if (search) {
+        query = query.or(`name.ilike.%${search}%,cpf.ilike.%${search}%,phone.ilike.%${search}%`);
+    }
+
+    const { data, error } = await query.limit(50);
+    if (error) throw error;
+
+    // Transform snake_case to camelCase
+    return data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        cpf: c.cpf,
+        phone: c.phone,
+        email: c.email,
+        address: c.address,
+        number: c.number,
+        district: c.district,
+        city: c.city,
+        state: c.state,
+        zipCode: c.zip_code,
+        notes: c.notes,
+        createdAt: c.created_at
+    }));
+};
+
+export const createCustomer = async (customer: any) => {
+    // Map to snake_case
+    const dbCustomer = {
+        name: customer.name,
+        cpf: customer.cpf,
+        phone: customer.phone,
+        email: customer.email,
+        address: customer.address,
+        number: customer.number,
+        district: customer.district,
+        city: customer.city,
+        state: customer.state,
+        zip_code: customer.zipCode,
+        notes: customer.notes
+    };
+
+    const { data, error } = await supabase
+        .from('customers')
+        .insert([dbCustomer])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
+export const updateCustomer = async (id: string, updates: any) => {
+    const dbUpdates: any = {};
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.cpf) dbUpdates.cpf = updates.cpf;
+    if (updates.phone) dbUpdates.phone = updates.phone;
+    if (updates.email) dbUpdates.email = updates.email;
+    if (updates.address) dbUpdates.address = updates.address;
+    if (updates.number) dbUpdates.number = updates.number;
+    if (updates.district) dbUpdates.district = updates.district;
+    if (updates.city) dbUpdates.city = updates.city;
+    if (updates.state) dbUpdates.state = updates.state;
+    if (updates.zipCode) dbUpdates.zip_code = updates.zipCode;
+    if (updates.notes) dbUpdates.notes = updates.notes;
+
+    const { data, error } = await supabase
+        .from('customers')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
 };

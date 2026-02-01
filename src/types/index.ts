@@ -198,7 +198,24 @@ export interface Sale {
   cashRegisterId?: string; // Sessão de Caixa
   filialId: string;
   createdAt: string;
+  customerId?: string;
   items?: SaleItem[];
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  cpf?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  number?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  notes?: string;
+  createdAt?: string;
 }
 
 export interface CashRegister {
