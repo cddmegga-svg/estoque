@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { User } from '@/types';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useState } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SidebarProps {
     currentPage: string;
@@ -82,31 +83,47 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
 
             {/* Navigation */}
             <nav className={cn("flex-1 py-6 space-y-1 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
-                {menuItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = currentPage === item.id;
+                <TooltipProvider delayDuration={0}>
+                    {menuItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = currentPage === item.id;
 
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => {
-                                onNavigate(item.id);
-                                if (isMobile && onClose) onClose();
-                            }}
-                            className={cn(
-                                'w-full flex items-center gap-3 py-2.5 text-sm font-medium rounded-lg transition-all',
-                                collapsed ? 'justify-center px-0' : 'px-3',
-                                isActive
-                                    ? 'bg-emerald-50 text-emerald-700'
-                                    : 'text-muted-foreground hover:bg-slate-50 hover:text-foreground'
-                            )}
-                            title={collapsed ? item.label : undefined}
-                        >
-                            <Icon className={cn("flex-shrink-0", collapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-emerald-600" : "text-muted-foreground")} />
-                            {!collapsed && item.label}
-                        </button>
-                    );
-                })}
+                        const ButtonContent = (
+                            <button
+                                key={item.id}
+                                onClick={() => {
+                                    onNavigate(item.id);
+                                    if (isMobile && onClose) onClose();
+                                }}
+                                className={cn(
+                                    'w-full flex items-center gap-3 py-2.5 text-sm font-medium rounded-lg transition-all',
+                                    collapsed ? 'justify-center px-0' : 'px-3',
+                                    isActive
+                                        ? 'bg-emerald-50 text-emerald-700'
+                                        : 'text-muted-foreground hover:bg-slate-50 hover:text-foreground'
+                                )}
+                            >
+                                <Icon className={cn("flex-shrink-0", collapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-emerald-600" : "text-muted-foreground")} />
+                                {!collapsed && item.label}
+                            </button>
+                        );
+
+                        if (collapsed) {
+                            return (
+                                <Tooltip key={item.id}>
+                                    <TooltipTrigger asChild>
+                                        {ButtonContent}
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" className="font-bold bg-slate-900 text-white">
+                                        <p>{item.label}</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            );
+                        }
+
+                        return ButtonContent;
+                    })}
+                </TooltipProvider>
             </nav>
 
             {/* Footer / User Profile */}

@@ -338,7 +338,7 @@ export const POSPage = () => {
     if (isLoadingRegister) return <div className="p-8">Carregando Frente de Caixa...</div>;
 
     return (
-        <div className="flex flex-col h-[calc(100vh-6rem)] gap-4">
+        <div className="flex flex-col h-full gap-4">
             <Tabs defaultValue="queue" className="flex-1 flex flex-col">
                 <div className="flex justify-between items-center bg-white p-2 rounded-lg border shadow-sm mb-4">
                     <TabsList className="bg-slate-100">
