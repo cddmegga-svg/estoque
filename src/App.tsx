@@ -66,10 +66,10 @@ function App() {
   }
 
   // Check Permissions Helper
+  const { checkPermission } = useAuth();
+
   const hasPermission = (permission: string) => {
-    // Admin always allows
-    // This tool call logic was empty because I decided to check Sidebar first.sions array
-    return user.permissions?.includes(permission);
+    return checkPermission ? checkPermission(permission) : false;
   };
 
   const handleNavigate = (page: string, params?: any) => {

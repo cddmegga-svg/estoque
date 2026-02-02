@@ -9,11 +9,14 @@
 - [x] Implementar "Limpeza de Sessões Presas" (Zombie Registers)
 - [x] Migração SaaS DB Phase 1 & 2 (RLS & Tenancy)
 - [x] Melhorias de UX (Persistência & Login Rigoroso)
+- [x] **Migração de Permissões (Login -> Equipe)** (Moves permissions to Employees table)
+- [x] **Sidebar Cirúrgica** (Hides items based on active employee)
+- [x] **Modo Quiosque (Unlock)** (Session-based unlock via PIN)
+- [x] **Configurar Admin/Dono (PIN 060813)** <!-- COMPLETED -->
 
 ## Melhorias de UX & SaaS (Atual)
-- [/] **Migração de Permissões (Login -> Equipe)** (Moves permissions to Employees table) <!-- FOCUS -->
-- [ ] **Sidebar Cirúrgica** (Ocultar itens sem permissão) <!-- FOCUS -->
-- [ ] **Validar Fluxo de Permissões** (PIN na navegação)
+- [/] **Validar Cadastro de Usuários pelo Admin** <!-- FOCUS -->
+    - [ ] Auditar `EmployeeManagement.tsx`
 
 ## Transformação SaaS (Produto Comercial) 🚀
 ### Fase 1: Fundação Multi-Tenant (Técnico)
