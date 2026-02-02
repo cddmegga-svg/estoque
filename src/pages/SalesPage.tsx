@@ -68,6 +68,12 @@ export const SalesPage = () => {
     };
 
     // Queries
+    const { data: customerResults = [] } = useQuery({
+        queryKey: ['customers_search', customerName],
+        queryFn: () => fetchCustomers(customerName),
+        enabled: customerName.length > 2 && !selectedCustomerId
+    });
+
     // Queries & Local DB
     // const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: fetchProducts }); <-- Replaced by Dexie
 
@@ -734,7 +740,7 @@ export const SalesPage = () => {
             </Dialog>
 
             {/* PIN Dialog for Salesperson Attribution */}
-            <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
+            <Dialog open={isSalespersonDialogOpen} onOpenChange={setIsSalespersonDialogOpen}>
                 <DialogContent className="max-w-xs">
                     <DialogHeader>
                         <DialogTitle className="text-center text-slate-700">Identifique-se</DialogTitle>
@@ -748,10 +754,10 @@ export const SalesPage = () => {
                             autoFocus
                             placeholder="PIN"
                             className="text-center text-2xl tracking-widest w-32 font-bold"
-                            value={salespersonPin}
-                            onChange={(e) => setSalespersonPin(e.target.value)}
+                            value={salespersonCode}
+                            onChange={(e) => setSalespersonCode(e.target.value)}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleConfirmWithPin();
+                                if (e.key === 'Enter') checkSalesperson();
                             }}
                             maxLength={6}
                         />
@@ -759,7 +765,7 @@ export const SalesPage = () => {
                     <DialogFooter className="sm:justify-center">
                         <Button
                             className="w-full bg-blue-600 hover:bg-blue-700"
-                            onClick={handleConfirmWithPin}
+                            onClick={checkSalesperson}
                         >
                             Confirmar
                         </Button>
