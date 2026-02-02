@@ -142,11 +142,11 @@ export const POSPage = () => {
     });
 
     // Validations
-    // useEffect(() => {
-    //     if (!isLoadingRegister && !currentRegister) {
-    //         setIsRegisterOpenDialog(true);
-    //     }
-    // }, [currentRegister, isLoadingRegister]);
+    useEffect(() => {
+        if (!isLoadingRegister && !currentRegister) {
+            setIsRegisterOpenDialog(true);
+        }
+    }, [currentRegister, isLoadingRegister]);
 
     // Split Payment State
     const [payments, setPayments] = useState<{ method: string, amount: number }[]>([]);
@@ -199,6 +199,7 @@ export const POSPage = () => {
     const [isCloseRegisterOpen, setIsCloseRegisterOpen] = useState(false);
     const [closingValues, setClosingValues] = useState({ money: 0, credit_card: 0, debit_card: 0, pix: 0 });
     const [calculatedTotals, setCalculatedTotals] = useState({ money: 0, credit_card: 0, debit_card: 0, pix: 0, total: 0 });
+    const [closingPin, setClosingPin] = useState('');
 
     const handleOpenRegister = async () => {
         if (!openingPin) {
@@ -285,41 +286,58 @@ export const POSPage = () => {
 
     const handleCloseRegister = async () => {
         if (!currentRegister) return;
-
-        // Security Check: Only the Owner (who opened) or Manager/Admin can close
-        // We need to ask for PIN inside the Close Dialog or assume if they are logged in they are the one.
-        // But the user said: "operadores... quem abre, tem que fechar"
-        // Since we don't ask for PIN *inside* the Close Dialog currently, 
-        // we should probably add a PIN input there OR verify against the current "session" if we had one.
-        // Simplest Fix: Add a PIN confirmation step inside `handleCloseRegister` dialog UI?
-        // Actually, let's just enforce that the Closing action matches the logic.
-        // For this step, I will just fix the accounting.
-        // The PIN requirement is better handled by not letting them *see* the Close button if wrong, or asking PIN.
-        // Given existing UI, I will assume the button is only clicked by the operator.
-        // I will add a PIN prompt to the Close Dialog in a future step if needed, 
-        // but for now let's fix the numbers.
+        if (!closingPin) {
+            toast({ variant: 'destructive', title: 'Erro', description: 'Informe o PIN do responsável.' });
+            return;
+        }
 
         const totalReported = closingValues.money + closingValues.credit_card + closingValues.debit_card + closingValues.pix;
         const diff = totalReported - calculatedTotals.total;
 
         try {
+            // Validate PIN
+            const { data: employee, error: empError } = await supabase
+                .from('employees')
+                .select('id, name, role')
+                .eq('pin', closingPin)
+                .single();
+
+            if (empError || !employee) {
+                toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Funcionário não encontrado.' });
+                return;
+            }
+
+            // Enforce "Who opens must close" OR Manager/Admin Override
+            if (currentRegister.opening_employee_id && employee.id !== currentRegister.opening_employee_id) {
+                if (!['admin', 'manager'].includes(employee.role)) {
+                    toast({ variant: 'destructive', title: 'Acesso Negado', description: 'Apenas quem abriu o caixa pode fechá-lo.' });
+                    return;
+                }
+            }
+
             const { error } = await supabase
                 .from('cash_registers')
                 .update({
                     status: 'closed',
                     closing_balance: totalReported,
                     closed_at: new Date().toISOString(),
-                    notes: `Fechamento. Esperado: ${formatCurrency(calculatedTotals.total)}. Informado: ${formatCurrency(totalReported)}. Diff: ${formatCurrency(diff)}`
+                    notes: `Fechado por ${employee.name}. Esp: ${formatCurrency(calculatedTotals.total)}. Inf: ${formatCurrency(totalReported)}.`
                 })
                 .eq('id', currentRegister.id);
 
             if (error) throw error;
 
-            toast({ title: 'Caixa Fechado', description: `Sessão encerrada.` });
-            queryClient.invalidateQueries({ queryKey: ['cash_register'] });
+            toast({ title: 'Caixa Fechado', description: `Sessão encerrada por ${employee.name}.` });
+
             setIsCloseRegisterOpen(false);
+            setClosingPin('');
+
+            // Invalidate and Refetch to ensure UI updates (Fix Zombie State)
+            await queryClient.invalidateQueries({ queryKey: ['cash_register'] });
+            await queryClient.refetchQueries({ queryKey: ['cash_register'] });
 
         } catch (err) {
+            console.error(err);
             toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao fechar caixa.' });
         }
     };
@@ -858,52 +876,66 @@ export const POSPage = () => {
                             </div>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsCloseRegisterOpen(false)}>Cancelar</Button>
-                        <Button variant="destructive" onClick={handleCloseRegister}>
-                            Encerrar Sessão
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                </div>
+
+                <div className="pt-4 border-t space-y-2">
+                    <Label className="font-bold text-slate-700">Assinatura Digital (PIN)</Label>
+                    <Input
+                        type="password"
+                        placeholder="Digite seu PIN para fechar"
+                        className="text-center tracking-widest text-lg font-bold"
+                        value={closingPin}
+                        onChange={(e) => setClosingPin(e.target.value)}
+                        autoComplete="off"
+                    />
+                </div>
+
+                <DialogFooter className="mt-4">
+                    <Button variant="outline" onClick={() => setIsCloseRegisterOpen(false)}>Cancelar</Button>
+                    <Button variant="destructive" onClick={handleCloseRegister}>
+                        Conferir e Fechar Sessão
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
 
-            {/* Cashier Identification Dialog - Used explicitly for sensitive ops, but regular flow is PIN-free per request */}
-            <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Confirmação de Caixa</DialogTitle>
-                        <DialogDescription>
-                            Digite seu PIN para validar esta operação.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex flex-col gap-4 py-4">
-                        <div className="flex items-center gap-4">
-                            <Label htmlFor="c-pin" className="text-right w-20">PIN</Label>
-                            <Input
-                                id="c-pin"
-                                type="password"
-                                inputMode="numeric"
-                                className="col-span-3 text-center text-2xl tracking-widest"
-                                placeholder="____"
-                                maxLength={6}
-                                value={cashierPin}
-                                onChange={(e) => setCashierPin(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') handleProcessPayment();
-                                }}
-                                autoFocus
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button type="button" variant="secondary" onClick={() => setIsCashierDialogOpen(false)}>Cancelar</Button>
-                        <Button type="button" onClick={() => handleProcessPayment()} disabled={!cashierPin || isProcessing}>
-                            Confirmar
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* Cashier Identification Dialog - Used explicitly for sensitive ops, but regular flow is PIN-free per request */ }
+    <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+                <DialogTitle>Confirmação de Caixa</DialogTitle>
+                <DialogDescription>
+                    Digite seu PIN para validar esta operação.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-4 py-4">
+                <div className="flex items-center gap-4">
+                    <Label htmlFor="c-pin" className="text-right w-20">PIN</Label>
+                    <Input
+                        id="c-pin"
+                        type="password"
+                        inputMode="numeric"
+                        className="col-span-3 text-center text-2xl tracking-widest"
+                        placeholder="____"
+                        maxLength={6}
+                        value={cashierPin}
+                        onChange={(e) => setCashierPin(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleProcessPayment();
+                        }}
+                        autoFocus
+                    />
+                </div>
+            </div>
+            <DialogFooter>
+                <Button type="button" variant="secondary" onClick={() => setIsCashierDialogOpen(false)}>Cancelar</Button>
+                <Button type="button" onClick={() => handleProcessPayment()} disabled={!cashierPin || isProcessing}>
+                    Confirmar
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 
 
         </div >
