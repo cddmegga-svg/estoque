@@ -22,6 +22,12 @@ import { POSPage } from '@/pages/POSPage';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { Toaster } from '@/components/ui/toaster';
 import { CommandMenu } from '@/components/CommandMenu';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import { useEffect } from 'react';
 
 import { useProductSync } from '@/hooks/useProductSync';
 
@@ -173,7 +179,78 @@ function App() {
 
       <Toaster />
       <CommandMenu onNavigate={handleNavigate} />
+
+      {/* Global Unlock Dialog */}
+      <UnlockDialog />
     </div>
+  );
+}
+
+// Global Unlock Component using Event Listener
+function UnlockDialog() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [pin, setPin] = useState('');
+  const { setActiveEmployee, activeEmployee } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-unlock-dialog', handleOpen);
+    return () => window.removeEventListener('open-unlock-dialog', handleOpen);
+  }, []);
+
+  const handleUnlock = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('pin', pin)
+        .eq('active', true)
+        .single();
+
+      if (error || !data) {
+        toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Funcionário não encontrado.' });
+        return;
+      }
+
+      setActiveEmployee?.(data); // "Upscale" permissions
+      toast({ title: 'Acesso Liberado', description: `Sessão desbloqueada para: ${data.name}` });
+      setIsOpen(false);
+      setPin('');
+      window.location.reload(); // Force refresh to re-render Sidebar with new permissions
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="max-w-xs">
+        <DialogHeader>
+          <DialogTitle className="text-center">Liberar Acesso</DialogTitle>
+          <DialogDescription className="text-center">
+            Digite seu PIN para desbloquear funções administrativas.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4 flex justify-center">
+          <Input
+            type="password"
+            autoFocus
+            placeholder="PIN"
+            className="text-center text-2xl tracking-widest w-32 font-bold"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+            maxLength={6}
+          />
+        </div>
+        <DialogFooter>
+          <Button onClick={handleUnlock} className="w-full bg-emerald-600 hover:bg-emerald-700">
+            Liberar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

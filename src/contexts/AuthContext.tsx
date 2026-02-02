@@ -11,6 +11,9 @@ interface AuthContextType {
     signIn: (email: string, password?: string) => Promise<void>;
     signUp: (email: string, password: string, data: any) => Promise<void>;
     signOut: () => Promise<void>;
+    activeEmployee?: User | null;
+    setActiveEmployee?: (employee: User | null) => void;
+    checkPermission?: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -20,6 +23,9 @@ const AuthContext = createContext<AuthContextType>({
     signIn: async () => { },
     signUp: async () => { },
     signOut: async () => { },
+    activeEmployee: null,
+    setActiveEmployee: () => { },
+    checkPermission: () => false,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -127,8 +133,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(null);
     };
 
+    // activeEmployee state for "Unlock Mode"
+    const [activeEmployee, setActiveEmployee] = useState<User | null>(null);
+
+    const checkPermission = (permission: string) => {
+        // 1. If an Employee is "Unlocked" (e.g. Manager override), check their permissions
+        if (activeEmployee) {
+            return activeEmployee.permissions?.includes(permission) || activeEmployee.role === 'admin';
+        }
+        // 2. Fallback to logged in User (Store Login)
+        return user?.permissions?.includes(permission) || user?.role === 'admin';
+    };
+
     return (
-        <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+        <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, activeEmployee, setActiveEmployee, checkPermission }}>
             {children}
         </AuthContext.Provider>
     );

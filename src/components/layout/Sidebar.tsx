@@ -16,11 +16,11 @@ interface SidebarProps {
 }
 
 const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClose, collapsed = false }: SidebarProps & { isMobile?: boolean, onClose?: () => void }) => {
-    const { signOut } = useAuth();
+    const { signOut, checkPermission } = useAuth();
 
-    // Permission Checks
+    // Permission Checks (Now uses the unified logic)
     const hasPermission = (permission: string) => {
-        return user?.permissions?.includes(permission) || user?.role === 'admin'; // Admin always has access
+        return checkPermission ? checkPermission(permission) : false;
     };
 
     const menuItems = [
@@ -144,7 +144,23 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
 
                 <Button
                     variant="outline"
-                    className={cn("w-full gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200", collapsed ? "justify-center px-0" : "justify-start")}
+                    className={cn("w-full gap-2 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 mb-2", collapsed ? "justify-center px-0" : "justify-start")}
+                    onClick={() => {
+                        // TODO: trigger unlock dialog
+                        // For now we just use the CommandMenu (Ctrl+K) or assume the POS enforces generic login
+                        // User requested "Surgical" permissions.
+                        // Ideally we should have a PIN Prompt here.
+                        window.dispatchEvent(new CustomEvent('open-unlock-dialog'));
+                    }}
+                    title={collapsed ? "Desbloquear Acesso" : undefined}
+                >
+                    <Shield className="w-4 h-4" />
+                    {!collapsed && "Liberar Acesso"}
+                </Button>
+
+                <Button
+                    variant="ghost"
+                    className={cn("w-full gap-2 text-red-400 hover:bg-red-50 hover:text-red-600", collapsed ? "justify-center px-0" : "justify-start")}
                     onClick={() => signOut()}
                     title={collapsed ? "Sair" : undefined}
                 >

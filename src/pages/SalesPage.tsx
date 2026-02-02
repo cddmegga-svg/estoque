@@ -724,6 +724,40 @@ export const SalesPage = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* PIN Dialog for Salesperson Attribution */}
+            <Dialog open={isPinDialogOpen} onOpenChange={setIsPinDialogOpen}>
+                <DialogContent className="max-w-xs">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-slate-700">Identifique-se</DialogTitle>
+                        <DialogDescription className="text-center">
+                            Digite seu PIN de vendedor para prosseguir.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 flex justify-center">
+                        <Input
+                            type="password"
+                            autoFocus
+                            placeholder="PIN"
+                            className="text-center text-2xl tracking-widest w-32 font-bold"
+                            value={salespersonPin}
+                            onChange={(e) => setSalespersonPin(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleConfirmWithPin();
+                            }}
+                            maxLength={6}
+                        />
+                    </div>
+                    <DialogFooter className="sm:justify-center">
+                        <Button
+                            className="w-full bg-blue-600 hover:bg-blue-700"
+                            onClick={handleConfirmWithPin}
+                        >
+                            Confirmar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
