@@ -213,16 +213,35 @@ function UnlockDialog() {
         return;
       }
 
-      // Manually save to session storage to avoid race condition with reload
-      sessionStorage.setItem('unlocked_employee', JSON.stringify(data));
-      setActiveEmployee?.(data); // "Upscale" permissions
+      const employeeUser: any = {
+        id: data.id,
+        name: data.name,
+        email: `employee-${data.pin}@system.local`, // Placeholder
+        role: data.role || 'viewer',
+        filialId: data.tenant_id, // Default to tenant for now if filial is null, or data.filial_id
+        permissions: data.permissions || [],
+        employeeCode: data.pin
+      };
 
-      toast({ title: 'Acesso Liberado', description: `Sessão desbloqueada para: ${data.name}` });
+      // Manually save to session storage to avoid race condition with reload
+      sessionStorage.setItem('unlocked_employee', JSON.stringify(employeeUser));
+      setActiveEmployee?.(employeeUser); // "Upscale" permissions
+
+      toast({
+        title: 'Acesso Liberado 🔓',
+        description: `Bem-vindo(a), ${data.name}. Os menus administrativos foram desbloqueados.`,
+        duration: 5000,
+        className: "bg-emerald-600 text-white"
+      });
+
       setIsOpen(false);
       setPin('');
-      window.location.reload(); // Force refresh to re-render Sidebar with new permissions
+
+      // Removed reload to allow instant React state update and debugging
+      // window.location.reload(); 
     } catch (err) {
       console.error(err);
+      toast({ variant: 'destructive', title: 'Erro Técnico', description: 'Verifique o console para detalhes.' });
     }
   };
 

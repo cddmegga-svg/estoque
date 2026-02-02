@@ -134,15 +134,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     // activeEmployee state for "Unlock Mode"
-    const [activeEmployee, setActiveEmployee] = useState<User | null>(null);
+    const [activeEmployee, setActiveEmployee] = useState<User | null>(() => {
+        const saved = sessionStorage.getItem('unlocked_employee');
+        if (saved) console.log("AuthContext: Restored unlocked employee", JSON.parse(saved));
+        return saved ? JSON.parse(saved) : null;
+    });
 
     const checkPermission = (permission: string) => {
         // 1. If an Employee is "Unlocked" (e.g. Manager override), check their permissions
         if (activeEmployee) {
-            return activeEmployee.permissions?.includes(permission) || activeEmployee.role === 'admin';
+            const has = activeEmployee.permissions?.includes(permission) || activeEmployee.role === 'admin';
+            // console.log(`Check(Emp): ${permission} -> ${has} (${activeEmployee.name})`);
+            return has;
         }
         // 2. Fallback to logged in User (Store Login)
-        return user?.permissions?.includes(permission) || user?.role === 'admin';
+        const userHas = user?.permissions?.includes(permission) || user?.role === 'admin';
+        // console.log(`Check(User): ${permission} -> ${userHas}`);
+        return userHas;
     };
 
     return (

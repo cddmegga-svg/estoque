@@ -16,11 +16,13 @@ interface SidebarProps {
 }
 
 const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClose, collapsed = false }: SidebarProps & { isMobile?: boolean, onClose?: () => void }) => {
-    const { signOut, checkPermission } = useAuth();
+    const { signOut, checkPermission, activeEmployee } = useAuth();
 
     // Permission Checks (Now uses the unified logic)
     const hasPermission = (permission: string) => {
-        return checkPermission ? checkPermission(permission) : false;
+        const result = checkPermission ? checkPermission(permission) : false;
+        console.log(`Sidebar: ${permission} = ${result}. ActiveEmp: ${activeEmployee?.name}`);
+        return result;
     };
 
     const menuItems = [
