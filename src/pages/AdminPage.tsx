@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { fetchUsers, fetchFiliais, updateUser, deleteUser, addFilial, updateFilial } from '@/services/api';
+import { fetchUsers, fetchFiliais, updateUser, deleteUser, deleteUserWithReassign, addFilial, updateFilial } from '@/services/api';
 import { User, Filial } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -66,10 +66,10 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
   });
 
   const deleteUserMutation = useMutation({
-    mutationFn: deleteUser,
+    mutationFn: (id: string) => deleteUserWithReassign(id, currentUser.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast({ title: 'Usuário excluído', description: 'O usuário foi removido do sistema' });
+      toast({ title: 'Usuário excluído', description: 'O usuário foi removido e seus registros foram transferidos para você.' });
     },
     onError: (error: any) => toast({ variant: 'destructive', title: 'Erro ao excluir', description: error.message })
   });

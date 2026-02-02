@@ -365,6 +365,14 @@ export const deleteUser = async (id: string) => {
 
     if (error) throw error;
 };
+
+export const deleteUserWithReassign = async (targetId: string, newOwnerId: string) => {
+    const { error } = await supabase.rpc('admin_reassign_and_delete_user', {
+        target_user_id: targetId,
+        new_owner_id: newOwnerId
+    });
+    if (error) throw error;
+};
 // Suppliers
 export const fetchSuppliers = async (): Promise<Supplier[]> => {
     const { data, error } = await supabase
