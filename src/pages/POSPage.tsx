@@ -876,66 +876,65 @@ export const POSPage = () => {
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="pt-4 border-t space-y-2">
-                    <Label className="font-bold text-slate-700">Assinatura Digital (PIN)</Label>
-                    <Input
-                        type="password"
-                        placeholder="Digite seu PIN para fechar"
-                        className="text-center tracking-widest text-lg font-bold"
-                        value={closingPin}
-                        onChange={(e) => setClosingPin(e.target.value)}
-                        autoComplete="off"
-                    />
-                </div>
+                    <div className="pt-4 border-t space-y-2">
+                        <Label className="font-bold text-slate-700">Assinatura Digital (PIN)</Label>
+                        <Input
+                            type="password"
+                            placeholder="Digite seu PIN para fechar"
+                            className="text-center tracking-widest text-lg font-bold"
+                            value={closingPin}
+                            onChange={(e) => setClosingPin(e.target.value)}
+                            autoComplete="off"
+                        />
+                    </div>
 
-                <DialogFooter className="mt-4">
-                    <Button variant="outline" onClick={() => setIsCloseRegisterOpen(false)}>Cancelar</Button>
-                    <Button variant="destructive" onClick={handleCloseRegister}>
-                        Conferir e Fechar Sessão
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                    <DialogFooter className="mt-4">
+                        <Button variant="outline" onClick={() => setIsCloseRegisterOpen(false)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleCloseRegister}>
+                            Conferir e Fechar Sessão
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
 
-            {/* Cashier Identification Dialog - Used explicitly for sensitive ops, but regular flow is PIN-free per request */ }
-    <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-                <DialogTitle>Confirmação de Caixa</DialogTitle>
-                <DialogDescription>
-                    Digite seu PIN para validar esta operação.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-4 py-4">
-                <div className="flex items-center gap-4">
-                    <Label htmlFor="c-pin" className="text-right w-20">PIN</Label>
-                    <Input
-                        id="c-pin"
-                        type="password"
-                        inputMode="numeric"
-                        className="col-span-3 text-center text-2xl tracking-widest"
-                        placeholder="____"
-                        maxLength={6}
-                        value={cashierPin}
-                        onChange={(e) => setCashierPin(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleProcessPayment();
-                        }}
-                        autoFocus
-                    />
-                </div>
-            </div>
-            <DialogFooter>
-                <Button type="button" variant="secondary" onClick={() => setIsCashierDialogOpen(false)}>Cancelar</Button>
-                <Button type="button" onClick={() => handleProcessPayment()} disabled={!cashierPin || isProcessing}>
-                    Confirmar
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
+            {/* Cashier Identification Dialog - Used explicitly for sensitive ops, but regular flow is PIN-free per request */}
+            <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Confirmação de Caixa</DialogTitle>
+                        <DialogDescription>
+                            Digite seu PIN para validar esta operação.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-4">
+                        <div className="flex items-center gap-4">
+                            <Label htmlFor="c-pin" className="text-right w-20">PIN</Label>
+                            <Input
+                                id="c-pin"
+                                type="password"
+                                inputMode="numeric"
+                                className="col-span-3 text-center text-2xl tracking-widest"
+                                placeholder="____"
+                                maxLength={6}
+                                value={cashierPin}
+                                onChange={(e) => setCashierPin(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleProcessPayment();
+                                }}
+                                autoFocus
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="secondary" onClick={() => setIsCashierDialogOpen(false)}>Cancelar</Button>
+                        <Button type="button" onClick={() => handleProcessPayment()} disabled={!cashierPin || isProcessing}>
+                            Confirmar
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
 
         </div >
