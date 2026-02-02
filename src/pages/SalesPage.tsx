@@ -33,8 +33,13 @@ export const SalesPage = () => {
 
     // Persistence: Load initial state from localStorage if available
     const [cart, setCart] = useState<CartItem[]>(() => {
-        const saved = localStorage.getItem('pos_cart');
-        return saved ? JSON.parse(saved) : [];
+        try {
+            const saved = localStorage.getItem('pos_cart');
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            console.error("Failed to parse cart", e);
+            return [];
+        }
     });
     const [customerName, setCustomerName] = useState(() => localStorage.getItem('pos_customer_name') || '');
     const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(() => localStorage.getItem('pos_customer_id') || null);
@@ -473,6 +478,9 @@ export const SalesPage = () => {
                                     </TableRow>
                                 ) : (
                                     cart.map((item, index) => {
+                                        // Guard against corrupted cart items
+                                        if (!item || !item.product) return null;
+
                                         // Calculate percentage for display
                                         // item.unitDiscount is currently VALUE. Logic needs to handle input as % and store as value, or vice-versa.
                                         // The helper `updateItemDiscountPercent` below handles the conversion.

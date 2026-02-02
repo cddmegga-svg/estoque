@@ -213,7 +213,10 @@ function UnlockDialog() {
         return;
       }
 
+      // Manually save to session storage to avoid race condition with reload
+      sessionStorage.setItem('unlocked_employee', JSON.stringify(data));
       setActiveEmployee?.(data); // "Upscale" permissions
+
       toast({ title: 'Acesso Liberado', description: `Sessão desbloqueada para: ${data.name}` });
       setIsOpen(false);
       setPin('');
