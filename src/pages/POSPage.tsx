@@ -220,6 +220,18 @@ export const POSPage = () => {
                 return;
             }
 
+            // Clean up Zombies: Close ANY existing open registers for this user/filial
+            // This prevents "Stacking" of open registers if one was not closed properly.
+            await supabase
+                .from('cash_registers')
+                .update({
+                    status: 'closed',
+                    closed_at: new Date().toISOString(),
+                    notes: 'Fechamento Automático (Limpeza de Sessão Anterior)'
+                })
+                .eq('user_id', user?.id)
+                .eq('status', 'open');
+
             const { error } = await supabase
                 .from('cash_registers')
                 .insert({
