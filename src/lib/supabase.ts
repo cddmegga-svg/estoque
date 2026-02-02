@@ -9,4 +9,11 @@ if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase environment variables. Please check .env.local');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
+export const supabase = createClient(supabaseUrl || '', supabaseKey || '', {
+  auth: {
+    storage: sessionStorage, // Force login on new tab/window
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});

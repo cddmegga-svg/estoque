@@ -30,18 +30,31 @@ export const SalesPage = () => {
 
     // State
     const [searchTerm, setSearchTerm] = useState('');
-    const [cart, setCart] = useState<CartItem[]>([]);
-    const [customerName, setCustomerName] = useState('');
+
+    // Persistence: Load initial state from localStorage if available
+    const [cart, setCart] = useState<CartItem[]>(() => {
+        const saved = localStorage.getItem('pos_cart');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [customerName, setCustomerName] = useState(() => localStorage.getItem('pos_customer_name') || '');
+    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(() => localStorage.getItem('pos_customer_id') || null);
+
     const [discountValue, setDiscountValue] = useState(0);
     const [isFinalizing, setIsFinalizing] = useState(false);
-    const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
     const [showCustomerResults, setShowCustomerResults] = useState(false);
 
-    const { data: customerResults = [] } = useQuery({
-        queryKey: ['customers_search', customerName],
-        queryFn: () => fetchCustomers(customerName),
-        enabled: customerName.length > 2 && !selectedCustomerId // Only search if typing and not already selected
-    });
+    // Persistence: Save state changes
+    useEffect(() => {
+        localStorage.setItem('pos_cart', JSON.stringify(cart));
+    }, [cart]);
+
+    useEffect(() => {
+        if (customerName) localStorage.setItem('pos_customer_name', customerName);
+        else localStorage.removeItem('pos_customer_name');
+
+        if (selectedCustomerId) localStorage.setItem('pos_customer_id', selectedCustomerId);
+        else localStorage.removeItem('pos_customer_id');
+    }, [customerName, selectedCustomerId]);
 
     const selectCustomer = (customer: any) => {
         setCustomerName(customer.name);
