@@ -12,11 +12,14 @@
 - [x] **Migração de Permissões (Login -> Equipe)** (Moves permissions to Employees table)
 - [x] **Sidebar Cirúrgica** (Hides items based on active employee)
 - [x] **Modo Quiosque (Unlock)** (Session-based unlock via PIN)
-- [x] **Configurar Admin/Dono (PIN 060813)** <!-- COMPLETED -->
+- [x] **Configurar Admin/Dono (PIN 060813)**
+- [x] **Validar Fluxo de Desbloqueio** (No-reload fix applied)
 
-## Melhorias de UX & SaaS (Atual)
-- [/] **Validar Cadastro de Usuários pelo Admin** <!-- FOCUS -->
-    - [ ] Auditar `EmployeeManagement.tsx`
+## Melhorias de Gestão (Atual)
+- [/] **Gestão de Usuários e Equipe**
+    - [ ] Adicionar Roles: Estoquista, Farmacêutico.
+    - [ ] Implementar deleção de Usuários de Login (antigos).
+    - [ ] Validar visão Multi-Filial para Admin.
 
 ## Transformação SaaS (Produto Comercial) 🚀
 ### Fase 1: Fundação Multi-Tenant (Técnico)

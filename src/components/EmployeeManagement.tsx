@@ -32,14 +32,38 @@ export const EmployeeManagement = ({ currentUser, filiais }: { currentUser: User
         setIsDialogOpen(true);
     };
 
+    const getFilialName = (id: string) => filiais.find(f => f.id === id)?.name || '-';
+
+    const DEFAULT_PERMISSIONS: Record<string, string[]> = {
+        salesperson: ['create_sale', 'view_products'],
+        cashier: ['access_pos', 'manage_cash', 'create_sale'],
+        manager: ['admin_access', 'manage_users', 'manage_stock', 'view_reports', 'view_financial'],
+        stock: ['view_stock', 'manage_stock', 'view_products'],
+        pharmacist: ['view_stock', 'manage_stock', 'create_sale', 'view_reports']
+    };
+
+    const getRoleLabel = (role: string) => {
+        switch (role) {
+            case 'manager': return 'Gerente';
+            case 'cashier': return 'Caixa';
+            case 'stock': return 'Estoquista';
+            case 'pharmacist': return 'Farmacêutico';
+            default: return 'Vendedor';
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            // Apply default permissions based on role if creating or if needing update
+            const permissions = DEFAULT_PERMISSIONS[form.role] || [];
+            const payload = { ...form, permissions };
+
             if (editingEmp) {
-                await updateEmployee(editingEmp.id, form);
+                await updateEmployee(editingEmp.id, payload);
                 toast({ title: 'Atualizado', description: 'Colaborador atualizado.' });
             } else {
-                await addEmployee(form);
+                await addEmployee(payload);
                 toast({ title: 'Criado', description: 'Colaborador adicionado à equipe.' });
             }
             queryClient.invalidateQueries({ queryKey: ['employees'] });
@@ -49,15 +73,6 @@ export const EmployeeManagement = ({ currentUser, filiais }: { currentUser: User
             toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao salvar.' });
         }
     };
-
-    const handleDelete = async (id: string) => {
-        if (!confirm('Remover este membro da equipe?')) return;
-        await deleteEmployee(id);
-        queryClient.invalidateQueries({ queryKey: ['employees'] });
-        toast({ title: 'Removido', description: 'Colaborador inativado.' });
-    };
-
-    const getFilialName = (id: string) => filiais.find(f => f.id === id)?.name || '-';
 
     return (
         <div>
@@ -80,7 +95,7 @@ export const EmployeeManagement = ({ currentUser, filiais }: { currentUser: User
                         <CardContent>
                             <div className="space-y-1">
                                 <div className="flex justify-between items-center text-sm text-muted-foreground">
-                                    <Badge variant="outline">{emp.role === 'manager' ? 'Gerente' : emp.role === 'cashier' ? 'Caixa' : 'Vendedor'}</Badge>
+                                    <Badge variant="outline">{getRoleLabel(emp.role)}</Badge>
                                     <span className="font-mono bg-slate-100 px-2 py-1 rounded">PIN: {emp.pin}</span>
                                 </div>
                                 <div className="text-xs text-muted-foreground flex items-center justify-between pt-2">
@@ -112,6 +127,8 @@ export const EmployeeManagement = ({ currentUser, filiais }: { currentUser: User
                                 <SelectContent>
                                     <SelectItem value="salesperson">Vendedor</SelectItem>
                                     <SelectItem value="cashier">Operador de Caixa</SelectItem>
+                                    <SelectItem value="stock">Estoquista</SelectItem>
+                                    <SelectItem value="pharmacist">Farmacêutico</SelectItem>
                                     <SelectItem value="manager">Gerente</SelectItem>
                                 </SelectContent>
                             </Select>
