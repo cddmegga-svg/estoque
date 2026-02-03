@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Shield, Trash2, Users, Building, Plus, Edit, MapPin, FileText } from 'lucide-react';
+import { TenantSettings } from '@/Components/TenantSettings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

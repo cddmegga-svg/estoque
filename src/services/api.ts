@@ -392,6 +392,35 @@ export const registerTenant = async (
     if (error) throw error;
     return data;
 };
+
+export const updateTenantSettings = async (
+    logoUrl?: string,
+    primaryColor?: string,
+    website?: string,
+    phone?: string,
+    name?: string
+) => {
+    const { data, error } = await supabase.rpc('update_tenant_settings', {
+        p_logo_url: logoUrl,
+        p_primary_color: primaryColor,
+        p_website: website,
+        p_phone: phone,
+        p_name: name
+    });
+    if (error) throw error;
+    return data;
+};
+
+export const fetchCurrentTenant = async () => {
+    const { data, error } = await supabase
+        .from('tenants')
+        .select('*')
+        .single();
+
+    if (error) throw error;
+    return data;
+};
+
 // Suppliers
 export const fetchSuppliers = async (): Promise<Supplier[]> => {
     const { data, error } = await supabase
