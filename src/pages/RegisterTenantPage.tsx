@@ -156,7 +156,7 @@ export const RegisterTenantPage = () => {
                 <CardHeader>
                     <div className="flex items-center gap-2 mb-2">
                         <Building2 className="w-6 h-6 text-emerald-600" />
-                        <span className="font-bold text-xl text-slate-800">PharmaFlow SaaS</span>
+                        <span className="font-bold text-xl text-slate-800">NexFarmaPro</span>
                     </div>
                     <CardTitle>Crie sua conta</CardTitle>
                     <CardDescription>

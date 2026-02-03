@@ -94,11 +94,11 @@ export const LoginPage = ({ onRegister }: LoginPageProps) => {
             </Button>
           </form>
         </CardContent>
-        {/* <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center">
           <Button variant="link" onClick={onRegister} className="text-muted-foreground">
-            Não tem conta? Cadastre-se
+            Não tem uma conta? Crie sua Farmácia Grátis
           </Button>
-        </CardFooter> */}
+        </CardFooter>
       </Card>
     </div>
   );
