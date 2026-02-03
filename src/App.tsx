@@ -50,7 +50,6 @@ function App() {
   }
 
   // Not authenticated
-  // Not authenticated
   if (!user) {
     if (showRegister) {
       return <RegisterTenantPage />;
