@@ -19,8 +19,8 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
 
   // Permissions
   const isGlobalAdmin = useMemo(() => {
-    // Check if role is admin OR if permission 'admin_access' is explicitly present (for unlocked employees)
-    return user.role === 'admin' || user.permissions?.includes('admin_access');
+    // Check if role is admin OR owner, OR if permission 'admin_access' is explicitly present
+    return user.role === 'admin' || user.role === 'owner' || user.permissions?.includes('admin_access');
   }, [user]);
 
   const stats = useMemo(() => {

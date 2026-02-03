@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { fetchUsers, fetchFiliais, updateUser, deleteUser, deleteUserWithReassign, addFilial, updateFilial } from '@/services/api';
+import { fetchUsers, fetchFiliais, updateUser, deleteUser, deleteUserWithReassign, addFilial, updateFilial, fetchCurrentTenant, updateTenantSettings } from '@/services/api';
 import { User, Filial } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -184,6 +184,7 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
           <TabsTrigger value="users">Usuários (Login)</TabsTrigger>
           <TabsTrigger value="employees">Equipe (Vendedores/Caixas)</TabsTrigger>
           <TabsTrigger value="filiais">Filiais</TabsTrigger>
+          <TabsTrigger value="settings">Minha Empresa</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -283,6 +284,10 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <TenantSettings />
         </TabsContent>
       </Tabs>
 
