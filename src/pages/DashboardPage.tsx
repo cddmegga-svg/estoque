@@ -17,14 +17,29 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
   const { data: products = [] } = useQuery({ queryKey: ['products'], queryFn: fetchProducts });
   const { data: filiais = [] } = useQuery({ queryKey: ['filiais'], queryFn: fetchFiliais });
 
+  // Permissions
+  const isGlobalAdmin = useMemo(() => {
+    // Check if role is admin OR if permission 'admin_access' is explicitly present (for unlocked employees)
+    return user.role === 'admin' || user.permissions?.includes('admin_access');
+  }, [user]);
+
   const stats = useMemo(() => {
-    const expiringItems = stock.filter(item => isExpiringSoon(item.expirationDate));
-    const totalProducts = products.length;
-    const totalValue = stock.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-    const stockByFilial = filiais.map(filial => ({
+    // 1. Determine Scope
+    const targetFiliais = isGlobalAdmin
+      ? filiais
+      : filiais.filter(f => f.id === user.filialId);
+
+    // 2. Filter Stock based on Scope
+    const visibleStock = stock.filter(item => targetFiliais.some(f => f.id === item.filialId));
+
+    const expiringItems = visibleStock.filter(item => isExpiringSoon(item.expirationDate));
+    const totalProducts = products.length; // Catalog is global
+    const totalValue = visibleStock.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+
+    const stockByFilial = targetFiliais.map(filial => ({
       filial,
-      items: stock.filter(item => item.filialId === filial.id).length,
-      quantity: stock.filter(item => item.filialId === filial.id).reduce((sum, item) => sum + item.quantity, 0),
+      items: visibleStock.filter(item => item.filialId === filial.id).length,
+      quantity: visibleStock.filter(item => item.filialId === filial.id).reduce((sum, item) => sum + item.quantity, 0),
     }));
 
     return {
@@ -32,8 +47,9 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
       totalValue,
       expiringItems,
       stockByFilial,
+      filialCount: targetFiliais.length
     };
-  }, [stock, products, filiais]);
+  }, [stock, products, filiais, user, isGlobalAdmin]);
 
   // Financial Stats
   const { data: payables = [] } = useQuery({ queryKey: ['payables'], queryFn: fetchPayables });
@@ -44,31 +60,37 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
     const next7Days = new Date(today);
     next7Days.setDate(today.getDate() + 7);
 
-    const dueSoon = payables.filter(p => {
+    // Filter Payables
+    const visiblePayables = isGlobalAdmin
+      ? payables
+      : payables.filter(p => p.filialId === user.filialId);
+
+    const dueSoon = visiblePayables.filter(p => {
       if (p.status !== 'pending') return false;
       const due = new Date(p.dueDate);
+      // Fix timezone - keeping simple date comparison for now
       return due >= today && due <= next7Days;
     });
 
     const totalDueSoon = dueSoon.reduce((acc, curr) => acc + curr.amount, 0);
-    const overdueCount = payables.filter(p => {
+    const overdueCount = visiblePayables.filter(p => {
       if (p.status !== 'pending') return false;
       const due = new Date(p.dueDate);
-      // Fix timezone comparison properly or just simple string check if formats aligned
-      // p.dueDate is YYYY-MM-DD string.
-      // new Date("2025-01-01") is usually UTC or local 00:00.
-      // We can compare timestamps.
       return due < today;
     }).length;
 
     return { totalDueSoon, countDueSoon: dueSoon.length, overdueCount };
-  }, [payables]);
+  }, [payables, user, isGlobalAdmin]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-foreground">Dashboard</h2>
-        <p className="text-muted-foreground mt-1">Visão geral do estoque e alertas importantes</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">Dashboard</h2>
+          <p className="text-muted-foreground mt-1">
+            {isGlobalAdmin ? "Visão Geral (Todas as Filiais)" : `Visão Local: ${filiais.find(f => f.id === user.filialId)?.name || 'Minha Loja'}`}
+          </p>
+        </div>
       </div>
 
       <ExpirationAlert
@@ -88,33 +110,35 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground">{stats.totalProducts}</div>
-            <p className="text-xs text-muted-foreground mt-1">Produtos cadastrados</p>
+            <p className="text-xs text-muted-foreground mt-1">Produtos cadastrados (Global)</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardDescription>Valor Total</CardDescription>
+              <CardDescription>Valor em Estoque</CardDescription>
               <TrendingUp className="w-4 h-4 text-muted-foreground" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">{formatCurrency(stats.totalValue)}</div>
-            <p className="text-xs text-muted-foreground mt-1">Em estoque</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isGlobalAdmin ? "Soma de todas lojas" : "Apenas nesta loja"}
+            </p>
           </CardContent>
         </Card>
 
         <Card onClick={() => onNavigate('admin')} className="cursor-pointer hover:bg-slate-50 transition-colors">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardDescription>Filiais</CardDescription>
+              <CardDescription>Filiais Ativas</CardDescription>
               <Building2 className="w-4 h-4 text-muted-foreground" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground">{filiais.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">Unidades ativas</p>
+            <div className="text-3xl font-bold text-foreground">{stats.filialCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">Unidades visíveis</p>
           </CardContent>
         </Card>
 

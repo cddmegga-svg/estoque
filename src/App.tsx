@@ -50,19 +50,24 @@ function App() {
 
   // Not authenticated
   if (!user) {
-    if (showRegister) {
+    import { RegisterTenantPage } from '@/pages/RegisterTenantPage';
+
+    // ... inside App component
+
+    // Not authenticated
+    if (!user) {
+      if (showRegister) {
+        // Check query param or state to decide which register page
+        // For simplicity, we replaced the old 'RegisterPage' with new 'RegisterTenantPage' 
+        // or we can toggle between them. Assuming we want the SaaS registration now.
+        return <RegisterTenantPage />;
+      }
       return (
-        <RegisterPage
-          onUserCreated={() => setShowRegister(false)}
-          onBack={() => setShowRegister(false)}
-        />
+        <>
+          <LoginPage onRegister={() => setShowRegister(true)} />
+        </>
       );
     }
-    return (
-      <>
-        <LoginPage onRegister={() => setShowRegister(true)} />
-      </>
-    );
   }
 
   // Check Permissions Helper

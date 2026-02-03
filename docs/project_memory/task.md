@@ -14,24 +14,21 @@
 - [x] **Modo Quiosque (Unlock)** (Session-based unlock via PIN)
 - [x] **Configurar Admin/Dono (PIN 060813)**
 - [x] **Validar Fluxo de Desbloqueio** (No-reload fix applied)
-
-## Melhorias de Gestão (Atual)
-- [/] **Gestão de Usuários e Equipe**
-    - [ ] Adicionar Roles: Estoquista, Farmacêutico.
-    - [ ] Implementar deleção de Usuários de Login (antigos).
-    - [ ] Validar visão Multi-Filial para Admin.
+- [x] **Gestão de Equipe (Cargos)** (Adicionado Estoquista/Farmacêutico)
+- [x] **Limpeza de Usuários (RPC e FKs Fix)** (Funcionalidade "Lixeira Segura")
+- [x] **Dashboard Multi-Loja (Admin View)**
 
 ## Transformação SaaS (Produto Comercial) 🚀
 ### Fase 1: Fundação Multi-Tenant (Técnico)
 - [x] Criar Documento de Arquitetura (ROADMAP_SAAS.md)
-- [x] **Migração de Banco de Dados**
-- [ ] **Adaptação do Backend** (Validar e Testar integridade)
-- [ ] **Página de Login SaaS** (Identificar tenant pelo usuário)
+- [x] **Migração de Banco de Dados** (RLS + TenantID)
+- [x] **Backend: RPC de Registro** (register_new_tenant)
+- [/] **Frontend: Tela de Cadastro de Farmácia** (Em progresso)
+- [ ] **Adaptação do Login** (Redirecionar para Dashboard correto)
 
-### Fase 2: Diferenciais de Produto (Funcional)
-- [ ] **Emissão de NFC-e Real** (Integração com eNotas/FocusNFE)
-- [ ] **Dashboards de Gestão**
-- [ ] **Configuração da Loja**
+### Fase 2: Gestão do Dono do Software (Nós) 👑
+- [ ] **Super Admin Dashboard** (Ver todas as farmácias cadastradas)
+- [ ] **Gestão de Assinaturas** (Bloquear inadimplentes)
 
 ### Fase 3: Venda e Escala
 - [ ] **Landing Page & Billing**

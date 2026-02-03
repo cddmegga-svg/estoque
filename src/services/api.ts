@@ -371,7 +371,27 @@ export const deleteUserWithReassign = async (targetId: string, newOwnerId: strin
         target_user_id: targetId,
         new_owner_id: newOwnerId
     });
+});
+if (error) throw error;
+};
+
+export const registerTenant = async (
+    companyName: string,
+    document: string,
+    userEmail: string,
+    userName: string,
+    userId: string
+) => {
+    const { data, error } = await supabase.rpc('register_new_tenant', {
+        p_company_name: companyName,
+        p_document: document,
+        p_user_email: userEmail,
+        p_user_name: userName,
+        p_user_id: userId
+    });
+
     if (error) throw error;
+    return data;
 };
 // Suppliers
 export const fetchSuppliers = async (): Promise<Supplier[]> => {
