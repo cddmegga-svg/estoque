@@ -33,7 +33,7 @@ import { useProductSync } from '@/hooks/useProductSync';
 import { RegisterTenantPage } from '@/pages/RegisterTenantPage';
 
 function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, checkPermission } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [pageParams, setPageParams] = useState<any>({});
   const [showRegister, setShowRegister] = useState(false);
@@ -61,127 +61,125 @@ function App() {
       </>
     );
   }
-}
 
-// Check Permissions Helper
-const { checkPermission } = useAuth();
+  // Check Permissions Helper
 
-const hasPermission = (permission: string) => {
-  return checkPermission ? checkPermission(permission) : false;
-};
+  const hasPermission = (permission: string) => {
+    return checkPermission ? checkPermission(permission) : false;
+  };
 
-const handleNavigate = (page: string, params?: any) => {
-  setCurrentPage(page);
-  setPageParams(params || {});
-};
+  const handleNavigate = (page: string, params?: any) => {
+    setCurrentPage(page);
+    setPageParams(params || {});
+  };
 
-const renderPage = () => {
-  switch (currentPage) {
-    case 'dashboard':
-      return <DashboardPage user={user} onNavigate={handleNavigate} />;
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <DashboardPage user={user} onNavigate={handleNavigate} />;
 
-    case 'stock':
-    case 'products':
-      if (!hasPermission('view_products') && !hasPermission('manage_stock') && !hasPermission('view_stock'))
-        return <div className="p-8 text-center text-red-500">Acesso Negado: Você não tem permissão para ver produtos/estoque.</div>;
-      return currentPage === 'stock' ? <StockPage user={user} params={pageParams} /> : <ProductsPage />;
+      case 'stock':
+      case 'products':
+        if (!hasPermission('view_products') && !hasPermission('manage_stock') && !hasPermission('view_stock'))
+          return <div className="p-8 text-center text-red-500">Acesso Negado: Você não tem permissão para ver produtos/estoque.</div>;
+        return currentPage === 'stock' ? <StockPage user={user} params={pageParams} /> : <ProductsPage />;
 
-    case 'import':
-      if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <ImportPage user={user} />;
+      case 'import':
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <ImportPage user={user} />;
 
-    case 'transfers':
-      if (!hasPermission('view_transfers')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <TransfersPage user={user} />;
+      case 'transfers':
+        if (!hasPermission('view_transfers')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <TransfersPage user={user} />;
 
-    case 'movements':
-      if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <MovementsPage user={user} />;
+      case 'movements':
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <MovementsPage user={user} />;
 
-    case 'suppliers':
-      if (!hasPermission('manage_suppliers')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <SuppliersPage />;
+      case 'suppliers':
+        if (!hasPermission('manage_suppliers')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <SuppliersPage />;
 
-    case 'financial':
-      if (!hasPermission('view_financial')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <FinancialPage user={user} />;
+      case 'financial':
+        if (!hasPermission('view_financial')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <FinancialPage user={user} />;
 
-    case 'purchaseRequests':
-    case 'orders':
-      if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <PurchaseRequestsPage user={user} />;
+      case 'purchaseRequests':
+      case 'orders':
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <PurchaseRequestsPage user={user} />;
 
-    case 'admin':
-      if (!hasPermission('admin_access') && !hasPermission('manage_users')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <AdminPage currentUser={user} />;
+      case 'admin':
+        if (!hasPermission('admin_access') && !hasPermission('manage_users')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <AdminPage currentUser={user} />;
 
-    case 'sales':
-      if (!hasPermission('create_sale')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <SalesPage />;
+      case 'sales':
+        if (!hasPermission('create_sale')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <SalesPage />;
 
-    case 'pos':
-      if (!hasPermission('access_pos')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <POSPage />;
+      case 'pos':
+        if (!hasPermission('access_pos')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <POSPage />;
 
-    case 'reports':
-      if (!hasPermission('view_reports')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <ReportsPage />;
+      case 'reports':
+        if (!hasPermission('view_reports')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <ReportsPage />;
 
-    case 'logistics':
-      if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <LogisticsPage user={user} />;
+      case 'logistics':
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <LogisticsPage user={user} />;
 
-    case 'conference': // Keeping for direct access if needed, or remove? User wants hidden.
-      if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
-      return <ConferencePage user={user} />;
+      case 'conference': // Keeping for direct access if needed, or remove? User wants hidden.
+        if (!hasPermission('manage_stock')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <ConferencePage user={user} />;
 
-    case 'customers':
-      // Assuming allow basic roles for now
-      return <CustomersPage />;
+      case 'customers':
+        // Assuming allow basic roles for now
+        return <CustomersPage />;
 
-    default:
-      return <DashboardPage user={user} onNavigate={handleNavigate} />;
-  }
-};
+      default:
+        return <DashboardPage user={user} onNavigate={handleNavigate} />;
+    }
+  };
 
-const isFullScreenPage = ['sales', 'pos'].includes(currentPage);
+  const isFullScreenPage = ['sales', 'pos'].includes(currentPage);
 
-return (
-  <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
-    {/* Mobile Header (Shows on mobile OR on full screen desktop pages) */}
-    {/* Mobile Header (Only on mobile) */}
-    <div className="lg:hidden">
-      <MobileHeader
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      {/* Mobile Header (Shows on mobile OR on full screen desktop pages) */}
+      {/* Mobile Header (Only on mobile) */}
+      <div className="lg:hidden">
+        <MobileHeader
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          user={user}
+        />
+      </div>
+
+      {/* Desktop Sidebar (Hidden on full screen pages) */}
+      {/* Desktop Sidebar */}
+      <Sidebar
         currentPage={currentPage}
         onNavigate={handleNavigate}
         user={user}
+        collapsed={isFullScreenPage}
+        className={isFullScreenPage ? 'hidden lg:flex' : 'hidden lg:flex'}
       />
+
+      {/* Main Content */}
+      <main className={`flex-1 p-4 lg:p-8 overflow-y-auto h-[calc(100vh-64px)] lg:h-screen lg:ml-64 ${isFullScreenPage ? 'lg:ml-16' : ''}`}>
+        <div className={`mx-auto ${isFullScreenPage ? 'max-w-full px-4' : 'max-w-7xl'}`}>
+          {renderPage()}
+        </div>
+      </main>
+
+      <Toaster />
+      <CommandMenu onNavigate={handleNavigate} />
+
+      {/* Global Unlock Dialog */}
+      <UnlockDialog />
     </div>
-
-    {/* Desktop Sidebar (Hidden on full screen pages) */}
-    {/* Desktop Sidebar */}
-    <Sidebar
-      currentPage={currentPage}
-      onNavigate={handleNavigate}
-      user={user}
-      collapsed={isFullScreenPage}
-      className={isFullScreenPage ? 'hidden lg:flex' : 'hidden lg:flex'}
-    />
-
-    {/* Main Content */}
-    <main className={`flex-1 p-4 lg:p-8 overflow-y-auto h-[calc(100vh-64px)] lg:h-screen lg:ml-64 ${isFullScreenPage ? 'lg:ml-16' : ''}`}>
-      <div className={`mx-auto ${isFullScreenPage ? 'max-w-full px-4' : 'max-w-7xl'}`}>
-        {renderPage()}
-      </div>
-    </main>
-
-    <Toaster />
-    <CommandMenu onNavigate={handleNavigate} />
-
-    {/* Global Unlock Dialog */}
-    <UnlockDialog />
-  </div>
-);
+  );
 }
 
 // Global Unlock Component using Event Listener
