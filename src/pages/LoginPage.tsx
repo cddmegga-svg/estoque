@@ -45,13 +45,13 @@ export const LoginPage = ({ onRegister }: LoginPageProps) => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto w-24 h-24 mb-2 flex items-center justify-center">
-            <img src="/logo.png" alt="Grupo Mega Farma" className="w-full h-full object-contain" />
+          <div className="mx-auto w-48 h-32 mb-4 flex items-center justify-center">
+            <img src="/nexfarma-logo.png" alt="NexFarmaPro" className="w-full h-full object-contain" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-emerald-800">Grupo Mega Farma</CardTitle>
+            <CardTitle className="text-2xl font-bold text-emerald-800">NexFarmaPro</CardTitle>
             <CardDescription className="text-base mt-2">
-              Sistema de Gestão
+              Sistema de Gestão Inteligente
             </CardDescription>
           </div>
         </CardHeader>
