@@ -371,8 +371,7 @@ export const deleteUserWithReassign = async (targetId: string, newOwnerId: strin
         target_user_id: targetId,
         new_owner_id: newOwnerId
     });
-});
-if (error) throw error;
+    if (error) throw error;
 };
 
 export const registerTenant = async (
