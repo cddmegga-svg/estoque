@@ -343,7 +343,7 @@ export const FinancialPage = ({ user }: FinancialPageProps) => {
                         <div className="space-y-6 py-4">
                             <div className="text-center space-y-2">
                                 <p className="text-sm text-muted-foreground">Valor a Pagar</p>
-                                <p className="text-4xl font-bold text-emerald-600">{formatCurrency(viewingBill.amount)}</p>
+                                <p className="text-4xl font-bold text-primary">{formatCurrency(viewingBill.amount)}</p>
                                 {getStatusBadge(viewingBill.status, viewingBill.dueDate)}
                             </div>
 
@@ -388,7 +388,7 @@ export const FinancialPage = ({ user }: FinancialPageProps) => {
                             </div>
 
                             {viewingBill.status === 'pending' && (
-                                <Button className="w-full bg-emerald-600 hover:bg-emerald-700" onClick={() => {
+                                <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => {
                                     updateMutation.mutate({ id: viewingBill.id, data: { status: 'paid' } });
                                     setViewingBill(null);
                                 }}>

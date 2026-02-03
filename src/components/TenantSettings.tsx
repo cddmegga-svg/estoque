@@ -82,7 +82,7 @@ export const TenantSettings = () => {
                     </div>
 
                     <div className="pt-4 flex justify-end">
-                        <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700">
+                        <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
                             {loading ? 'Salvando...' : 'Salvar Alterações'}
                         </Button>
                     </div>

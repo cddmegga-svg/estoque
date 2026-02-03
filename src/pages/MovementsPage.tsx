@@ -389,7 +389,7 @@ export const MovementsPage = ({ user }: { user: any }) => {
                                                 />
                                             </div>
 
-                                            <Button onClick={handleRegister} className={selectedTab === 'entry' ? "w-full bg-emerald-600 hover:bg-emerald-700" : "w-full bg-red-600 hover:bg-red-700"}>
+                                            <Button onClick={handleRegister} className={selectedTab === 'entry' ? "w-full bg-primary hover:bg-primary/90" : "w-full bg-red-600 hover:bg-red-700"}>
                                                 {selectedTab === 'entry' ? 'Registrar Entrada' : 'Registrar Baixa'}
                                             </Button>
                                         </div>
@@ -425,7 +425,7 @@ export const MovementsPage = ({ user }: { user: any }) => {
                                                 <TableCell>{formatDateTime(batch.date)}</TableCell>
                                                 <TableCell>
                                                     {batch.type === 'entry'
-                                                        ? <Badge className="bg-emerald-600">Entrada</Badge>
+                                                        ? <Badge className="bg-primary hover:bg-primary/90">Entrada</Badge>
                                                         : <Badge className="bg-red-600">Saída</Badge>
                                                     }
                                                 </TableCell>

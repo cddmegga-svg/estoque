@@ -127,11 +127,11 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
                                     'w-full flex items-center gap-3 py-2.5 text-sm font-medium rounded-lg transition-all',
                                     collapsed ? 'justify-center px-0' : 'px-3',
                                     isActive
-                                        ? 'bg-emerald-50 text-emerald-700'
+                                        ? 'bg-primary/10 text-primary'
                                         : 'text-muted-foreground hover:bg-slate-50 hover:text-foreground'
                                 )}
                             >
-                                <Icon className={cn("flex-shrink-0", collapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-emerald-600" : "text-muted-foreground")} />
+                                <Icon className={cn("flex-shrink-0", collapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-primary" : "text-muted-foreground")} />
                                 {!collapsed && item.label}
                             </button>
                         );
@@ -157,7 +157,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
             {/* Footer / User Profile */}
             <div className="p-4 border-t border-border/50 bg-slate-50/50 flex-shrink-0">
                 <div className={cn("flex items-center gap-3 mb-4", collapsed && "justify-center")}>
-                    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold flex-shrink-0">
                         {user?.name?.charAt(0) || 'U'}
                     </div>
                     {!collapsed && (
@@ -172,7 +172,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
 
                 <Button
                     variant="outline"
-                    className={cn("w-full gap-2 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 mb-2", collapsed ? "justify-center px-0" : "justify-start")}
+                    className={cn("w-full gap-2 hover:bg-primary/10 hover:text-primary hover:border-primary/50 mb-2", collapsed ? "justify-center px-0" : "justify-start")}
                     onClick={() => {
                         // TODO: trigger unlock dialog
                         // For now we just use the CommandMenu (Ctrl+K) or assume the POS enforces generic login

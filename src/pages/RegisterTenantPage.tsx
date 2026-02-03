@@ -130,7 +130,7 @@ export const RegisterTenantPage = () => {
                 <Card className="w-full max-w-md text-center">
                     <CardHeader>
                         <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
-                            <CheckCircle className="w-8 h-8 text-emerald-600" />
+                            <CheckCircle className="w-8 h-8 text-primary" />
                         </div>
                         <CardTitle className="text-2xl text-emerald-700">Conta Criada!</CardTitle>
                         <CardDescription>
@@ -141,7 +141,7 @@ export const RegisterTenantPage = () => {
                         <p className="text-muted-foreground">
                             Sua conta foi configurada e sua farmácia já está ativa.
                         </p>
-                        <Button className="w-full bg-emerald-600 hover:bg-emerald-700" onClick={() => navigate('/login')}>
+                        <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => navigate('/login')}>
                             Ir para o Login
                         </Button>
                     </CardContent>
@@ -155,7 +155,7 @@ export const RegisterTenantPage = () => {
             <Card className="w-full max-w-lg">
                 <CardHeader>
                     <div className="flex items-center gap-2 mb-2">
-                        <Building2 className="w-6 h-6 text-emerald-600" />
+                        <Building2 className="w-6 h-6 text-primary" />
                         <span className="font-bold text-xl text-slate-800">NexFarmaPro</span>
                     </div>
                     <CardTitle>Crie sua conta</CardTitle>
@@ -232,12 +232,12 @@ export const RegisterTenantPage = () => {
                             </div>
                         </div>
 
-                        <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={loading}>
+                        <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={loading}>
                             {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Configurando Farmácia...</> : 'Criar Conta Grátis'}
                         </Button>
 
                         <div className="text-center text-sm">
-                            Já tem conta? <Link to="/login" className="text-emerald-600 hover:underline">Fazer Login</Link>
+                            Já tem conta? <Link to="/login" className="text-primary hover:underline">Fazer Login</Link>
                         </div>
                     </form>
                 </CardContent>

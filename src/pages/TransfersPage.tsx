@@ -319,7 +319,7 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                      <Button size="sm" className="bg-primary hover:bg-primary/90">
                         Aceitar
                       </Button>
                     </TableCell>
@@ -343,7 +343,7 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                      <Button size="sm" className="bg-primary hover:bg-primary/90">
                         Aceitar
                       </Button>
                     </TableCell>
@@ -471,7 +471,7 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
                       <Printer className="w-4 h-4 mr-2" /> Imprimir Guia
                     </Button>
                     <Button
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                      className="flex-1 bg-primary hover:bg-primary/90"
                       onClick={handleFinalizeTransfer}
                       disabled={transferItems.length === 0}
                     >

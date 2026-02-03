@@ -123,7 +123,7 @@ function App() {
       <>
         <ThemeManager />
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-emerald-600 font-medium animate-pulse">Carregando NexFarmaPro...</div>
+          <div className="text-primary font-medium animate-pulse">Carregando NexFarmaPro...</div>
         </div>
       </>
     );
@@ -217,7 +217,7 @@ function UnlockDialog() {
         title: 'Acesso Liberado 🔓',
         description: `Bem-vindo(a), ${data.name}. Os menus administrativos foram desbloqueados.`,
         duration: 5000,
-        className: "bg-emerald-600 text-white"
+        className: "bg-primary text-primary-foreground"
       });
 
       setIsOpen(false);
@@ -250,7 +250,7 @@ function UnlockDialog() {
           />
         </div>
         <DialogFooter>
-          <Button onClick={handleUnlock} className="w-full bg-emerald-600 hover:bg-emerald-700">
+          <Button onClick={handleUnlock} className="w-full bg-primary hover:bg-primary/90">
             Liberar
           </Button>
         </DialogFooter>

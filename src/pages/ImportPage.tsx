@@ -369,7 +369,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
               />
               <label htmlFor="xml-file" className="cursor-pointer flex flex-col items-center gap-2">
                 <div className="bg-emerald-100 p-3 rounded-full">
-                  <Upload className="w-6 h-6 text-emerald-600" />
+                  <Upload className="w-6 h-6 text-primary" />
                 </div>
                 <div className="font-semibold text-slate-700">Clique para selecionar ou arraste o XML aqui</div>
                 <p className="text-xs text-muted-foreground">Suporta apenas arquivos .xml de NFe</p>

@@ -101,12 +101,12 @@ export const CustomersPage = () => {
             <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <User className="h-6 w-6 text-emerald-600" />
+                        <User className="h-6 w-6 text-primary" />
                         Gestão de Clientes (CRM)
                     </h1>
                     <p className="text-slate-500">Cadastre e gerencie seus clientes fieis.</p>
                 </div>
-                <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={() => { resetForm(); setIsDialogOpen(true); }} className="bg-primary hover:bg-primary/90">
                     <Plus className="mr-2 h-4 w-4" /> Novo Cliente
                 </Button>
             </div>
@@ -266,7 +266,7 @@ export const CustomersPage = () => {
                         </div>
                         <DialogFooter className="mt-6">
                             <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
-                            <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">Salvar</Button>
+                            <Button type="submit" className="bg-primary hover:bg-primary/90">Salvar</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

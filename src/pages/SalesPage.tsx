@@ -342,7 +342,7 @@ export const SalesPage = () => {
                     undefined,
                     selectedCustomerId || undefined
                 );
-                toast({ title: 'Pré-Venda Enviada!', description: `Código enviado para o Caixa. Total: ${formatCurrency(total)}`, className: "bg-emerald-600 text-white" });
+                toast({ title: 'Pré-Venda Enviada!', description: `Código enviado para o Caixa. Total: ${formatCurrency(total)}`, className: "bg-primary text-primary-foreground" });
             } else {
                 toast({ title: 'Modo Offline', description: 'Pré-venda salva localmente.', variant: 'default' });
             }
@@ -403,7 +403,7 @@ export const SalesPage = () => {
                                                     PMC: {formatCurrency(product.pmcPrice)}
                                                 </div>
                                             )}
-                                            <div className="font-black text-3xl text-emerald-600">
+                                            <div className="font-black text-3xl text-primary">
                                                 {formatCurrency(product.salePrice)}
                                             </div>
                                         </div>
@@ -430,7 +430,7 @@ export const SalesPage = () => {
                             onBlur={() => setTimeout(() => setShowCustomerResults(false), 200)} // Delay to allow click
                         />
                         {selectedCustomerId && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-emerald-600 font-bold bg-emerald-100 px-2 py-1 rounded-full">
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-primary font-bold bg-primary/10 px-2 py-1 rounded-full">
                                 CRM
                             </div>
                         )}
@@ -604,7 +604,7 @@ export const SalesPage = () => {
                     </div>
 
                     <Button
-                        className="h-24 w-60 text-2xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-900/60 rounded-2xl transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-center gap-1"
+                        className="h-24 w-60 text-2xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/40 rounded-2xl transition-all hover:scale-105 active:scale-95 flex flex-col items-center justify-center gap-1"
                         disabled={cart.length === 0 || isFinalizing}
                         onClick={handleFinalizeClick}
                     >
@@ -658,7 +658,7 @@ export const SalesPage = () => {
                 <DialogContent className="sm:max-w-xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <ShoppingBag className="w-5 h-5 text-emerald-600" />
+                            <ShoppingBag className="w-5 h-5 text-primary-foreground" />
                             Histórico do Produto
                         </DialogTitle>
                         <DialogDescription>
@@ -667,7 +667,7 @@ export const SalesPage = () => {
                     </DialogHeader>
                     <div className="py-4">
                         {isLoadingHistory ? (
-                            <div className="flex justify-center p-8"><RefreshCw className="animate-spin text-emerald-600" /></div>
+                            <div className="flex justify-center p-8"><RefreshCw className="animate-spin text-primary" /></div>
                         ) : productHistory.length === 0 ? (
                             <div className="text-center text-muted-foreground p-8">Nenhuma venda anterior encontrada.</div>
                         ) : (

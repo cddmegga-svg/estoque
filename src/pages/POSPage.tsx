@@ -476,7 +476,7 @@ export const POSPage = () => {
                                 <div className="flex justify-between items-center">
                                     <div className="flex gap-2 items-center">
                                         <div className="bg-emerald-100 p-2 rounded-full">
-                                            <AlertCircle className="w-4 h-4 text-emerald-600" />
+                                            <AlertCircle className="w-4 h-4 text-primary" />
                                         </div>
                                         <CardTitle className="text-base">Aguardando Pagamento</CardTitle>
                                     </div>
@@ -544,7 +544,7 @@ export const POSPage = () => {
                                             </div>
                                             <div className="text-right">
                                                 <div className="text-sm text-muted-foreground uppercase tracking-widest font-bold">Total a Pagar</div>
-                                                <div className="text-emerald-600 font-black text-4xl tracking-tighter">{formatCurrency(selectedSale.final_value)}</div>
+                                                <div className="text-primary font-black text-4xl tracking-tighter">{formatCurrency(selectedSale.final_value)}</div>
                                             </div>
                                         </div>
                                     </CardHeader>
@@ -576,7 +576,7 @@ export const POSPage = () => {
                                                         {remainingToPay > 0 && remainingToPay !== currentPaymentAmount && (
                                                             <Button
                                                                 variant="link"
-                                                                className="h-auto p-0 text-emerald-600 font-bold"
+                                                                className="h-auto p-0 text-primary font-bold"
                                                                 onClick={() => setCurrentPaymentAmount(remainingToPay)}
                                                             >
                                                                 Usar Restante ({formatCurrency(remainingToPay)})
@@ -598,7 +598,7 @@ export const POSPage = () => {
                                                         onClick={() => addPayment('money')}
                                                         disabled={currentPaymentAmount <= 0}
                                                     >
-                                                        <DollarSign className="w-6 h-6 text-emerald-600" />
+                                                        <DollarSign className="w-6 h-6 text-primary" />
                                                         <span className="font-bold text-emerald-700">Lançar Dinheiro</span>
                                                     </Button>
                                                     <Button
@@ -662,7 +662,7 @@ export const POSPage = () => {
                                                                 <span className="text-xs text-slate-500 font-bold">
                                                                     {remainingToPay > 0 ? 'Restante a Pagar' : 'Troco'}
                                                                 </span>
-                                                                <span className={`text-2xl font-black ${remainingToPay > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                                                                <span className={`text-2xl font-black ${remainingToPay > 0 ? 'text-red-500' : 'text-primary'}`}>
                                                                     {remainingToPay > 0 ? formatCurrency(remainingToPay) : formatCurrency(change)}
                                                                 </span>
                                                             </div>
@@ -693,7 +693,7 @@ export const POSPage = () => {
                                             </Button>
                                             <Button
                                                 size="lg"
-                                                className={`flex-[2] h-14 text-xl font-bold shadow-lg transition-all ${isFiscalEnabled ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-900/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/20'}`}
+                                                className={`flex-[2] h-14 text-xl font-bold shadow-lg transition-all ${isFiscalEnabled ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-900/20' : 'bg-primary hover:bg-primary/90 shadow-primary/20'}`}
                                                 disabled={!canFinalize || isProcessing}
                                                 onClick={initiatePayment}
                                             >
@@ -848,7 +848,7 @@ export const POSPage = () => {
                                 <span>PIX:</span>
                                 <span className="font-mono font-bold text-slate-700">{formatCurrency(calculatedTotals.pix)}</span>
                             </div>
-                            <div className="flex justify-between text-sm border-t pt-1 font-bold text-emerald-600 mt-2">
+                            <div className="flex justify-between text-sm border-t pt-1 font-bold text-primary mt-2">
                                 <span>Total:</span>
                                 <span className="font-mono text-lg">{formatCurrency(calculatedTotals.total)}</span>
                             </div>

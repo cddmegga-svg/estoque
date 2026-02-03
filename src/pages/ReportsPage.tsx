@@ -70,7 +70,7 @@ export const ReportsPage = () => {
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Faturamento Total</CardTitle>
-                                <DollarSign className="h-4 w-4 text-emerald-600" />
+                                <DollarSign className="h-4 w-4 text-primary" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{formatCurrency(stats?.totalRevenue || 0)}</div>
@@ -210,7 +210,7 @@ const CommissionsReport = () => {
                                 <TableRow key={i}>
                                     <TableCell className="font-medium">{c.name}</TableCell>
                                     <TableCell className="text-center">{c.count}</TableCell>
-                                    <TableCell className="text-right font-bold text-emerald-600">{formatCurrency(c.total)}</TableCell>
+                                    <TableCell className="text-right font-bold text-primary">{formatCurrency(c.total)}</TableCell>
                                 </TableRow>
                             ))
                         )}

@@ -271,7 +271,7 @@ export const ProductsPage = () => {
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="bg-emerald-600 hover:bg-emerald-700">
+                        <Button className="bg-primary hover:bg-primary/90">
                             <Plus className="w-4 h-4 mr-2" />
                             Novo Produto
                         </Button>
@@ -512,7 +512,7 @@ export const ProductsPage = () => {
                                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                                     Cancelar
                                 </Button>
-                                <Button type="submit" disabled={createProductMutation.isPending} className="bg-emerald-600 hover:bg-emerald-700">
+                                <Button type="submit" disabled={createProductMutation.isPending} className="bg-primary hover:bg-primary/90">
                                     {createProductMutation.isPending ? 'Salvando...' : 'Salvar Produto'}
                                 </Button>
                             </DialogFooter>
@@ -600,7 +600,7 @@ export const ProductsPage = () => {
                                                             {product.activeIngredient && <span className="text-xs text-muted-foreground">{product.activeIngredient}</span>}
                                                             {product.category && <Badge variant="secondary" className="text-[10px] h-4 px-1">{product.category}</Badge>}
                                                             {product.abcCurve && (
-                                                                <Badge className={`text-[10px] h-4 px-1 ${product.abcCurve === 'A' ? 'bg-emerald-500 hover:bg-emerald-600' :
+                                                                <Badge className={`text-[10px] h-4 px-1 ${product.abcCurve === 'A' ? 'bg-primary hover:bg-primary/90' :
                                                                     product.abcCurve === 'B' ? 'bg-blue-500 hover:bg-blue-600' :
                                                                         'bg-slate-500 hover:bg-slate-600'
                                                                     }`}>

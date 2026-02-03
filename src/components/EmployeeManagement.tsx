@@ -77,7 +77,7 @@ export const EmployeeManagement = ({ currentUser, filiais }: { currentUser: User
     return (
         <div>
             <div className="flex justify-end mb-4">
-                <Button onClick={() => openDialog()} className="bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={() => openDialog()} className="bg-primary hover:bg-primary/90">
                     <Plus className="w-4 h-4 mr-2" /> Novo Membro
                 </Button>
             </div>

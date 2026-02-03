@@ -138,7 +138,7 @@ export const PurchaseRequestsPage = ({ user }: PurchaseRequestsPageProps) => {
                     <h2 className="text-3xl font-bold text-foreground">Livro de Encomendas</h2>
                     <p className="text-muted-foreground">Gerencie pedidos especiais de clientes e medicamentos sob encomenda.</p>
                 </div>
-                <Button onClick={() => handleOpenDialog()} size="lg" className="bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={() => handleOpenDialog()} size="lg" className="bg-primary hover:bg-primary/90">
                     <Plus className="w-4 h-4 mr-2" /> Nova Encomenda
                 </Button>
             </div>

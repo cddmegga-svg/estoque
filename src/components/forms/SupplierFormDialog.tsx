@@ -140,7 +140,7 @@ export const SupplierFormDialog = ({ isOpen, onClose, onSuccess, initialData, ed
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-                        <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">
+                        <Button type="submit" className="bg-primary hover:bg-primary/90">
                             {createMutation.isPending || updateMutation.isPending ? 'Salvando...' : 'Salvar Fornecedor'}
                         </Button>
                     </DialogFooter>

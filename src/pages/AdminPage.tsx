@@ -190,7 +190,7 @@ export const AdminPage = ({ currentUser }: AdminPageProps) => {
 
         <TabsContent value="users">
           <div className="flex justify-end mb-4">
-            <Button onClick={() => setIsCreateUserOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
+            <Button onClick={() => setIsCreateUserOpen(true)} className="bg-primary hover:bg-primary/90">
               <Plus className="w-4 h-4 mr-2" /> Adicionar Usuário
             </Button>
           </div>
