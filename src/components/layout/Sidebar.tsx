@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { User } from '@/types';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SidebarProps {
@@ -17,17 +17,37 @@ interface SidebarProps {
 
 const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClose, collapsed = false }: SidebarProps & { isMobile?: boolean, onClose?: () => void }) => {
     const { signOut, checkPermission, activeEmployee } = useAuth();
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [tenantName, setTenantName] = useState('NexFarmaPro');
+
+    // Fetch tenant branding
+    useEffect(() => {
+        // Simple fetch without needing full context for now
+        import('@/services/api').then(({ fetchCurrentTenant }) => {
+            fetchCurrentTenant().then(tenant => {
+                if (tenant) {
+                    if (tenant.logo_url) setLogoUrl(tenant.logo_url);
+                    if (tenant.name) setTenantName(tenant.name);
+                }
+            });
+        });
+    }, []);
 
     // Permission Checks (Now uses the unified logic)
     const hasPermission = (permission: string) => {
         const result = checkPermission ? checkPermission(permission) : false;
-        console.log(`Sidebar: ${permission} = ${result}. ActiveEmp: ${activeEmployee?.name}`);
         return result;
     };
 
+    // ... menu items ...
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
     ];
+    // ... keeping the rest of the logic same, just updating the return JSX header ...
+
+    // (Re-declaring menuItems logic here because replace_file requires contiguous block replacement or full match)
+    // To minimize complexity, I will just target the Header section in replacement if possible, 
+    // but the state needs to be at top. So I am replacing the top part.
 
     if (hasPermission('view_products') || hasPermission('manage_stock') || hasPermission('view_stock')) {
         menuItems.push(
@@ -72,13 +92,19 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
         <div className="flex flex-col h-full bg-white">
             {/* Header */}
             <div className="h-20 flex items-center px-6 border-b border-border/50 gap-3 flex-shrink-0">
-                <div className={cn("flex-shrink-0 transition-all duration-300", collapsed ? "h-8 w-8" : "h-10 w-10")}>
-                    <img src="/logo.png" alt="Mega Farma" className="h-full w-full object-contain" />
+                <div className={cn("flex-shrink-0 transition-all duration-300 rounded-lg overflow-hidden", collapsed ? "h-8 w-8" : "h-10 w-10")}>
+                    {logoUrl ? (
+                        <img src={logoUrl} alt={tenantName} className="h-full w-full object-contain" />
+                    ) : (
+                        <div className="h-full w-full bg-emerald-600 flex items-center justify-center text-white font-bold">
+                            {tenantName.charAt(0)}
+                        </div>
+                    )}
                 </div>
                 {!collapsed && (
                     <div className="min-w-0">
-                        <h1 className="text-lg font-extrabold text-[#d32f2f] leading-none tracking-tight">MEGA FARMA</h1>
-                        <p className="text-xs font-semibold text-[#1976d2] tracking-wider">POPULAR</p>
+                        <h1 className="text-lg font-extrabold text-foreground leading-none tracking-tight">{tenantName}</h1>
+                        <p className="text-xs font-semibold text-muted-foreground tracking-wider">GESTÃO</p>
                     </div>
                 )}
             </div>

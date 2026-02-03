@@ -6,46 +6,38 @@ export default {
   theme: {
     extend: {
       colors: {
-        border: 'hsl(214 32% 91%)',
-        input: 'hsl(214 32% 91%)',
-        ring: 'hsl(215 25% 27%)',
-        background: 'hsl(0 0% 100%)',
-        foreground: 'hsl(215 25% 27%)',
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(160 60% 45%)',
-          foreground: 'hsl(0 0% 100%)',
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
-          DEFAULT: 'hsl(214 32% 95%)',
-          foreground: 'hsl(215 25% 27%)',
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
         },
         destructive: {
-          DEFAULT: 'hsl(0 84% 60%)',
-          foreground: 'hsl(0 0% 100%)',
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
-          DEFAULT: 'hsl(214 32% 95%)',
-          foreground: 'hsl(215 16% 47%)',
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
-          DEFAULT: 'hsl(214 32% 95%)',
-          foreground: 'hsl(215 25% 27%)',
-        },
-        warning: {
-          DEFAULT: 'hsl(38 92% 50%)',
-          foreground: 'hsl(0 0% 100%)',
-        },
-        success: {
-          DEFAULT: 'hsl(142 71% 45%)',
-          foreground: 'hsl(0 0% 100%)',
-        },
-        card: {
-          DEFAULT: 'hsl(0 0% 100%)',
-          foreground: 'hsl(215 25% 27%)',
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
         },
         popover: {
-          DEFAULT: 'hsl(0 0% 100%)',
-          foreground: 'hsl(215 25% 27%)',
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
         },
       },
       borderRadius: {
