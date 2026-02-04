@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Building2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { registerTenant } from '@/services/api';
-
+import { supabase } from '@/lib/supabase';
+import { Link, useNavigate } from 'react-router-dom';
 interface RegisterTenantPageProps {
     onLogin: () => void;
 }
@@ -98,16 +99,26 @@ export const RegisterTenantPage = ({ onLogin }: RegisterTenantPageProps) => {
 
         setLoading(true);
         try {
-            // 1. Create Supabase Auth User
-            const { user, error } = await signUp(formData.email, formData.password, {
-                name: formData.name,
-                role: 'admin' // Initial Metadata
+            // 1. Create Supabase Auth User (Directly, bypassing AuthContext to avoid premature profile creation)
+            // This is crucial for SaaS: The RPC 'register_new_tenant' handles the profile creation linked to the tenant.
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: formData.email,
+                password: formData.password,
+                options: {
+                    data: {
+                        name: formData.name,
+                        role: 'admin'
+                    }
+                }
             });
 
-            if (error) {
-                console.error("Erro no signUp:", error);
-                throw error;
+            if (authError) {
+                console.error("Erro no signUp:", authError);
+                throw authError; // Rethrow actual auth error
             }
+
+            // Check if user is returned (sometimes session is null if email confirmation is required)
+            const user = authData.user;
             if (!user) throw new Error('Falha ao criar usuário. Tente novamente.');
 
             // 2. Call RPC to Create Tenant and link User

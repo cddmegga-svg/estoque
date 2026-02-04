@@ -27,7 +27,7 @@ BEGIN
     VALUES ('Matriz - ' || p_company_name, p_document, 'Endereço Principal', 'store', v_tenant_id)
     RETURNING id INTO v_filial_id;
 
-    -- 3. Create/Update Public User Profile
+    -- 3. Create/Update Public User Profile (Idempotent)
     -- We assume the user already exists in auth.users (signed up via client).
     -- We insert into public.users.
     INSERT INTO users (id, name, email, role, filial_id, tenant_id, permissions)
@@ -39,7 +39,13 @@ BEGIN
         v_filial_id, 
         v_tenant_id, 
         ARRAY['admin_access']
-    );
+    )
+    ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        role = EXCLUDED.role,
+        filial_id = EXCLUDED.filial_id,
+        tenant_id = EXCLUDED.tenant_id,
+        permissions = EXCLUDED.permissions;
 
     -- 4. Update Auth Metadata (The Magic Step for RLS)
     -- This requires permissions to alter auth.users. 
