@@ -166,7 +166,7 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardDescription>Contas a Pagar (7 dias)</CardDescription>
-              <DollarSign className="w-4 h-4 text-emerald-600" />
+              <DollarSign className="w-4 h-4 text-primary" />
             </div>
           </CardHeader>
           <CardContent>

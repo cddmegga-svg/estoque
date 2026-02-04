@@ -96,7 +96,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
                     {logoUrl ? (
                         <img src={logoUrl} alt={tenantName} className="h-full w-full object-contain" />
                     ) : (
-                        <div className="h-full w-full bg-emerald-600 flex items-center justify-center text-white font-bold">
+                        <div className="h-full w-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
                             {tenantName.charAt(0)}
                         </div>
                     )}
