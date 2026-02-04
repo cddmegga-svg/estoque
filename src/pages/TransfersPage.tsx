@@ -306,7 +306,7 @@ export const TransfersPage = ({ user }: TransfersPageProps) => {
                       <div className="text-xs text-muted-foreground">Medley</div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-bold text-emerald-700">Filial Centro</div>
+                      <div className="font-bold text-primary">Filial Centro</div>
                       <div className="text-xs text-muted-foreground">Estoque: 450 (Alto)</div>
                     </TableCell>
                     <TableCell>

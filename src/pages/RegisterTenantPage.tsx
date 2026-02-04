@@ -8,9 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Loader2, Building2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { registerTenant } from '@/services/api';
-import { Link, useNavigate } from 'react-router-dom';
 
-export const RegisterTenantPage = () => {
+interface RegisterTenantPageProps {
+    onLogin: () => void;
+}
+
+export const RegisterTenantPage = ({ onLogin }: RegisterTenantPageProps) => {
     const [step, setStep] = useState<'details' | 'account' | 'success'>('account');
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -24,7 +27,6 @@ export const RegisterTenantPage = () => {
 
     const { signUp } = useAuth();
     const { toast } = useToast();
-    const navigate = useNavigate();
 
     // CNPJ Validator (Checksum)
     const validateCNPJ = (cnpj: string) => {
@@ -81,6 +83,7 @@ export const RegisterTenantPage = () => {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log("Tentando registrar...", formData.email);
 
         if (formData.password !== formData.confirmPassword) {
             toast({ variant: 'destructive', title: 'Senhas não conferem', description: 'Por favor, digite a mesma senha.' });
@@ -88,21 +91,24 @@ export const RegisterTenantPage = () => {
         }
 
         if (!validateCNPJ(formData.cnpj)) {
-            toast({ variant: 'destructive', title: 'CNPJ Inválido', description: 'O CNPJ informado não é válido. Verifique os números.' });
+            console.warn("CNPJ Inválido:", formData.cnpj);
+            toast({ variant: 'destructive', title: 'CNPJ Inválido', description: 'O CNPJ informado não é válido (Erro de dígito verificador).' });
             return;
         }
 
         setLoading(true);
         try {
             // 1. Create Supabase Auth User
-            // Note: This signs them up but doesn't create the tenant yet.
             const { user, error } = await signUp(formData.email, formData.password, {
                 name: formData.name,
                 role: 'admin' // Initial Metadata
             });
 
-            if (error) throw error;
-            if (!user) throw new Error('Falha ao criar usuário.');
+            if (error) {
+                console.error("Erro no signUp:", error);
+                throw error;
+            }
+            if (!user) throw new Error('Falha ao criar usuário. Tente novamente.');
 
             // 2. Call RPC to Create Tenant and link User
             await registerTenant(
@@ -117,7 +123,7 @@ export const RegisterTenantPage = () => {
             toast({ title: 'Sucesso!', description: 'Sua farmácia foi criada. Bem-vindo ao Sistema!' });
 
         } catch (err: any) {
-            console.error(err);
+            console.error("Catch Error:", err);
             toast({ variant: 'destructive', title: 'Erro no Cadastro', description: err.message || 'Falha ao criar conta.' });
         } finally {
             setLoading(false);
@@ -129,10 +135,10 @@ export const RegisterTenantPage = () => {
             <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
                 <Card className="w-full max-w-md text-center">
                     <CardHeader>
-                        <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                        <div className="mx-auto w-16 h-16 bg-secondary/30 rounded-full flex items-center justify-center mb-4">
                             <CheckCircle className="w-8 h-8 text-primary" />
                         </div>
-                        <CardTitle className="text-2xl text-emerald-700">Conta Criada!</CardTitle>
+                        <CardTitle className="text-2xl text-primary">Conta Criada!</CardTitle>
                         <CardDescription>
                             Bem-vindo ao sistema, <strong>{formData.companyName}</strong>.
                         </CardDescription>
@@ -141,7 +147,7 @@ export const RegisterTenantPage = () => {
                         <p className="text-muted-foreground">
                             Sua conta foi configurada e sua farmácia já está ativa.
                         </p>
-                        <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => navigate('/login')}>
+                        <Button className="w-full bg-primary hover:bg-primary/90" onClick={onLogin}>
                             Ir para o Login
                         </Button>
                     </CardContent>
@@ -237,7 +243,7 @@ export const RegisterTenantPage = () => {
                         </Button>
 
                         <div className="text-center text-sm">
-                            Já tem conta? <Link to="/login" className="text-primary hover:underline">Fazer Login</Link>
+                            Já tem conta? <Button variant="link" className="p-0 text-primary hover:underline h-auto font-normal" onClick={onLogin}>Fazer Login</Button>
                         </div>
                     </form>
                 </CardContent>

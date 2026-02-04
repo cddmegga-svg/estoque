@@ -578,7 +578,7 @@ export const ProductsPage = () => {
                                     return (
                                         <div key={product.id} className={`grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 transition-colors text-sm border-l-4 ${isLowStock ? 'border-l-amber-500 bg-amber-50/50' : 'border-l-transparent'}`}>
                                             <div className="col-span-4 font-medium flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded bg-white border flex items-center justify-center text-emerald-700 overflow-hidden relative">
+                                                <div className="w-10 h-10 rounded bg-white border flex items-center justify-center text-primary overflow-hidden relative">
                                                     {product.imageUrl ? (
                                                         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
                                                     ) : (

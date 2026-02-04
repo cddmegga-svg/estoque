@@ -596,8 +596,8 @@ export const SalesPage = () => {
                         </div>
 
                         <div className="text-right space-y-0">
-                            <div className="text-sm text-emerald-500 uppercase tracking-widest font-bold mb-1">Total Final</div>
-                            <div className="text-6xl font-black text-emerald-400 tracking-tighter leading-none filters drop-shadow-lg">
+                            <div className="text-sm text-primary uppercase tracking-widest font-bold mb-1">Total Final</div>
+                            <div className="text-6xl font-black text-primary tracking-tighter leading-none filters drop-shadow-lg">
                                 {formatCurrency(total)}
                             </div>
                         </div>

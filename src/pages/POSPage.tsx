@@ -494,12 +494,12 @@ export const POSPage = () => {
                                         {queue.map((sale: SaleQueueItem) => (
                                             <div
                                                 key={sale.id}
-                                                className={`p-4 cursor-pointer hover:bg-slate-50 transition-colors group ${selectedSale?.id === sale.id ? 'bg-emerald-50 border-l-4 border-emerald-500' : 'border-l-4 border-transparent'}`}
+                                                className={`p-4 cursor-pointer hover:bg-slate-50 transition-colors group ${selectedSale?.id === sale.id ? 'bg-secondary/40 border-l-4 border-primary' : 'border-l-4 border-transparent'}`}
                                                 onClick={() => setSelectedSale(sale)}
                                             >
                                                 <div className="flex justify-between mb-1">
                                                     <div className="flex flex-col">
-                                                        <span className="font-bold text-slate-800 text-lg group-hover:text-emerald-700 transition-colors">{sale.customer_name}</span>
+                                                        <span className="font-bold text-slate-800 text-lg group-hover:text-primary transition-colors">{sale.customer_name}</span>
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 bg-white border-slate-200 text-slate-500">
                                                                 {sale.salesperson_name}

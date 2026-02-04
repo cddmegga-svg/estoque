@@ -354,7 +354,7 @@ export const ImportPage = ({ user }: ImportPageProps) => {
           <div className="space-y-2">
             <Label>Arquivo XML (NFe)</Label>
             <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${isDragOver ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 hover:border-emerald-400 hover:bg-slate-50'}`}
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${isDragOver ? 'border-primary bg-secondary/20' : 'border-slate-300 hover:border-primary/60 hover:bg-secondary/10'}`}
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
               onDrop={onDrop}

@@ -138,7 +138,7 @@ function App() {
     <>
       <ThemeManager />
       {!user ? (
-        showRegister ? <RegisterTenantPage /> : <LoginPage onRegister={() => setShowRegister(true)} />
+        showRegister ? <RegisterTenantPage onLogin={() => setShowRegister(false)} /> : <LoginPage onRegister={() => setShowRegister(true)} />
       ) : (
         <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
           {/* Mobile Header */}

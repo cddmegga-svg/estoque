@@ -170,7 +170,7 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-700">{formatCurrency(financialStats.totalDueSoon)}</div>
+            <div className="text-3xl font-bold text-primary">{formatCurrency(financialStats.totalDueSoon)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               {financialStats.countDueSoon} a vencer
               {financialStats.overdueCount > 0 && <span className="text-destructive font-bold ml-1">({financialStats.overdueCount} atrasadas)</span>}

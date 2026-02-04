@@ -87,7 +87,7 @@ export const EmployeeManagement = ({ currentUser, filiais }: { currentUser: User
                     <Card key={emp.id}>
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${emp.role === 'manager' ? 'bg-red-500' : emp.role === 'cashier' ? 'bg-blue-500' : 'bg-emerald-500'}`} />
+                                <div className={`w-2 h-2 rounded-full ${emp.role === 'manager' ? 'bg-red-500' : emp.role === 'cashier' ? 'bg-blue-500' : 'bg-primary'}`} />
                                 <span className="font-bold text-lg">{emp.name}</span>
                             </div>
                             <Button variant="ghost" size="icon" onClick={() => openDialog(emp)}><Edit className="w-4 h-4" /></Button>

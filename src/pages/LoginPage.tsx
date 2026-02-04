@@ -49,7 +49,7 @@ export const LoginPage = ({ onRegister }: LoginPageProps) => {
             <img src="/nexfarma-logo.png" alt="NexFarmaPro" className="w-full h-full object-contain" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold text-emerald-800">NexFarmaPro</CardTitle>
+            <CardTitle className="text-2xl font-bold text-primary">NexFarmaPro</CardTitle>
             <CardDescription className="text-base mt-2">
               Sistema de Gestão Inteligente
             </CardDescription>
