@@ -975,3 +975,33 @@ export const updateCustomer = async (id: string, updates: any) => {
     if (error) throw error;
     return data;
 };
+
+// --- Super Admin / SaaS Management ---
+
+// 1. Fetch All Tenants (Super Admin Only)
+export const fetchAllTenants = async () => {
+    const { data, error } = await supabase.rpc('saas_get_all_tenants');
+    if (error) {
+        console.error('SaaS Fetch Error:', error);
+        throw error;
+    }
+    return data;
+};
+
+// 2. Toggle Tenant Status (Active/Suspended)
+export const toggleTenantStatus = async (tenantId: string, status: string) => {
+    const { error } = await supabase.rpc('saas_toggle_tenant_status', {
+        p_tenant_id: tenantId,
+        p_status: status
+    });
+    if (error) throw error;
+};
+
+// 3. Update Tenant Features (SNGPC, Fiscal, etc.)
+export const updateTenantFeatures = async (tenantId: string, features: any) => {
+    const { error } = await supabase.rpc('saas_update_tenant_features', {
+        p_tenant_id: tenantId,
+        p_features: features
+    });
+    if (error) throw error;
+};

@@ -80,6 +80,17 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
         menuItems.push({ id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' });
     }
 
+    // ULTRA-SECRET SUPER ADMIN MENU 🛡️
+    // Only visible to the owner email
+    if (user?.email === 'nexfarmapro@gmail.com') {
+        menuItems.push({
+            id: 'super-admin',
+            label: 'Gestão SaaS (Admin)',
+            icon: Shield,
+            path: '/super-admin'
+        });
+    }
+
     if (hasPermission('access_pos')) {
         menuItems.push({ id: 'pos', label: 'Frente de Caixa', icon: DollarSign, path: '/pos' });
     }

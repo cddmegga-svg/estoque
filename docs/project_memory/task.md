@@ -28,8 +28,13 @@
 - [x] **Adaptação do Login** (Redirecionar para Dashboard correto)
 
 ### Fase 2: Gestão do Dono do Software (Nós) 👑
-- [ ] **Super Admin Dashboard** (Ver todas as farmácias cadastradas)
+- [/] **Super Admin Dashboard** (Ver todas as farmácias cadastradas)
 - [ ] **Gestão de Assinaturas** (Bloquear inadimplentes)
 
-### Fase 3: Venda e Escala
+### Fase 3: Integração SNGPC 💊 (Prioridade Média)
+- [ ] **Estudo e Planejamento XML 2.0**
+- [ ] **Módulo de Transmissão**
+- [ ] **Validação de Estoque Rígido**
+
+### Fase 4: Venda e Escala
 - [ ] **Landing Page & Billing**
