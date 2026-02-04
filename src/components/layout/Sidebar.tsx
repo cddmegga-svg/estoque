@@ -49,54 +49,61 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
     // To minimize complexity, I will just target the Header section in replacement if possible, 
     // but the state needs to be at top. So I am replacing the top part.
 
-    if (hasPermission('view_products') || hasPermission('manage_stock') || hasPermission('view_stock')) {
-        menuItems.push(
-            { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' },
-            { id: 'products', icon: Package, label: 'Produtos', path: '/products' }
-        );
-    }
-
-    if (hasPermission('create_sale')) {
-        menuItems.push({ id: 'sales', icon: DollarSign, label: 'Pré-Venda (Balcão)', path: '/sales' });
-        menuItems.push({ id: 'customers', label: 'Clientes (CRM)', icon: Users, path: '/customers' });
-    }
-
-    if (hasPermission('manage_suppliers')) {
-        menuItems.push({ id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' });
-    }
-
-    if (hasPermission('view_reports')) {
-        menuItems.push({ id: 'reports', icon: BarChart3, label: 'Relatórios (BI)', path: '/reports' });
-    }
-
-    if (hasPermission('manage_stock')) {
-        menuItems.push(
-            { id: 'logistics', icon: Truck, label: 'Logística & Operações', path: '/logistics' },
-            { id: 'orders', label: 'Encomendas', icon: ClipboardList, path: '/orders' }
-        );
-    }
-
-    if (hasPermission('view_financial')) {
-        menuItems.push({ id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' });
-    }
-
     // ULTRA-SECRET SUPER ADMIN MENU 🛡️
-    // Only visible to the owner email
-    if (user?.email === 'nexfarmapro@gmail.com') {
+    const isSuperAdmin = user?.email === 'nexfarmapro@gmail.com';
+
+    if (isSuperAdmin) {
+        // Super Admin sees ONLY this.
         menuItems.push({
             id: 'super-admin',
             label: 'Gestão SaaS (Admin)',
             icon: Shield,
             path: '/super-admin'
         });
-    }
+        // We return early or just don't push anything else. 
+        // But let's verify if they want *some* generic admin tools?
+        // User said: "somente a adm das farmácias cadastradas".
+        // So we skip ALL other checks.
+    } else {
+        // Standard User / Tenant Menus
+        if (hasPermission('view_products') || hasPermission('manage_stock') || hasPermission('view_stock')) {
+            menuItems.push(
+                { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' },
+                { id: 'products', icon: Package, label: 'Produtos', path: '/products' }
+            );
+        }
 
-    if (hasPermission('access_pos')) {
-        menuItems.push({ id: 'pos', label: 'Frente de Caixa', icon: DollarSign, path: '/pos' });
-    }
+        if (hasPermission('create_sale')) {
+            menuItems.push({ id: 'sales', icon: DollarSign, label: 'Pré-Venda (Balcão)', path: '/sales' });
+            menuItems.push({ id: 'customers', label: 'Clientes (CRM)', icon: Users, path: '/customers' });
+        }
 
-    if (hasPermission('manage_users') || user?.role === 'admin') {
-        menuItems.push({ id: 'admin', label: 'Administração', icon: Shield, path: '/admin' });
+        if (hasPermission('manage_suppliers')) {
+            menuItems.push({ id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' });
+        }
+
+        if (hasPermission('view_reports')) {
+            menuItems.push({ id: 'reports', icon: BarChart3, label: 'Relatórios (BI)', path: '/reports' });
+        }
+
+        if (hasPermission('manage_stock')) {
+            menuItems.push(
+                { id: 'logistics', icon: Truck, label: 'Logística & Operações', path: '/logistics' },
+                { id: 'orders', label: 'Encomendas', icon: ClipboardList, path: '/orders' }
+            );
+        }
+
+        if (hasPermission('view_financial')) {
+            menuItems.push({ id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' });
+        }
+
+        if (hasPermission('access_pos')) {
+            menuItems.push({ id: 'pos', label: 'Frente de Caixa', icon: DollarSign, path: '/pos' });
+        }
+
+        if (hasPermission('manage_users') || user?.role === 'admin') {
+            menuItems.push({ id: 'admin', label: 'Administração', icon: Shield, path: '/admin' });
+        }
     }
 
     return (

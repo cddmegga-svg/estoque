@@ -43,6 +43,15 @@ function App() {
     return checkPermission ? checkPermission(permission) : false;
   };
 
+  const isSuperAdmin = user?.email === 'nexfarmapro@gmail.com';
+
+  // Force Redirect for Super Admin
+  useEffect(() => {
+    if (isSuperAdmin && currentPage === 'dashboard') {
+      setCurrentPage('super-admin');
+    }
+  }, [isSuperAdmin, currentPage]);
+
   const handleNavigate = (page: string, params?: any) => {
     setCurrentPage(page);
     setPageParams(params || {});

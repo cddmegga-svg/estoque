@@ -38,19 +38,33 @@ export const ThemeManager = () => {
     const { user } = useAuth();
 
     useEffect(() => {
+        const resetTheme = () => {
+            document.documentElement.style.removeProperty('--primary');
+            document.documentElement.style.removeProperty('--ring');
+            // Remove other potential modifications
+        };
+
         if (user) {
             fetchCurrentTenant().then(tenant => {
                 if (tenant && tenant.primary_color) {
                     const hsl = hexToHsl(tenant.primary_color);
                     if (hsl) {
                         document.documentElement.style.setProperty('--primary', hsl);
-                        // Optional: Calculate a secondary/ring color based on primary?
                         document.documentElement.style.setProperty('--ring', hsl);
+                    } else {
+                        resetTheme();
                     }
+                } else {
+                    resetTheme(); // No custom color = default theme
                 }
-            }).catch(console.error);
+            }).catch(err => {
+                console.error("Theme Load Error:", err);
+                resetTheme();
+            });
+        } else {
+            resetTheme();
         }
     }, [user]);
 
-    return null; // This component renders nothing visually
+    return null;
 };
