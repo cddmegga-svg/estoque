@@ -99,8 +99,9 @@ export const RegisterTenantPage = ({ onLogin }: RegisterTenantPageProps) => {
 
         setLoading(true);
         try {
-            // 1. Create Supabase Auth User (Directly, bypassing AuthContext to avoid premature profile creation)
-            // This is crucial for SaaS: The RPC 'register_new_tenant' handles the profile creation linked to the tenant.
+            let userId = null;
+
+            // 1. Tentar Criar Usuário
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.password,
@@ -113,29 +114,59 @@ export const RegisterTenantPage = ({ onLogin }: RegisterTenantPageProps) => {
             });
 
             if (authError) {
-                console.error("Erro no signUp:", authError);
-                throw authError; // Rethrow actual auth error
+                // SE O USUÁRIO JÁ EXISTE (Erro 422 ou mensagem específica)
+                // A Supabase AS VEZES retorna 200 falso positivo se email confirm is on, 
+                // mas se der erro explícito, tentamos logar.
+                if (authError.message.includes("already registered") || authError.message.includes("already created")) {
+                    console.log("Usuário já existe. Tentando login para recuperar ID...");
+
+                    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                        email: formData.email,
+                        password: formData.password
+                    });
+
+                    if (signInError) {
+                        throw new Error('Esta conta já existe, mas a senha informada está incorreta.');
+                    }
+
+                    userId = signInData.user?.id;
+                } else {
+                    throw authError; // Outro erro real
+                }
+            } else {
+                // Registro novo (ou fake success se confirm enabled)
+                userId = authData.user?.id;
+
+                // Se não retornou user (caso de confirm email pendente estrito), avisamos.
+                if (!userId) {
+                    // Tentar login imediato caso tenha sido "fake success"
+                    const { data: retryLogin } = await supabase.auth.signInWithPassword({
+                        email: formData.email,
+                        password: formData.password
+                    });
+                    userId = retryLogin.user?.id;
+                }
             }
 
-            // Check if user is returned (sometimes session is null if email confirmation is required)
-            const user = authData.user;
-            if (!user) throw new Error('Falha ao criar usuário. Tente novamente.');
+            if (!userId) throw new Error('Verifique seu e-mail para confirmar a conta antes de continuar.');
 
-            // 2. Call RPC to Create Tenant and link User
-            await registerTenant(
+            // 2. Chamar RPC para Criar Farmácia (Vincula o usuário existente à nova farmácia)
+            const rpcResult = await registerTenant(
                 formData.companyName,
                 formData.cnpj,
                 formData.email,
                 formData.name,
-                user.id
+                userId
             );
 
+            console.log("Farmácia criada:", rpcResult);
+
             setStep('success');
-            toast({ title: 'Sucesso!', description: 'Sua farmácia foi criada. Bem-vindo ao Sistema!' });
+            toast({ title: 'Sucesso!', description: 'Cadastro recuperado e farmácia criada.' });
 
         } catch (err: any) {
-            console.error("Catch Error:", err);
-            toast({ variant: 'destructive', title: 'Erro no Cadastro', description: err.message || 'Falha ao criar conta.' });
+            console.error("Erro no Processo:", err);
+            toast({ variant: 'destructive', title: 'Atenção', description: err.message || 'Falha ao processar cadastro.' });
         } finally {
             setLoading(false);
         }
