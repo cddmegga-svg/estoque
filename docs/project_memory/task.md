@@ -24,8 +24,8 @@
 - [x] Criar Documento de Arquitetura (ROADMAP_SAAS.md)
 - [x] **Migração de Banco de Dados** (RLS + TenantID)
 - [x] **Backend: RPC de Registro** (register_new_tenant)
-- [/] **Frontend: Tela de Cadastro de Farmácia** (Em progresso)
-- [ ] **Adaptação do Login** (Redirecionar para Dashboard correto)
+- [x] **Frontend: Tela de Cadastro de Farmácia** (Concluído)
+- [x] **Adaptação do Login** (Redirecionar para Dashboard correto)
 
 ### Fase 2: Gestão do Dono do Software (Nós) 👑
 - [ ] **Super Admin Dashboard** (Ver todas as farmácias cadastradas)
