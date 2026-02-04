@@ -16,7 +16,7 @@ import { SalesPage } from '@/pages/SalesPage';
 import { ConferencePage } from '@/pages/ConferencePage';
 import { LogisticsPage } from '@/pages/LogisticsPage';
 import { POSPage } from '@/pages/POSPage';
-import { CustomersPage } => '@/pages/CustomersPage';
+import { CustomersPage } from '@/pages/CustomersPage';
 import { Toaster } from '@/components/ui/toaster';
 import { CommandMenu } from '@/components/CommandMenu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
