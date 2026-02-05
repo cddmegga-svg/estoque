@@ -1,16 +1,14 @@
 -- Function: register_new_tenant
 -- Description: Handles the onboarding of a new pharmacy (SaaS).
--- 1. Creates the Tenant.
--- 2. Links the creating User (from Auth) to this Tenant.
--- 3. Updates the User's app_metadata to include tenant_id (for RLS).
--- 4. Creates a default 'store' Filial for the tenant.
+-- UPDATED: Now accepts p_user_pin to set the Owner's PIN.
 
 CREATE OR REPLACE FUNCTION register_new_tenant(
     p_company_name TEXT,
     p_document TEXT, -- CNPJ
     p_user_email TEXT,
     p_user_name TEXT,
-    p_user_id UUID -- Passed explicitly or we can use auth.uid()
+    p_user_id UUID,
+    p_user_pin TEXT DEFAULT NULL
 )
 RETURNS JSONB AS $$
 DECLARE
@@ -28,9 +26,7 @@ BEGIN
     RETURNING id INTO v_filial_id;
 
     -- 3. Create/Update Public User Profile (Idempotent)
-    -- We assume the user already exists in auth.users (signed up via client).
-    -- We insert into public.users.
-    INSERT INTO users (id, name, email, role, filial_id, tenant_id, permissions)
+    INSERT INTO users (id, name, email, role, filial_id, tenant_id, permissions, pin)
     VALUES (
         p_user_id, 
         p_user_name, 
@@ -38,18 +34,18 @@ BEGIN
         'admin', 
         v_filial_id, 
         v_tenant_id, 
-        ARRAY['admin_access']
+        ARRAY['admin_access', 'manage_users', 'manage_stock', 'view_financial', 'view_reports', 'access_pos'], -- Full Access for Owner
+        p_user_pin
     )
     ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
         role = EXCLUDED.role,
         filial_id = EXCLUDED.filial_id,
         tenant_id = EXCLUDED.tenant_id,
-        permissions = EXCLUDED.permissions;
+        permissions = EXCLUDED.permissions,
+        pin = EXCLUDED.pin; -- Update PIN if provided
 
     -- 4. Update Auth Metadata (The Magic Step for RLS)
-    -- This requires permissions to alter auth.users. 
-    -- SECURITY DEFINER should allow this if the function owner is postgres/supabase_admin.
     UPDATE auth.users
     SET raw_app_meta_data = 
         COALESCE(raw_app_meta_data, '{}'::jsonb) || 

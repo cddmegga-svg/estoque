@@ -379,14 +379,16 @@ export const registerTenant = async (
     document: string,
     userEmail: string,
     userName: string,
-    userId: string
+    userId: string,
+    userPin?: string
 ) => {
     const { data, error } = await supabase.rpc('register_new_tenant', {
         p_company_name: companyName,
         p_document: document,
         p_user_email: userEmail,
         p_user_name: userName,
-        p_user_id: userId
+        p_user_id: userId,
+        p_user_pin: userPin
     });
 
     if (error) throw error;

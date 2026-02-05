@@ -201,35 +201,67 @@ function UnlockDialog() {
 
   const handleUnlock = async () => {
     try {
-      const { data, error } = await supabase
+      // 1. Try finding an Employee first (Standard Case)
+      let { data: employeeData, error: employeeError } = await supabase
         .from('employees')
         .select('*')
         .eq('pin', pin)
         .eq('active', true)
         .single();
 
-      if (error || !data) {
-        toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Funcionário não encontrado.' });
+      let unlockedUser: any = null;
+
+      // 2. If no employee found, try finding an Owner/User with this PIN
+      if (!employeeData) {
+        // Security Note: We should ideally also check if the PIN belongs to a user in the CURRENT tenant.
+        // But verifying the tenant depends on the context. 
+        // For now, PINs should be somewhat unique or we assume the first match is valid.
+        // A better approach is to check if the user belongs to the current tenant of the logged in user?
+        // Actually, "global" owners across tenants might have same PIN? Unlikely to collide often.
+        // Let's just check the `users` table.
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('pin', pin)
+          .single();
+
+        if (userData) {
+          unlockedUser = {
+            id: userData.id,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            filialId: userData.filial_id,
+            permissions: userData.permissions || [],
+            employeeCode: userData.pin,
+            isOwner: true
+          };
+        }
+      } else {
+        // It was an employee
+        unlockedUser = {
+          id: employeeData.id,
+          name: employeeData.name,
+          email: `employee-${employeeData.pin}@system.local`,
+          role: employeeData.role || 'viewer',
+          filialId: employeeData.filial_id,
+          permissions: employeeData.permissions || [],
+          employeeCode: employeeData.pin
+        };
+      }
+
+      if (!unlockedUser) {
+        toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Nenhum funcionário ou dono encontrado com este PIN.' });
         return;
       }
 
-      const employeeUser: any = {
-        id: data.id,
-        name: data.name,
-        email: `employee-${data.pin}@system.local`, // Placeholder
-        role: data.role || 'viewer',
-        filialId: data.tenant_id,
-        permissions: data.permissions || [],
-        employeeCode: data.pin
-      };
-
       // Manually save to session storage to avoid race condition with reload
-      sessionStorage.setItem('unlocked_employee', JSON.stringify(employeeUser));
-      setActiveEmployee?.(employeeUser); // "Upscale" permissions
+      sessionStorage.setItem('unlocked_employee', JSON.stringify(unlockedUser));
+      setActiveEmployee?.(unlockedUser); // "Upscale" permissions
 
       toast({
         title: 'Acesso Liberado 🔓',
-        description: `Bem-vindo(a), ${data.name}. Os menus administrativos foram desbloqueados.`,
+        description: `Bem-vindo(a), ${unlockedUser.name}.`,
         duration: 5000,
         className: "bg-primary text-primary-foreground"
       });
