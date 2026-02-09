@@ -28,6 +28,7 @@ import { useProductSync } from '@/hooks/useProductSync';
 import { ThemeManager } from '@/components/ThemeManager';
 import { RegisterTenantPage } from '@/pages/RegisterTenantPage';
 import { SuperAdminPage } from '@/pages/SuperAdminPage';
+import { ReportsPage } from '@/pages/ReportsPage';
 
 function App() {
   const { user, loading, checkPermission } = useAuth();

@@ -139,7 +139,7 @@ export function SuperAdminPage() {
         try {
             await toggleTenantStatus(tenantId, newStatus);
             toast({
-                title: sent => newStatus === 'active' ? 'Farmácia Ativada' : 'Farmácia Suspensa',
+                title: newStatus === 'active' ? 'Farmácia Ativada' : 'Farmácia Suspensa',
                 description: `O acesso foi ${newStatus === 'active' ? 'liberado' : 'bloqueado'} com sucesso.`,
                 className: newStatus === 'active' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
             });
