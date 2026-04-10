@@ -21,6 +21,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { CommandMenu } from '@/components/CommandMenu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
@@ -181,9 +182,80 @@ function App() {
 
           {/* Global Unlock Dialog */}
           <UnlockDialog />
+          {/* Password Recovery Dialog */}
+          <PasswordRecoveryDialog />
         </div>
       )}
     </>
+  );
+}
+
+// Password Recovery Component
+function PasswordRecoveryDialog() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsOpen(true);
+      }
+    });
+    return () => authListener.subscription.unsubscribe();
+  }, []);
+
+  const handleUpdatePassword = async () => {
+    if (newPassword.length < 6) {
+      toast({ variant: 'destructive', title: 'Erro', description: 'A nova senha deve ter no mínimo 6 caracteres.' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast({ title: 'Sucesso', description: 'Senha atualizada com sucesso! Você já pode fechar esta janela e usar o sistema.', className: 'bg-green-600 text-white' });
+      setIsOpen(false);
+      setNewPassword('');
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Erro', description: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Recuperação de Senha</DialogTitle>
+          <DialogDescription>
+            Digite sua nova senha abaixo.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="new_password">Nova Senha</Label>
+            <Input
+              id="new_password"
+              type="password"
+              placeholder="Mínimo 6 caracteres"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter className="sm:justify-end">
+          <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleUpdatePassword} disabled={loading || newPassword.length < 6}>
+            {loading ? 'Salvando...' : 'Salvar Nova Senha'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
