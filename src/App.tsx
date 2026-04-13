@@ -30,6 +30,7 @@ import { ThemeManager } from '@/components/ThemeManager';
 import { RegisterTenantPage } from '@/pages/RegisterTenantPage';
 import { SuperAdminPage } from '@/pages/SuperAdminPage';
 import { ReportsPage } from '@/pages/ReportsPage';
+import { IntegrationsPage } from '@/pages/IntegrationsPage';
 
 function App() {
   const { user, loading, checkPermission } = useAuth();
@@ -126,6 +127,10 @@ function App() {
         // Basic frontend check (backend also protects this)
         if (user?.email !== 'nexfarmapro@gmail.com') return <div className="p-8 text-center text-red-500">Acesso Restrito ao Super Admin.</div>;
         return <SuperAdminPage />;
+
+      case 'integrations':
+        if (!hasPermission('admin_access')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
+        return <IntegrationsPage />;
 
       default:
         return <DashboardPage user={user} onNavigate={handleNavigate} />;

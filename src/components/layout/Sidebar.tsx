@@ -97,8 +97,13 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
             menuItems.push({ id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' });
         }
 
-        if (hasPermission('access_pos')) {
-            menuItems.push({ id: 'pos', label: 'Frente de Caixa', icon: DollarSign, path: '/pos' });
+        // Frente de Caixa Nativo Desativado (Foco em Back-office Integrado Alpha7/Lothus)
+        // if (hasPermission('access_pos')) {
+        //     menuItems.push({ id: 'pos', label: 'Frente de Caixa', icon: DollarSign, path: '/pos' });
+        // }
+
+        if (hasPermission('admin_access')) { // Apenas admin pode ver Integrações
+            menuItems.push({ id: 'integrations', label: 'Integrações (API)', icon: DollarSign, path: '/integrations' });
         }
 
         if (hasPermission('manage_users') || user?.role === 'admin') {
