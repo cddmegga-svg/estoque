@@ -148,6 +148,9 @@ function App() {
   return (
     <>
       <ThemeManager />
+      {/* Password Recovery Dialog must be top-level to run even before user is logged in */}
+      <PasswordRecoveryDialog />
+      
       {!user ? (
         showRegister ? <RegisterTenantPage onLogin={() => setShowRegister(false)} /> : <LoginPage onRegister={() => setShowRegister(true)} />
       ) : (
@@ -182,8 +185,6 @@ function App() {
 
           {/* Global Unlock Dialog */}
           <UnlockDialog />
-          {/* Password Recovery Dialog */}
-          <PasswordRecoveryDialog />
         </div>
       )}
     </>
