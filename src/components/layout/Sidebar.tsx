@@ -59,7 +59,7 @@ export const MobileHeader = ({ currentPage, onNavigate, user }: MobileHeaderProp
 export const Sidebar = ({ currentPage, onNavigate, user, collapsed = false, className }: SidebarProps) => {
     
     const menuItems = [
-        { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard, path: 'dashboard' },
+        { id: 'dashboard', label: 'VisÃ£o Geral', icon: LayoutDashboard, path: 'dashboard' },
     ];
 
     const isSuperAdmin = user?.email === 'nexfarmapro@gmail.com';
@@ -67,7 +67,7 @@ export const Sidebar = ({ currentPage, onNavigate, user, collapsed = false, clas
     if (isSuperAdmin) {
         menuItems.push({
             id: 'super-admin',
-            label: 'Gestão SaaS (Admin)',
+            label: 'GestÃ£o SaaS (Admin)',
             icon: Shield,
             path: 'super-admin'
         });
@@ -75,25 +75,25 @@ export const Sidebar = ({ currentPage, onNavigate, user, collapsed = false, clas
         // NOVOS MENUS DO NEXFARMAPRO (COFRE DIGITAL)
         menuItems.push({ id: 'documents', label: 'Cofre Digital', icon: Package, path: 'documents' });
         
-        // Módulos de Compliance
+        // Mï¿½dulos de Compliance
         menuItems.push({ id: 'audit', label: 'Auditoria de Logs', icon: ClipboardList, path: 'audit' });
-        menuItems.push({ id: 'retention', label: 'Políticas de Retenção', icon: FileText, path: 'retention' });
+        menuItems.push({ id: 'retention', label: 'Polï¿½ticas de Retenï¿½ï¿½o', icon: FileText, path: 'retention' });
         menuItems.push({ id: 'legal-holds', label: 'Legal Holds', icon: Shield, path: 'legal-holds' });
         
-        // Integrações
+        // Integraï¿½ï¿½es
         if (hasPermission(user, 'admin_access') || user?.role === 'admin') {
             menuItems.push({ id: 'integrations', label: 'Connectors & SNCR', icon: ArrowLeftRight, path: 'integrations' });
-            menuItems.push({ id: 'backups', label: 'Gestão de Backups', icon: RefreshCw, path: 'backups' });
+            menuItems.push({ id: 'backups', label: 'GestÃ£o de Backups', icon: RefreshCw, path: 'backups' });
         }
 
-        // Configurações
+        // Configuraï¿½ï¿½es
         if (hasPermission(user, 'manage_users') || user?.role === 'admin') {
-            menuItems.push({ id: 'admin', label: 'Configurações', icon: Shield, path: 'admin' });
+            menuItems.push({ id: 'admin', label: 'Configuraï¿½ï¿½es', icon: Shield, path: 'admin' });
         }
     }
 
     return (
-        <div className={cn("flex flex-col h-full bg-white border-r", className)}>
+        <div className={cn("flex flex-col h-full bg-white border-r fixed inset-y-0 left-0 z-50 transition-all duration-300", collapsed ? "w-16" : "w-64", className)}>
             <div className="h-20 flex items-center px-6 border-b border-border/50 gap-3 flex-shrink-0">
                 <div className={cn("flex-shrink-0 transition-all duration-300 rounded-lg overflow-hidden", collapsed ? "h-8 w-8" : "h-10 w-10")}>
                     <div className="w-full h-full bg-primary/10 flex items-center justify-center">
@@ -158,3 +158,4 @@ export const Sidebar = ({ currentPage, onNavigate, user, collapsed = false, clas
         </div>
     );
 };
+
