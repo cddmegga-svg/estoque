@@ -169,7 +169,7 @@ export function SuperAdminPage() {
                         <ShieldAlert className="h-8 w-8 text-purple-600" />
                         Super Admin
                     </h1>
-                    <p className="text-muted-foreground">Gestão global de farmácias (Tenants)</p>
+                    <p className="text-muted-foreground">Gest�o global de farmácias (Tenants)</p>
                 </div>
                 <div className="flex gap-2">
                     {/* ... Cards ... */}

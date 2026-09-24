@@ -1,4 +1,4 @@
-﻿import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu, DollarSign, Users, ClipboardList, BarChart3, Truck } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu, DollarSign, Users, ClipboardList, BarChart3, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -164,21 +164,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
                     )}
                 </div>
 
-                <Button
-                    variant="outline"
-                    className={cn("w-full gap-2 hover:bg-primary/10 hover:text-primary hover:border-primary/50 mb-2", collapsed ? "justify-center px-0" : "justify-start")}
-                    onClick={() => {
-                        // TODO: trigger unlock dialog
-                        // For now we just use the CommandMenu (Ctrl+K) or assume the POS enforces generic login
-                        // User requested "Surgical" permissions.
-                        // Ideally we should have a PIN Prompt here.
-                        window.dispatchEvent(new CustomEvent('open-unlock-dialog'));
-                    }}
-                    title={collapsed ? "Desbloquear Acesso" : undefined}
-                >
-                    <Shield className="w-4 h-4" />
-                    {!collapsed && "Liberar Acesso"}
-                </Button>
+
 
                 <Button
                     variant="ghost"

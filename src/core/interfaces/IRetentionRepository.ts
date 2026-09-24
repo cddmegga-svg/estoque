@@ -1,4 +1,4 @@
-export interface RetentionPolicyEntity {
+export interface Reten��onPolicyEntity {
   id: string;
   tenant_id: string;
   name: string;
@@ -17,8 +17,8 @@ export interface LegalHoldEntity {
   released_at?: Date;
 }
 
-export interface IRetentionRepository {
-  getPolicyForDocument(documentType: string, tenantId: string): Promise<RetentionPolicyEntity | null>;
+export interface IReten��onRepository {
+  getPolicyForDocument(documentType: string, tenantId: string): Promise<Reten��onPolicyEntity | null>;
   checkActiveLegalHolds(documentId: string): Promise<boolean>;
   applyLegalHold(hold: Partial<LegalHoldEntity>): Promise<void>;
   releaseLegalHold(documentId: string, reason: string): Promise<void>;

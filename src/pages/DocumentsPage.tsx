@@ -24,7 +24,7 @@ export const DocumentsPage = () => {
                 <tr>
                   <th className="px-6 py-3">Documento (ID / Arquivo)</th>
                   <th className="px-6 py-3">Origem</th>
-                  <th className="px-6 py-3">Tipo / Retenção</th>
+                  <th className="px-6 py-3">Tipo / Reten��o</th>
                   <th className="px-6 py-3">Status SNCR</th>
                   <th className="px-6 py-3">Integridade</th>
                 </tr>

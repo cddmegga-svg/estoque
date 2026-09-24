@@ -32,7 +32,7 @@ export const Header = ({ user, onNavigate, onRegister }: HeaderProps) => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-foreground">FarmaControl</h1>
-              <p className="text-sm text-muted-foreground">Gestão de Estoque</p>
+              <p className="text-sm text-muted-foreground">Gest�o de Estoque</p>
             </div>
           </div>
 

@@ -8,7 +8,7 @@ export const BackupsPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Gestão de Backups (Disaster Recovery)</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Gest�o de Backups (Disaster Recovery)</h2>
           <p className="text-muted-foreground mt-1">
             Monitoramento da Regra 3-2-1. Backups físicos e criptografados para conformidade com RDC 1.028/2026.
           </p>

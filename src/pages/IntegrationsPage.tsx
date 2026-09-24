@@ -13,7 +13,7 @@ export function IntegrationsPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight text-slate-800">Integrações (API)</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-slate-800">Integra��es (API)</h2>
                 <p className="text-muted-foreground mt-2">
                     Gerencie a comunicação do nosso sistema com o banco de dados da sua farmácia (Alpha7 / Lothus PDV).
                 </p>

@@ -76,7 +76,7 @@ export const LoginPage = ({ onRegister }: LoginPageProps) => {
           <div>
             <CardTitle className="text-2xl font-bold text-primary">NexFarmaPro</CardTitle>
             <CardDescription className="text-base mt-2">
-              {isResetting ? 'Recuperação de Senha' : 'Sistema de Gestão Inteligente'}
+              {isResetting ? 'Recuperação de Senha' : 'Sistema de Gest�o Inteligente'}
             </CardDescription>
           </div>
         </CardHeader>

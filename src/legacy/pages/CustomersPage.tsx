@@ -102,7 +102,7 @@ export const CustomersPage = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
                         <User className="h-6 w-6 text-primary" />
-                        Gestão de Clientes (CRM)
+                        Gest�o de Clientes (CRM)
                     </h1>
                     <p className="text-slate-500">Cadastre e gerencie seus clientes fieis.</p>
                 </div>

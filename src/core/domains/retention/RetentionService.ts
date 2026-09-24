@@ -1,44 +1,44 @@
-import { IRetentionRepository } from '@/core/interfaces/IRetentionRepository';
+import { IRetenï¿½ï¿½onRepository } from '@/core/interfaces/IRetenï¿½ï¿½onRepository';
 import { IDocumentRepository, DocumentEntity } from '@/core/interfaces/IDocumentRepository';
 import { IAuditRepository } from '@/core/interfaces/IAuditRepository';
 
-export class RetentionService {
+export class Retenï¿½ï¿½onService {
   constructor(
-    private retentionRepo: IRetentionRepository,
+    private retentionRepo: IRetenï¿½ï¿½onRepository,
     private documentRepo: IDocumentRepository,
     private audit: IAuditRepository
   ) {}
 
   async evaluateDeletionEligibility(documentId: string, userId: string): Promise<{ eligible: boolean, reason: string }> {
     const doc = await this.documentRepo.findById(documentId);
-    if (!doc) return { eligible: false, reason: 'Documento não encontrado' };
+    if (!doc) return { eligible: false, reason: 'Documento nï¿½o encontrado' };
 
-    // 1. LEGAL HOLD É SOBERANO!
+    // 1. LEGAL HOLD ï¿½ SOBERANO!
     const hasLegalHold = await this.retentionRepo.checkActiveLegalHolds(documentId);
     if (hasLegalHold) {
       await this.audit.logEvent({ user_id: userId, action: 'DELETION_BLOCKED_BY_LEGAL_HOLD', entity_type: 'document', entity_id: documentId });
-      return { eligible: false, reason: 'Bloqueado por Legal Hold Ativo (Ordem de Preservação)' };
+      return { eligible: false, reason: 'Bloqueado por Legal Hold Ativo (Ordem de Preservaï¿½ï¿½o)' };
     }
 
-    // 2. Busca Política de Retenção
+    // 2. Busca Polï¿½tica de Retenï¿½ï¿½o
     const policy = await this.retentionRepo.getPolicyForDocument(doc.document_type, doc.tenant_id);
     if (!policy) {
-      return { eligible: false, reason: 'Nenhuma política de retenção definida. Exclusão de segurança negada.' };
+      return { eligible: false, reason: 'Nenhuma polï¿½tica de retenï¿½ï¿½o definida. Exclusï¿½o de seguranï¿½a negada.' };
     }
 
-    // 3. Calcula vencimento da retenção
+    // 3. Calcula vencimento da retenï¿½ï¿½o
     const expiryDate = new Date(doc.created_at);
     expiryDate.setMonth(expiryDate.getMonth() + policy.retention_months);
 
     if (new Date() < expiryDate) {
-      return { eligible: false, reason: `Período de Retenção Ativo. Vence em ${expiryDate.toLocaleDateString()}` };
+      return { eligible: false, reason: `Perï¿½odo de Retenï¿½ï¿½o Ativo. Vence em ${expiryDate.toLocaleDateString()}` };
     }
 
-    // 4. Se a política exige revisão humana (Review Required)
+    // 4. Se a polï¿½tica exige revisï¿½o humana (Review Required)
     if (policy.review_required) {
-       return { eligible: false, reason: 'Período expirado, mas requer revisão/aprovação manual pelo Responsável Técnico.' };
+       return { eligible: false, reason: 'Perï¿½odo expirado, mas requer revisï¿½o/aprovaï¿½ï¿½o manual pelo Responsï¿½vel Tï¿½cnico.' };
     }
 
-    return { eligible: true, reason: 'Retenção Expirada. Elegível para exclusão.' };
+    return { eligible: true, reason: 'Retenï¿½ï¿½o Expirada. Elegï¿½vel para exclusï¿½o.' };
   }
 }
