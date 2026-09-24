@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu, DollarSign, Users, ClipboardList, BarChart3, Truck } from 'lucide-react';
+﻿import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu, DollarSign, Users, ClipboardList, BarChart3, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -49,36 +49,36 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
     // To minimize complexity, I will just target the Header section in replacement if possible, 
     // but the state needs to be at top. So I am replacing the top part.
 
-    // ULTRA-SECRET SUPER ADMIN MENU 🛡️
+    // ULTRA-SECRET SUPER ADMIN MENU ðŸ›¡ï¸
     const isSuperAdmin = user?.email === 'nexfarmapro@gmail.com';
 
     if (isSuperAdmin) {
         menuItems.push({
             id: 'super-admin',
-            label: 'Gestão SaaS (Admin)',
+            label: 'GestÃ£o SaaS (Admin)',
             icon: Shield,
             path: '/super-admin'
         });
     } else {
         // NOVOS MENUS DO NEXFARMAPRO (COFRE DIGITAL)
         
-        // Todos os usuários autenticados veem o Cofre (nível de acesso é filtrado na página)
+        // Todos os usuÃ¡rios autenticados veem o Cofre (nÃ­vel de acesso Ã© filtrado na pÃ¡gina)
         menuItems.push({ id: 'documents', label: 'Cofre Digital', icon: Package, path: '/documents' });
         
-        // Módulos de Compliance
+        // MÃ³dulos de Compliance
         menuItems.push({ id: 'audit', label: 'Auditoria de Logs', icon: ClipboardList, path: '/audit' });
-        menuItems.push({ id: 'retention', label: 'Políticas de Retenção', icon: FileText, path: '/retention' });
+        menuItems.push({ id: 'retention', label: 'PolÃ­ticas de RetenÃ§Ã£o', icon: FileText, path: '/retention' });
         menuItems.push({ id: 'legal-holds', label: 'Legal Holds', icon: Shield, path: '/legal-holds' });
         
-        // Integração (SNCR e Alpha7/Lotus)
+        // IntegraÃ§Ã£o (SNCR e Alpha7/Lotus)
         if (hasPermission('admin_access')) {
             menuItems.push({ id: 'integrations', label: 'Connectors & SNCR', icon: ArrowLeftRight, path: '/integrations' });
-            menuItems.push({ id: 'backups', label: 'Gestão de Backups', icon: RefreshCw, path: '/backups' });
+            menuItems.push({ id: 'backups', label: 'GestÃ£o de Backups', icon: RefreshCw, path: '/backups' });
         }
 
-        // Configurações
+        // ConfiguraÃ§Ãµes
         if (hasPermission('manage_users') || user?.role === 'admin') {
-            menuItems.push({ id: 'admin', label: 'Configurações', icon: Shield, path: '/admin' });
+            menuItems.push({ id: 'admin', label: 'ConfiguraÃ§Ãµes', icon: Shield, path: '/admin' });
         }
     }
 
@@ -98,7 +98,7 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
                 {!collapsed && (
                     <div className="min-w-0">
                         <h1 className="text-lg font-extrabold text-foreground leading-none tracking-tight">{tenantName}</h1>
-                        <p className="text-xs font-semibold text-muted-foreground tracking-wider">GESTÃO</p>
+                        <p className="text-xs font-semibold text-muted-foreground tracking-wider">GESTÃƒO</p>
                     </div>
                 )}
             </div>

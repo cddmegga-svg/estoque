@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { BackupsPage } from '@/pages/BackupsPage';
 import { DocumentsPage } from '@/pages/DocumentsPage';
 import { ImportPage } from '@/pages/ImportPage';
 import { TransfersPage } from '@/legacy/pages/TransfersPage';
@@ -69,7 +70,7 @@ function App() {
       case 'stock':
       case 'products':
         if (!hasPermission('view_products') && !hasPermission('manage_stock') && !hasPermission('view_stock'))
-          return <div className="p-8 text-center text-red-500">Acesso Negado: Você não tem permissão para ver produtos/estoque.</div>;
+          return <div className="p-8 text-center text-red-500">Acesso Negado: VocÃª nÃ£o tem permissÃ£o para ver produtos/estoque.</div>;
         return currentPage === 'stock' ? <StockPage user={user} params={pageParams} /> : <ProductsPage />;
 
       case 'import':
@@ -138,11 +139,11 @@ function App() {
       case 'audit':
         return <PlaceholderPage title="Auditoria de Logs (Tamper-Evident)" />;
       case 'retention':
-        return <PlaceholderPage title="Pol�ticas de Reten��o" />;
+        return <PlaceholderPage title="Políticas de Retenção" />;
       case 'legal-holds':
-        return <PlaceholderPage title="Legal Holds (Ordens de Preserva��o)" />;
+        return <PlaceholderPage title="Legal Holds (Ordens de Preservação)" />;
       case 'backups':
-        return <PlaceholderPage title="Gest�o de Backups Locais" />;
+        return <BackupsPage />;
       default:
         return <DashboardPage user={user} onNavigate={handleNavigate} />;
     }
@@ -225,14 +226,14 @@ function PasswordRecoveryDialog() {
 
   const handleUpdatePassword = async () => {
     if (newPassword.length < 6) {
-      toast({ variant: 'destructive', title: 'Erro', description: 'A nova senha deve ter no mínimo 6 caracteres.' });
+      toast({ variant: 'destructive', title: 'Erro', description: 'A nova senha deve ter no mÃ­nimo 6 caracteres.' });
       return;
     }
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      toast({ title: 'Sucesso', description: 'Senha atualizada com sucesso! Você já pode fechar esta janela e usar o sistema.', className: 'bg-green-600 text-white' });
+      toast({ title: 'Sucesso', description: 'Senha atualizada com sucesso! VocÃª jÃ¡ pode fechar esta janela e usar o sistema.', className: 'bg-green-600 text-white' });
       setIsOpen(false);
       setNewPassword('');
     } catch (err: any) {
@@ -246,7 +247,7 @@ function PasswordRecoveryDialog() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Recuperação de Senha</DialogTitle>
+          <DialogTitle>RecuperaÃ§Ã£o de Senha</DialogTitle>
           <DialogDescription>
             Digite sua nova senha abaixo.
           </DialogDescription>
@@ -257,7 +258,7 @@ function PasswordRecoveryDialog() {
             <Input
               id="new_password"
               type="password"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="MÃ­nimo 6 caracteres"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
             />
@@ -341,7 +342,7 @@ function UnlockDialog() {
       }
 
       if (!unlockedUser) {
-        toast({ variant: 'destructive', title: 'PIN Inválido', description: 'Nenhum funcionário ou dono encontrado com este PIN.' });
+        toast({ variant: 'destructive', title: 'PIN InvÃ¡lido', description: 'Nenhum funcionÃ¡rio ou dono encontrado com este PIN.' });
         return;
       }
 
@@ -350,7 +351,7 @@ function UnlockDialog() {
       setActiveEmployee?.(unlockedUser); // "Upscale" permissions
 
       toast({
-        title: 'Acesso Liberado 🔓',
+        title: 'Acesso Liberado ðŸ”“',
         description: `Bem-vindo(a), ${unlockedUser.name}.`,
         duration: 5000,
         className: "bg-primary text-primary-foreground"
@@ -360,7 +361,7 @@ function UnlockDialog() {
       setPin('');
     } catch (err) {
       console.error(err);
-      toast({ variant: 'destructive', title: 'Erro Técnico', description: 'Verifique o console para detalhes.' });
+      toast({ variant: 'destructive', title: 'Erro TÃ©cnico', description: 'Verifique o console para detalhes.' });
     }
   };
 
@@ -370,7 +371,7 @@ function UnlockDialog() {
         <DialogHeader>
           <DialogTitle className="text-center">Liberar Acesso</DialogTitle>
           <DialogDescription className="text-center">
-            Digite seu PIN para desbloquear funções administrativas.
+            Digite seu PIN para desbloquear funÃ§Ãµes administrativas.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 flex justify-center">
