@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useCompany } from '@/contexts/CompanyContext';
+
 
 
 interface SidebarProps {
@@ -32,11 +32,11 @@ interface SidebarProps {
 
 export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     const { user, hasPermission, logout } = useAuth();
-    const { company } = useCompany();
+    
     const navigate = useNavigate();
     const location = useLocation();
 
-    const logoUrl = company?.logo_url;
+    const logoUrl = null;
 
     const menuItems = [
         { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard, path: '/' },
@@ -139,3 +139,17 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     );
 };
 
+
+
+export const MobileHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
+    return (
+        <div className="md:hidden flex items-center justify-between p-4 border-b bg-white">
+            <div className="flex items-center gap-2">
+                <span className="font-bold text-lg text-foreground">NexFarmaPro</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onMenuClick}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </Button>
+        </div>
+    );
+};
