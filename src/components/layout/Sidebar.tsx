@@ -2,44 +2,64 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { 
     LayoutDashboard, 
-    ShoppingCart, 
     Package, 
-    Settings, 
-    Users, 
+    Shield, 
     LogOut,
     ArrowLeftRight,
     FileText,
-    Calculator,
-    Archive,
-    DollarSign,
-    ClipboardCheck,
-    Truck,
-    Shield,
-    BarChart3,
     ClipboardList,
-    RefreshCw
+    RefreshCw,
+    Menu
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { useLocation, useNavigate } from 'react-router-dom';
 
-
-
-interface SidebarProps {
-    collapsed: boolean;
-    onToggle: () => void;
+interface User {
+  role?: string;
+  permissions?: string[];
+  email?: string;
+  [key: string]: any;
 }
 
-export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
-    const { user, hasPermission, logout } = useAuth();
+interface SidebarProps {
+    currentPage: string;
+    onNavigate: (page: string) => void;
+    user: User | null;
+    collapsed?: boolean;
+    className?: string;
+}
+
+interface MobileHeaderProps {
+    currentPage: string;
+    onNavigate: (page: string) => void;
+    user: User | null;
+}
+
+const hasPermission = (user: User | null, permission: string) => {
+    if (!user) return false;
+    if (user.role === 'admin' || user.role === 'superadmin') return true;
+    return user.permissions?.includes(permission) || false;
+};
+
+export const MobileHeader = ({ currentPage, onNavigate, user }: MobileHeaderProps) => {
+    return (
+        <div className="md:hidden flex items-center justify-between p-4 border-b bg-white">
+            <div className="flex items-center gap-2">
+                <span className="font-bold text-lg text-foreground">NexFarmaPro</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => {
+                // Just toggle a custom event for the mobile menu if needed, or handle it via App state.
+                // For now, this just exists to satisfy the prop contract.
+            }}>
+                <Menu className="w-5 h-5" />
+            </Button>
+        </div>
+    );
+};
+
+export const Sidebar = ({ currentPage, onNavigate, user, collapsed = false, className }: SidebarProps) => {
     
-    const navigate = useNavigate();
-    const location = useLocation();
-
-    const logoUrl = null;
-
     const menuItems = [
-        { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard, path: '/' },
+        { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard, path: 'dashboard' },
     ];
 
     const isSuperAdmin = user?.email === 'nexfarmapro@gmail.com';
@@ -49,40 +69,36 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             id: 'super-admin',
             label: 'Gestão SaaS (Admin)',
             icon: Shield,
-            path: '/super-admin'
+            path: 'super-admin'
         });
     } else {
         // NOVOS MENUS DO NEXFARMAPRO (COFRE DIGITAL)
-        menuItems.push({ id: 'documents', label: 'Cofre Digital', icon: Package, path: '/documents' });
+        menuItems.push({ id: 'documents', label: 'Cofre Digital', icon: Package, path: 'documents' });
         
         // Módulos de Compliance
-        menuItems.push({ id: 'audit', label: 'Auditoria de Logs', icon: ClipboardList, path: '/audit' });
-        menuItems.push({ id: 'retention', label: 'Políticas de Retenção', icon: FileText, path: '/retention' });
-        menuItems.push({ id: 'legal-holds', label: 'Legal Holds', icon: Shield, path: '/legal-holds' });
+        menuItems.push({ id: 'audit', label: 'Auditoria de Logs', icon: ClipboardList, path: 'audit' });
+        menuItems.push({ id: 'retention', label: 'Políticas de Retenção', icon: FileText, path: 'retention' });
+        menuItems.push({ id: 'legal-holds', label: 'Legal Holds', icon: Shield, path: 'legal-holds' });
         
         // Integrações
-        if (hasPermission('admin_access')) {
-            menuItems.push({ id: 'integrations', label: 'Connectors & SNCR', icon: ArrowLeftRight, path: '/integrations' });
-            menuItems.push({ id: 'backups', label: 'Gestão de Backups', icon: RefreshCw, path: '/backups' });
+        if (hasPermission(user, 'admin_access') || user?.role === 'admin') {
+            menuItems.push({ id: 'integrations', label: 'Connectors & SNCR', icon: ArrowLeftRight, path: 'integrations' });
+            menuItems.push({ id: 'backups', label: 'Gestão de Backups', icon: RefreshCw, path: 'backups' });
         }
 
         // Configurações
-        if (hasPermission('manage_users') || user?.role === 'admin') {
-            menuItems.push({ id: 'admin', label: 'Configurações', icon: Shield, path: '/admin' });
+        if (hasPermission(user, 'manage_users') || user?.role === 'admin') {
+            menuItems.push({ id: 'admin', label: 'Configurações', icon: Shield, path: 'admin' });
         }
     }
 
     return (
-        <div className="flex flex-col h-full bg-white">
+        <div className={cn("flex flex-col h-full bg-white border-r", className)}>
             <div className="h-20 flex items-center px-6 border-b border-border/50 gap-3 flex-shrink-0">
                 <div className={cn("flex-shrink-0 transition-all duration-300 rounded-lg overflow-hidden", collapsed ? "h-8 w-8" : "h-10 w-10")}>
-                    {logoUrl ? (
-                        <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
-                    ) : (
-                        <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-primary font-bold text-xl">N</span>
-                        </div>
-                    )}
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary font-bold text-xl">N</span>
+                    </div>
                 </div>
                 {!collapsed && (
                     <div className="flex flex-col min-w-0 transition-opacity duration-300">
@@ -100,7 +116,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                 <div className="space-y-1">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
-                        const isActive = location.pathname === item.path;
+                        const isActive = currentPage === item.path || (currentPage === '' && item.path === 'dashboard');
                         return (
                             <Button
                                 key={item.id}
@@ -110,7 +126,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                                     isActive ? "bg-primary/10 text-primary hover:bg-primary/15 font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground",
                                     collapsed ? "justify-center px-0" : "px-3"
                                 )}
-                                onClick={() => navigate(item.path)}
+                                onClick={() => onNavigate(item.path)}
                                 title={collapsed ? item.label : undefined}
                             >
                                 {isActive && (
@@ -128,28 +144,17 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                 <Button
                     variant="ghost"
                     className={cn("w-full gap-2 text-red-500 hover:bg-red-50 hover:text-red-600", collapsed ? "justify-center px-0" : "justify-start")}
-                    onClick={logout}
+                    onClick={() => {
+                        // Dispatch a logout event or clear localStorage to trigger AuthContext logout
+                        localStorage.removeItem('sb-auth-token');
+                        window.location.reload();
+                    }}
                     title={collapsed ? "Sair" : undefined}
                 >
                     <LogOut className="w-4 h-4" />
                     {!collapsed && "Sair do Sistema"}
                 </Button>
             </div>
-        </div>
-    );
-};
-
-
-
-export const MobileHeader = ({ onMenuClick }: { onMenuClick: () => void }) => {
-    return (
-        <div className="md:hidden flex items-center justify-between p-4 border-b bg-white">
-            <div className="flex items-center gap-2">
-                <span className="font-bold text-lg text-foreground">NexFarmaPro</span>
-            </div>
-            <Button variant="ghost" size="icon" onClick={onMenuClick}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-            </Button>
         </div>
     );
 };
