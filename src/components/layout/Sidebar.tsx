@@ -65,18 +65,18 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
         // Todos os usuÃ¡rios autenticados veem o Cofre (nÃ­vel de acesso Ã© filtrado na pÃ¡gina)
         menuItems.push({ id: 'documents', label: 'Cofre Digital', icon: Package, path: '/documents' });
         
-        // MÃ³dulos de Compliance
+        // M�dulos de Compliance
         menuItems.push({ id: 'audit', label: 'Auditoria de Logs', icon: ClipboardList, path: '/audit' });
-        menuItems.push({ id: 'retention', label: 'PolÃ­ticas de RetenÃ§Ã£o', icon: FileText, path: '/retention' });
+        menuItems.push({ id: 'retention', label: 'Pol�ticas de Reten��on' });
         menuItems.push({ id: 'legal-holds', label: 'Legal Holds', icon: Shield, path: '/legal-holds' });
         
-        // IntegraÃ§Ã£o (SNCR e Alpha7/Lotus)
+        // Integra��es (SNCR e Alpha7/Lotus)
         if (hasPermission('admin_access')) {
             menuItems.push({ id: 'integrations', label: 'Connectors & SNCR', icon: ArrowLeftRight, path: '/integrations' });
-            menuItems.push({ id: 'backups', label: 'GestÃ£o de Backups', icon: RefreshCw, path: '/backups' });
+            menuItems.push({ id: 'backups', label: 'Gest�o de Backups', icon: RefreshCw, path: '/backups' });
         }
 
-        // ConfiguraÃ§Ãµes
+        // Configura��es
         if (hasPermission('manage_users') || user?.role === 'admin') {
             menuItems.push({ id: 'admin', label: 'ConfiguraÃ§Ãµes', icon: Shield, path: '/admin' });
         }

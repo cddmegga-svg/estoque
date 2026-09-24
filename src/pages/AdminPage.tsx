@@ -1,9 +1,9 @@
-﻿import React, { useState } from 'react';
+﻿import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, UserPlus, Key, Users } from 'lucide-react';
+import { Shield, UserPlus, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export const AdminPage = () => {
+export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
