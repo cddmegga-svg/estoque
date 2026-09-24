@@ -1,219 +1,140 @@
-import { LayoutDashboard, Package, FileText, ArrowLeftRight, Shield, Zap, LogOut, RefreshCw, Menu, DollarSign, Users, ClipboardList, BarChart3, Truck } from 'lucide-react';
+import React from 'react';
 import { cn } from '@/lib/utils';
+import { 
+    LayoutDashboard, 
+    ShoppingCart, 
+    Package, 
+    Settings, 
+    Users, 
+    LogOut,
+    ArrowLeftRight,
+    FileText,
+    Calculator,
+    Archive,
+    DollarSign,
+    ClipboardCheck,
+    Truck,
+    Shield,
+    BarChart3,
+    ClipboardList,
+    RefreshCw
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { User } from '@/types';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useState, useEffect } from 'react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useCompany } from '@/contexts/CompanyContext';
+import nexfarmaLogo from '@/assets/nexfarma.png'; // Updated Logo
 
 interface SidebarProps {
-    currentPage: string;
-    onNavigate: (page: string, params?: any) => void;
-    user: User | null;
-    collapsed?: boolean;
-    className?: string;
+    collapsed: boolean;
+    onToggle: () => void;
 }
 
-const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClose, collapsed = false }: SidebarProps & { isMobile?: boolean, onClose?: () => void }) => {
-    const { signOut, checkPermission, activeEmployee } = useAuth();
-    const [logoUrl, setLogoUrl] = useState<string | null>(null);
-    const [tenantName, setTenantName] = useState('NexFarmaPro');
+export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
+    const { user, hasPermission, logout } = useAuth();
+    const { company } = useCompany();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    // Fetch tenant branding
-    useEffect(() => {
-        // Simple fetch without needing full context for now
-        import('@/services/api').then(({ fetchCurrentTenant }) => {
-            fetchCurrentTenant().then(tenant => {
-                if (tenant) {
-                    if (tenant.logo_url) setLogoUrl(tenant.logo_url);
-                    if (tenant.name) setTenantName(tenant.name);
-                }
-            });
-        });
-    }, []);
+    const logoUrl = company?.logo_url || nexfarmaLogo;
 
-    // Permission Checks (Now uses the unified logic)
-    const hasPermission = (permission: string) => {
-        const result = checkPermission ? checkPermission(permission) : false;
-        return result;
-    };
-
-    // ... menu items ...
     const menuItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+        { id: 'dashboard', label: 'Vis„o Geral', icon: LayoutDashboard, path: '/' },
     ];
-    // ... keeping the rest of the logic same, just updating the return JSX header ...
 
-    // (Re-declaring menuItems logic here because replace_file requires contiguous block replacement or full match)
-    // To minimize complexity, I will just target the Header section in replacement if possible, 
-    // but the state needs to be at top. So I am replacing the top part.
-
-    // ULTRA-SECRET SUPER ADMIN MENU √∞≈∏‚Ä∫¬°√Ø¬∏¬è
     const isSuperAdmin = user?.email === 'nexfarmapro@gmail.com';
 
     if (isSuperAdmin) {
         menuItems.push({
             id: 'super-admin',
-            label: 'Gest√É¬£o SaaS (Admin)',
+            label: 'Gest„o SaaS (Admin)',
             icon: Shield,
             path: '/super-admin'
         });
     } else {
         // NOVOS MENUS DO NEXFARMAPRO (COFRE DIGITAL)
-        
-        // Todos os usu√É¬°rios autenticados veem o Cofre (n√É¬≠vel de acesso √É¬© filtrado na p√É¬°gina)
         menuItems.push({ id: 'documents', label: 'Cofre Digital', icon: Package, path: '/documents' });
         
-        // MÔøΩdulos de Compliance
+        // MÛdulos de Compliance
         menuItems.push({ id: 'audit', label: 'Auditoria de Logs', icon: ClipboardList, path: '/audit' });
-        menuItems.push({ id: 'retention', label: 'PolÔøΩticas de RetenÔøΩÔøΩon' });
+        menuItems.push({ id: 'retention', label: 'PolÌticas de RetenÁ„o', icon: FileText, path: '/retention' });
         menuItems.push({ id: 'legal-holds', label: 'Legal Holds', icon: Shield, path: '/legal-holds' });
         
-        // IntegraÔøΩÔøΩes (SNCR e Alpha7/Lotus)
+        // IntegraÁıes
         if (hasPermission('admin_access')) {
             menuItems.push({ id: 'integrations', label: 'Connectors & SNCR', icon: ArrowLeftRight, path: '/integrations' });
-            menuItems.push({ id: 'backups', label: 'GestÔøΩo de Backups', icon: RefreshCw, path: '/backups' });
+            menuItems.push({ id: 'backups', label: 'Gest„o de Backups', icon: RefreshCw, path: '/backups' });
         }
 
-        // ConfiguraÔøΩÔøΩes
+        // ConfiguraÁıes
         if (hasPermission('manage_users') || user?.role === 'admin') {
-            menuItems.push({ id: 'admin', label: 'Configura√É¬ß√É¬µes', icon: Shield, path: '/admin' });
+            menuItems.push({ id: 'admin', label: 'ConfiguraÁıes', icon: Shield, path: '/admin' });
         }
     }
 
     return (
         <div className="flex flex-col h-full bg-white">
-            {/* Header */}
             <div className="h-20 flex items-center px-6 border-b border-border/50 gap-3 flex-shrink-0">
                 <div className={cn("flex-shrink-0 transition-all duration-300 rounded-lg overflow-hidden", collapsed ? "h-8 w-8" : "h-10 w-10")}>
                     {logoUrl ? (
-                        <img src={logoUrl} alt={tenantName} className="h-full w-full object-contain" />
+                        <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
                     ) : (
-                        <div className="h-full w-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                            {tenantName.charAt(0)}
+                        <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-primary font-bold text-xl">N</span>
                         </div>
                     )}
                 </div>
                 {!collapsed && (
-                    <div className="min-w-0">
-                        <h1 className="text-lg font-extrabold text-foreground leading-none tracking-tight">{tenantName}</h1>
-                        <p className="text-xs font-semibold text-muted-foreground tracking-wider">GEST√É∆íO</p>
+                    <div className="flex flex-col min-w-0 transition-opacity duration-300">
+                        <span className="font-bold text-lg leading-tight truncate text-foreground">
+                            NexFarmaPro
+                        </span>
+                        <span className="text-xs font-medium text-emerald-600 truncate uppercase tracking-wider">
+                            Compliance Vault
+                        </span>
                     </div>
                 )}
             </div>
 
-            {/* Navigation */}
-            <nav className={cn("flex-1 py-6 space-y-1 overflow-y-auto", collapsed ? "px-2" : "px-3")}>
-                <TooltipProvider delayDuration={0}>
+            <div className="flex-1 overflow-y-auto py-6 px-4 scrollbar-thin">
+                <div className="space-y-1">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
-                        const isActive = currentPage === item.id;
-
-                        const ButtonContent = (
-                            <button
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <Button
                                 key={item.id}
-                                onClick={() => {
-                                    onNavigate(item.id);
-                                    if (isMobile && onClose) onClose();
-                                }}
+                                variant={isActive ? "secondary" : "ghost"}
                                 className={cn(
-                                    'w-full flex items-center gap-3 py-2.5 text-sm font-medium rounded-lg transition-all',
-                                    collapsed ? 'justify-center px-0' : 'px-3',
-                                    isActive
-                                        ? 'bg-primary/10 text-primary'
-                                        : 'text-muted-foreground hover:bg-slate-50 hover:text-foreground'
+                                    "w-full justify-start gap-3 relative group transition-all duration-200",
+                                    isActive ? "bg-primary/10 text-primary hover:bg-primary/15 font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                                    collapsed ? "justify-center px-0" : "px-3"
                                 )}
+                                onClick={() => navigate(item.path)}
+                                title={collapsed ? item.label : undefined}
                             >
-                                <Icon className={cn("flex-shrink-0", collapsed ? "w-6 h-6" : "w-5 h-5", isActive ? "text-primary" : "text-muted-foreground")} />
-                                {!collapsed && item.label}
-                            </button>
+                                {isActive && (
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                                )}
+                                <Icon className={cn("w-5 h-5 transition-transform duration-200", isActive ? "scale-110" : "group-hover:scale-110")} />
+                                {!collapsed && <span className="truncate">{item.label}</span>}
+                            </Button>
                         );
-
-                        if (collapsed) {
-                            return (
-                                <Tooltip key={item.id}>
-                                    <TooltipTrigger asChild>
-                                        {ButtonContent}
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right" className="font-bold bg-slate-900 text-white">
-                                        <p>{item.label}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            );
-                        }
-
-                        return ButtonContent;
                     })}
-                </TooltipProvider>
-            </nav>
-
-            {/* Footer / User Profile */}
-            <div className="p-4 border-t border-border/50 bg-slate-50/50 flex-shrink-0">
-                <div className={cn("flex items-center gap-3 mb-4", collapsed && "justify-center")}>
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold flex-shrink-0">
-                        {user?.name?.charAt(0) || 'U'}
-                    </div>
-                    {!collapsed && (
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
-                            <p className="text-xs text-muted-foreground truncate capitalize">
-                                {user?.role === 'admin' ? 'Administrador' : 'Colaborador'}
-                            </p>
-                        </div>
-                    )}
                 </div>
+            </div>
 
-
-
+            <div className="p-4 border-t border-border/50 bg-slate-50/50 mt-auto">
                 <Button
                     variant="ghost"
-                    className={cn("w-full gap-2 text-red-400 hover:bg-red-50 hover:text-red-600", collapsed ? "justify-center px-0" : "justify-start")}
-                    onClick={() => signOut()}
+                    className={cn("w-full gap-2 text-red-500 hover:bg-red-50 hover:text-red-600", collapsed ? "justify-center px-0" : "justify-start")}
+                    onClick={logout}
                     title={collapsed ? "Sair" : undefined}
                 >
                     <LogOut className="w-4 h-4" />
-                    {!collapsed && "Sair"}
+                    {!collapsed && "Sair do Sistema"}
                 </Button>
             </div>
         </div>
     );
 };
-
-export const Sidebar = (props: SidebarProps) => {
-    return (
-        <aside className={cn(
-            "border-r border-border min-h-screen hidden lg:flex flex-col fixed left-0 top-0 h-full z-50 bg-white shadow-sm transition-all duration-300",
-            props.collapsed ? "w-16" : "w-64",
-            props.className
-        )}>
-            <SidebarContent {...props} />
-        </aside>
-    );
-};
-
-export const MobileHeader = (props: SidebarProps) => {
-    const [open, setOpen] = useState(false);
-
-    return (
-        <div className="h-16 border-b bg-white flex items-center justify-between px-4 sticky top-0 z-40 shadow-sm">
-            <div className="flex items-center gap-2">
-                <div className="h-8 w-8">
-                    <img src="/logo.png" alt="Mega Farma" className="h-full w-full object-contain" />
-                </div>
-                <span className="font-bold text-lg text-emerald-800">PharmaFlow mobile</span>
-            </div>
-
-            <Sheet open={open} onOpenChange={setOpen}>
-                <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <Menu className="w-6 h-6" />
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-72">
-                    <SidebarContent {...props} isMobile={true} onClose={() => setOpen(false)} />
-                </SheetContent>
-            </Sheet>
-        </div>
-    );
-}

@@ -1,4 +1,4 @@
-Ôªøimport React from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, UserPlus, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,14 +8,14 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Configura√ß√µes & Usu√°rios</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">ConfiguraÁıes & Usu·rios</h2>
           <p className="text-muted-foreground mt-1">
-            Gest√£o de acesso ao Cofre Digital e certificados (e-CNPJ).
+            Gest„o de acesso ao Cofre Digital e certificados (e-CNPJ).
           </p>
         </div>
         <Button className="gap-2 bg-primary hover:bg-primary/90">
           <UserPlus className="w-4 h-4" />
-          Novo Usu√°rio
+          Novo Usu·rio
         </Button>
       </div>
 
@@ -23,8 +23,8 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Usu√°rios Autorizados</CardTitle>
-              <CardDescription>Colaboradores com acesso √† infraestrutura de preserva√ß√£o.</CardDescription>
+              <CardTitle>Usu·rios Autorizados</CardTitle>
+              <CardDescription>Colaboradores com acesso ‡ infraestrutura de preservaÁ„o.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="relative overflow-x-auto rounded-lg border border-border">
@@ -33,8 +33,8 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
                     <tr>
                       <th className="px-6 py-3">Nome</th>
                       <th className="px-6 py-3">Papel</th>
-                      <th className="px-6 py-3">Permiss√µes de Cofre</th>
-                      <th className="px-6 py-3 text-right">A√ß√µes</th>
+                      <th className="px-6 py-3">Permissıes de Cofre</th>
+                      <th className="px-6 py-3 text-right">AÁıes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -42,7 +42,7 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
                       <td className="px-6 py-4 font-medium text-foreground">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">JD</div>
-                          <span>Jo√£o Dono</span>
+                          <span>Jo„o Dono</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">Administrador</td>
@@ -57,10 +57,10 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
                       <td className="px-6 py-4 font-medium text-foreground">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">MF</div>
-                          <span>Maria (Farmac√™utica RT)</span>
+                          <span>Maria (FarmacÍutica RT)</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">T√©cnico</td>
+                      <td className="px-6 py-4">TÈcnico</td>
                       <td className="px-6 py-4 flex flex-wrap gap-1">
                         <span className="bg-slate-100 text-slate-800 text-xs font-medium px-2 py-0.5 rounded">Consultar Cofre</span>
                         <span className="bg-slate-100 text-slate-800 text-xs font-medium px-2 py-0.5 rounded">Legal Holds</span>
@@ -83,7 +83,7 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
                 <Key className="w-5 h-5 text-blue-600" />
                 Certificado e-CNPJ
               </CardTitle>
-              <CardDescription>Credencial usada para comunica√ß√£o oficial com o SNCR.</CardDescription>
+              <CardDescription>Credencial usada para comunicaÁ„o oficial com o SNCR.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
@@ -91,7 +91,7 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
                   <span className="font-semibold text-emerald-800">FARMACIA SAUDE LTDA</span>
                   <Shield className="w-4 h-4 text-emerald-600" />
                 </div>
-                <p className="text-xs text-emerald-700 mb-4">V√°lido at√©: 15/12/2026</p>
+                <p className="text-xs text-emerald-700 mb-4">V·lido atÈ: 15/12/2026</p>
                 <Button variant="outline" className="w-full text-xs" size="sm">Substituir Certificado A1</Button>
               </div>
             </CardContent>
