@@ -1,11 +1,11 @@
-import React from 'react';
+Ôªøimport React from 'react';
 
 export const PlaceholderPage = ({ title }: { title: string }) => {
   return (
     <div className="p-8 space-y-4">
       <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
       <p className="text-muted-foreground">
-        Este mÛdulo do NexFarmaPro est· em construÁ„o. O motor de infraestrutura j· foi conectado no backend.
+        Este m√≥dulo do NexFarmaPro est√° em constru√ß√£o. O motor de infraestrutura j√° foi conectado no backend.
       </p>
     </div>
   );

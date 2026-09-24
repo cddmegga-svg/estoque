@@ -1,4 +1,4 @@
-import { ShieldCheck, FileText, AlertTriangle, Lock, Search } from 'lucide-react';
+Ôªøimport { ShieldCheck, FileText, AlertTriangle, Lock, Search, Printer } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { User } from '@/types';
 
@@ -12,9 +12,9 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Vis„o Geral de Compliance</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Vis√£o Geral de Compliance</h2>
           <p className="text-muted-foreground mt-1">
-            MÈtricas de proteÁ„o, integridade e retenÁ„o de documentos do SNCR.
+            M√©tricas de prote√ß√£o, integridade e reten√ß√£o de documentos do SNCR.
           </p>
         </div>
       </div>
@@ -36,13 +36,13 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
         <Card onClick={() => onNavigate('retention')} className="cursor-pointer hover:bg-slate-50 transition-colors">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardDescription>Aguardando Revis„o</CardDescription>
+              <CardDescription>Aguardando Revis√£o</CardDescription>
               <FileText className="w-5 h-5 text-blue-600" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">45</div>
-            <p className="text-xs text-muted-foreground mt-1">Receitas com retenÁ„o expirada</p>
+            <p className="text-xs text-muted-foreground mt-1">Receitas com reten√ß√£o expirada</p>
           </CardContent>
         </Card>
 
@@ -55,7 +55,7 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-foreground">3</div>
-            <p className="text-xs text-muted-foreground mt-1">Processos de fiscalizaÁ„o</p>
+            <p className="text-xs text-muted-foreground mt-1">Processos de fiscaliza√ß√£o</p>
           </CardContent>
         </Card>
 
@@ -76,26 +76,43 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Atividade do Conector Local</CardTitle>
-            <CardDescription>Status das integraÁıes de ingest„o de receitas.</CardDescription>
+            <CardTitle>Atividade dos Conectores Locais</CardTitle>
+            <CardDescription>Status das integra√ß√µes de ingest√£o de receitas.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
                 <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                    <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Impressora Virtual NexFarma</p>
+                    <p className="text-sm text-muted-foreground">Spooler do Windows operando</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-indigo-600">ONLINE</p>
+                  <p className="text-xs text-muted-foreground">√öltima impress√£o h√° 5 min</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
+                    <Printer className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
                     <p className="font-medium text-foreground">Alpha7 Connector (Local)</p>
-                    <p className="text-sm text-muted-foreground">Pasta monitorada operando</p>
+                    <p className="text-sm text-muted-foreground">Pasta monitorada</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-emerald-600">ONLINE</p>
-                  <p className="text-xs text-muted-foreground">⁄ltimo arquivo h· 2 min</p>
+                  <p className="text-xs text-muted-foreground">√öltimo arquivo h√° 1 hora</p>
                 </div>
               </div>
+              
               <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -103,12 +120,12 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
                   </div>
                   <div>
                     <p className="font-medium text-foreground">SNCR API Endpoint</p>
-                    <p className="text-sm text-muted-foreground">ValidaÁ„o Gov.br / ICP-Brasil</p>
+                    <p className="text-sm text-muted-foreground">Valida√ß√£o Gov.br / ICP-Brasil</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-blue-600">AUTENTICADO</p>
-                  <p className="text-xs text-muted-foreground">e-CNPJ V·lido</p>
+                  <p className="text-xs text-muted-foreground">e-CNPJ V√°lido</p>
                 </div>
               </div>
             </div>
