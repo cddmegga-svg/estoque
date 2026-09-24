@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCompany } from '@/contexts/CompanyContext';
-import nexfarmaLogo from '@/assets/nexfarma.png'; // Updated Logo
+
 
 interface SidebarProps {
     collapsed: boolean;
@@ -36,7 +36,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const logoUrl = company?.logo_url || nexfarmaLogo;
+    const logoUrl = company?.logo_url;
 
     const menuItems = [
         { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard, path: '/' },
@@ -138,3 +138,4 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </div>
     );
 };
+
