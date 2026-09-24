@@ -53,61 +53,32 @@ const SidebarContent = ({ currentPage, onNavigate, user, isMobile = false, onClo
     const isSuperAdmin = user?.email === 'nexfarmapro@gmail.com';
 
     if (isSuperAdmin) {
-        // Super Admin sees ONLY this.
         menuItems.push({
             id: 'super-admin',
             label: 'Gestão SaaS (Admin)',
             icon: Shield,
             path: '/super-admin'
         });
-        // We return early or just don't push anything else. 
-        // But let's verify if they want *some* generic admin tools?
-        // User said: "somente a adm das farmácias cadastradas".
-        // So we skip ALL other checks.
     } else {
-        // Standard User / Tenant Menus
-        if (hasPermission('view_products') || hasPermission('manage_stock') || hasPermission('view_stock')) {
-            menuItems.push(
-                { id: 'stock', icon: Package, label: 'Estoque', path: '/stock' },
-                { id: 'products', icon: Package, label: 'Produtos', path: '/products' }
-            );
+        // NOVOS MENUS DO NEXFARMAPRO (COFRE DIGITAL)
+        
+        // Todos os usuários autenticados veem o Cofre (nível de acesso é filtrado na página)
+        menuItems.push({ id: 'documents', label: 'Cofre Digital', icon: Package, path: '/documents' });
+        
+        // Módulos de Compliance
+        menuItems.push({ id: 'audit', label: 'Auditoria de Logs', icon: ClipboardList, path: '/audit' });
+        menuItems.push({ id: 'retention', label: 'Políticas de Retenção', icon: FileText, path: '/retention' });
+        menuItems.push({ id: 'legal-holds', label: 'Legal Holds', icon: Shield, path: '/legal-holds' });
+        
+        // Integração (SNCR e Alpha7/Lotus)
+        if (hasPermission('admin_access')) {
+            menuItems.push({ id: 'integrations', label: 'Connectors & SNCR', icon: ArrowLeftRight, path: '/integrations' });
+            menuItems.push({ id: 'backups', label: 'Gestão de Backups', icon: RefreshCw, path: '/backups' });
         }
 
-        if (hasPermission('create_sale')) {
-            // menuItems.push({ id: 'sales', icon: DollarSign, label: 'Pré-Venda (Balcão)', path: '/sales' });
-            menuItems.push({ id: 'customers', label: 'Clientes (CRM)', icon: Users, path: '/customers' });
-        }
-
-        if (hasPermission('manage_suppliers')) {
-            menuItems.push({ id: 'suppliers', label: 'Fornecedores', icon: Users, path: '/suppliers' });
-        }
-
-        if (hasPermission('view_reports')) {
-            menuItems.push({ id: 'reports', icon: BarChart3, label: 'Relatórios (BI)', path: '/reports' });
-        }
-
-        if (hasPermission('manage_stock')) {
-            menuItems.push(
-                { id: 'logistics', icon: Truck, label: 'Logística & Operações', path: '/logistics' },
-                { id: 'orders', label: 'Encomendas', icon: ClipboardList, path: '/orders' }
-            );
-        }
-
-        if (hasPermission('view_financial')) {
-            menuItems.push({ id: 'financial', label: 'Contas a Pagar', icon: DollarSign, path: '/financial' });
-        }
-
-        // Frente de Caixa Nativo Desativado (Foco em Back-office Integrado Alpha7/Lothus)
-        // if (hasPermission('access_pos')) {
-        //     menuItems.push({ id: 'pos', label: 'Frente de Caixa', icon: DollarSign, path: '/pos' });
-        // }
-
-        if (hasPermission('admin_access')) { // Apenas admin pode ver Integrações
-            menuItems.push({ id: 'integrations', label: 'Integrações (API)', icon: DollarSign, path: '/integrations' });
-        }
-
+        // Configurações
         if (hasPermission('manage_users') || user?.role === 'admin') {
-            menuItems.push({ id: 'admin', label: 'Administração', icon: Shield, path: '/admin' });
+            menuItems.push({ id: 'admin', label: 'Configurações', icon: Shield, path: '/admin' });
         }
     }
 

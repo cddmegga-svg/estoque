@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
-import { StockPage } from '@/legacy/pages/StockPage';
+import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { DocumentsPage } from '@/pages/DocumentsPage';
 import { ImportPage } from '@/pages/ImportPage';
 import { TransfersPage } from '@/legacy/pages/TransfersPage';
 import { MovementsPage } from '@/legacy/pages/MovementsPage';
@@ -132,6 +133,16 @@ function App() {
         if (!hasPermission('admin_access')) return <div className="p-8 text-center text-red-500">Acesso Negado.</div>;
         return <IntegrationsPage />;
 
+      case 'documents':
+        return <DocumentsPage />;
+      case 'audit':
+        return <PlaceholderPage title="Auditoria de Logs (Tamper-Evident)" />;
+      case 'retention':
+        return <PlaceholderPage title="Políticas de Retenção" />;
+      case 'legal-holds':
+        return <PlaceholderPage title="Legal Holds (Ordens de Preservação)" />;
+      case 'backups':
+        return <PlaceholderPage title="Gestão de Backups Locais" />;
       default:
         return <DashboardPage user={user} onNavigate={handleNavigate} />;
     }
@@ -385,3 +396,5 @@ function UnlockDialog() {
 }
 
 export default App;
+
+
