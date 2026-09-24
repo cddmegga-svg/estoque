@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeftRight, FileText, ClipboardList, RefreshCw, Truck } from 'lucide-react';
 
 // Import sub-pages
-import { ImportPage } from './ImportPage';
+import { ImportPage } from '@/pages/ImportPage';
 import { TransfersPage } from './TransfersPage';
 import { MovementsPage } from './MovementsPage'; // Ensure this matches actual export
 import { ConferencePage } from './ConferencePage';
