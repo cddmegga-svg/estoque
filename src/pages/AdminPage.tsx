@@ -15,7 +15,7 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
         </div>
         <Button className="gap-2 bg-primary hover:bg-primary/90">
           <UserPlus className="w-4 h-4" />
-          Novo Usu�rio
+          Novo Usuário
         </Button>
       </div>
 
@@ -24,7 +24,7 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
           <Card>
             <CardHeader>
               <CardTitle>Usuários Autorizados</CardTitle>
-              <CardDescription>Colaboradores com acesso � infraestrutura de preservação.</CardDescription>
+              <CardDescription>Colaboradores com acesso à infraestrutura de preservação.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="relative overflow-x-auto rounded-lg border border-border">
@@ -33,7 +33,7 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
                     <tr>
                       <th className="px-6 py-3">Nome</th>
                       <th className="px-6 py-3">Papel</th>
-                      <th className="px-6 py-3">Permiss�es de Cofre</th>
+                      <th className="px-6 py-3">Permissões de Cofre</th>
                       <th className="px-6 py-3 text-right">Ações</th>
                     </tr>
                   </thead>
@@ -60,7 +60,7 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
                           <span>Maria (Farmacêutica RT)</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">T�cnico</td>
+                      <td className="px-6 py-4">Técnico</td>
                       <td className="px-6 py-4 flex flex-wrap gap-1">
                         <span className="bg-slate-100 text-slate-800 text-xs font-medium px-2 py-0.5 rounded">Consultar Cofre</span>
                         <span className="bg-slate-100 text-slate-800 text-xs font-medium px-2 py-0.5 rounded">Legal Holds</span>
@@ -91,7 +91,7 @@ export const AdminPage = ({ currentUser }: { currentUser?: any }) => {
                   <span className="font-semibold text-emerald-800">FARMACIA SAUDE LTDA</span>
                   <Shield className="w-4 h-4 text-emerald-600" />
                 </div>
-                <p className="text-xs text-emerald-700 mb-4">V�lido at�: 15/12/2026</p>
+                <p className="text-xs text-emerald-700 mb-4">Válido até: 15/12/2026</p>
                 <Button variant="outline" className="w-full text-xs" size="sm">Substituir Certificado A1</Button>
               </div>
             </CardContent>

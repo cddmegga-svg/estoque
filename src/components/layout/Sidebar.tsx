@@ -75,7 +75,7 @@ export const Sidebar = ({ currentPage, onNavigate, user, collapsed = false, clas
         // NOVOS MENUS DO NEXFARMAPRO (COFRE DIGITAL)
         menuItems.push({ id: 'documents', label: 'Cofre Digital', icon: Package, path: 'documents' });
         
-        // M�dulos de Compliance
+        // Módulos de Compliance
         menuItems.push({ id: 'audit', label: 'Auditoria de Logs', icon: ClipboardList, path: 'audit' });
         menuItems.push({ id: 'retention', label: 'Políticas de Retenção', icon: FileText, path: 'retention' });
         menuItems.push({ id: 'legal-holds', label: 'Legal Holds', icon: Shield, path: 'legal-holds' });
