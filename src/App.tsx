@@ -139,7 +139,7 @@ function App() {
       case 'audit':
         return <PlaceholderPage title="Auditoria de Logs (Tamper-Evident)" />;
       case 'retention':
-        return <PlaceholderPage title="Pol�ticas de Reten��o" />;
+        return <PlaceholderPage title="Políticas de Retenção" />;
       case 'legal-holds':
         return <PlaceholderPage title="Legal Holds (Ordens de Preservação)" />;
       case 'backups':

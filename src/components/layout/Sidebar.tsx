@@ -77,18 +77,18 @@ export const Sidebar = ({ currentPage, onNavigate, user, collapsed = false, clas
         
         // M�dulos de Compliance
         menuItems.push({ id: 'audit', label: 'Auditoria de Logs', icon: ClipboardList, path: 'audit' });
-        menuItems.push({ id: 'retention', label: 'Pol�ticas de Reten��o', icon: FileText, path: 'retention' });
+        menuItems.push({ id: 'retention', label: 'Políticas de Retenção', icon: FileText, path: 'retention' });
         menuItems.push({ id: 'legal-holds', label: 'Legal Holds', icon: Shield, path: 'legal-holds' });
         
-        // Integra��es
+        // Integrações
         if (hasPermission(user, 'admin_access') || user?.role === 'admin') {
             menuItems.push({ id: 'integrations', label: 'Connectors & SNCR', icon: ArrowLeftRight, path: 'integrations' });
             menuItems.push({ id: 'backups', label: 'Gestão de Backups', icon: RefreshCw, path: 'backups' });
         }
 
-        // Configura��es
+        // Configurações
         if (hasPermission(user, 'manage_users') || user?.role === 'admin') {
-            menuItems.push({ id: 'admin', label: 'Configura��es', icon: Shield, path: 'admin' });
+            menuItems.push({ id: 'admin', label: 'Configurações', icon: Shield, path: 'admin' });
         }
     }
 

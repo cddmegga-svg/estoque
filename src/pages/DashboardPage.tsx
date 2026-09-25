@@ -12,7 +12,7 @@ export const DashboardPage = ({ user, onNavigate }: DashboardPageProps) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Vis�o Geral de Compliance</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Visão Geral de Compliance</h2>
           <p className="text-muted-foreground mt-1">
             Métricas de proteção, integridade e retenção de documentos do SNCR.
           </p>
